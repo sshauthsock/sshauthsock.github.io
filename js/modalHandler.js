@@ -82,7 +82,7 @@ function renderSpiritInfo(
   );
   kakaoAdSpiritInfoModalDesktop.innerHTML = `
       <ins class="kakao_ad_area"
-          data-ad-unit="DAN-NsxEDVcaO6e1i2Gs"
+          data-ad-unit="DAN-aOM3JPGvOLhHlyoS"
           data-ad-width="728"
           data-ad-height="90"></ins>
   `;
@@ -94,7 +94,7 @@ function renderSpiritInfo(
   );
   kakaoAdSpiritInfoModalMobile.innerHTML = `
       <ins class="kakao_ad_area"
-          data-ad-unit="DAN-09D9k8dFdlWpHbvG"
+          data-ad-unit="DAN-epbkjAaeHSxv0MYl"
           data-ad-width="320"
           data-ad-height="50"></ins>
   `;

@@ -162,7 +162,7 @@ function renderResultContent(result, container, isFromRanking) {
 
   kakaoAdResultModalDesktop.innerHTML = `
       <ins class="kakao_ad_area"
-          data-ad-unit="DAN-bwZLqrZLwsCZMMPu"
+          data-ad-unit="DAN-avif2d68afxV6xpn"
           data-ad-width="728"
           data-ad-height="90"></ins>
   `;
@@ -176,7 +176,7 @@ function renderResultContent(result, container, isFromRanking) {
 
   kakaoAdResultModalMobile.innerHTML = `
       <ins class="kakao_ad_area"
-          data-ad-unit="DAN-wS76LEpUOnrNUa0L"
+          data-ad-unit="DAN-wnVEYOHZjycPISXg"
           data-ad-width="320"
           data-ad-height="50"></ins>
   `;
