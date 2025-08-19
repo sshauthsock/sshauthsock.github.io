@@ -1,4 +1,4 @@
-import{a as m,f as b,h as y,s as h}from"./index-DX-UovPW.js";import{b as d}from"./utils-CHsLvtYz.js";import{s as S}from"./modalHandler-CAxpF0W0.js";import{S as g,F as k}from"./constants-lx1P6xCQ.js";import{s as C}from"./resultModal-z94XDZDX.js";const r={currentCategory:"수호",currentRankingType:"bond",currentStatKey:"bind",currentLoadedRankings:[]},n={};function $(){return`
+import{a as m,f as b,h as y,s as h}from"./index-BFDEfZgD.js";import{b as d}from"./utils-CHsLvtYz.js";import{s as S}from"./modalHandler-CAxpF0W0.js";import{S as g,F as k}from"./constants-lx1P6xCQ.js";import{s as C}from"./resultModal-CY43pxzM.js";const r={currentCategory:"수호",currentRankingType:"bond",currentStatKey:"bind",currentLoadedRankings:[]},n={};function $(){return`
     <div class="sub-tabs" id="rankingCategoryTabs">
         <div class="tab active" data-category="수호">수호</div>
         <div class="tab" data-category="탑승">탑승</div>
@@ -26,7 +26,7 @@ import{a as m,f as b,h as y,s as h}from"./index-DX-UovPW.js";import{b as d}from"
         <h1 class="ranking-title">환수 <span id="rankingCategoryTitle">수호</span> <span id="rankingTypeTitle">결속</span> 랭킹</h1>
         <div id="rankingsContainer" class="rankings-list"></div>
     </div>
-  `}async function c(){m(n.rankingsContainer,"랭킹 데이터 로딩 중",`${r.currentCategory} ${r.currentRankingType==="bond"?"결속":"능력치"} 랭킹을 불러오고 있습니다.`);try{const t=await b(r.currentCategory,r.currentRankingType,r.currentStatKey);r.currentLoadedRankings=t.rankings||[],L(r.currentLoadedRankings)}catch(t){console.error("랭킹 데이터 로드 실패:",t),n.rankingsContainer.innerHTML=`<p class="error-message">랭킹 데이터를 불러오는 데 실패했습니다: ${t.message}</p>`}finally{y()}}function L(t){r.currentRankingType==="bond"?T(t):R(t)}function T(t){const s=n.rankingsContainer;if(!s)return;if(t.length===0){s.innerHTML='<p class="no-data-message">결속 랭킹 데이터가 없습니다.</p>';return}const a=`
+  `}async function c(){m(n.rankingsContainer,"랭킹 데이터 로딩 중",`${r.currentCategory} ${r.currentRankingType==="bond"?"결속":"능력치"} 랭킹을 불러오고 있습니다.`);try{const t=await b(r.currentCategory,r.currentRankingType,r.currentStatKey);r.currentLoadedRankings=t.rankings||[],L(r.currentLoadedRankings)}catch(t){console.error("랭킹 데이터 로드 실패:",t),n.rankingsContainer.innerHTML='<p class="error-message">서버 점검중입니다.</p>'}finally{y()}}function L(t){r.currentRankingType==="bond"?T(t):R(t)}function T(t){const s=n.rankingsContainer;if(!s)return;if(t.length===0){s.innerHTML='<p class="no-data-message">결속 랭킹 데이터가 없습니다.</p>';return}const a=`
     <div class="ranking-table-container">
       <table class="ranking-table">
         <thead><tr><th>순위</th><th>조합</th><th>등급/세력</th><th>환산 점수</th><th class="action-column">상세</th></tr></thead>
