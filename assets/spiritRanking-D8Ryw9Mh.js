@@ -1,4 +1,4 @@
-import{a as m,f as b,h as y,s as h}from"./index-C579pNBa.js";import{b as d}from"./utils-CHsLvtYz.js";import{s as S}from"./modalHandler-CAxpF0W0.js";import{S as g,F as k}from"./constants-lx1P6xCQ.js";import{s as C}from"./resultModal-pl85BP_l.js";const r={currentCategory:"수호",currentRankingType:"bond",currentStatKey:"bind",currentLoadedRankings:[]},n={};function $(){return`
+import{a as m,f as b,h as y,s as h}from"./index-DX-UovPW.js";import{b as d}from"./utils-CHsLvtYz.js";import{s as S}from"./modalHandler-CAxpF0W0.js";import{S as g,F as k}from"./constants-lx1P6xCQ.js";import{s as C}from"./resultModal-z94XDZDX.js";const r={currentCategory:"수호",currentRankingType:"bond",currentStatKey:"bind",currentLoadedRankings:[]},n={};function $(){return`
     <div class="sub-tabs" id="rankingCategoryTabs">
         <div class="tab active" data-category="수호">수호</div>
         <div class="tab" data-category="탑승">탑승</div>
