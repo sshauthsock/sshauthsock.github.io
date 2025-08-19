@@ -1,4 +1,4 @@
-import{a as m,f as b,h as y,s as h}from"./index-7BHmx9Br.js";import{b as d}from"./utils-CHsLvtYz.js";import{s as S}from"./modalHandler-DvetA_GR.js";import{S as g,F as k}from"./constants-lx1P6xCQ.js";import{s as C}from"./resultModal-DOvUi161.js";const r={currentCategory:"수호",currentRankingType:"bond",currentStatKey:"bind",currentLoadedRankings:[]},n={};function $(){return`
+import{a as m,f as b,h as y,s as h}from"./index-C579pNBa.js";import{b as d}from"./utils-CHsLvtYz.js";import{s as S}from"./modalHandler-CAxpF0W0.js";import{S as g,F as k}from"./constants-lx1P6xCQ.js";import{s as C}from"./resultModal-pl85BP_l.js";const r={currentCategory:"수호",currentRankingType:"bond",currentStatKey:"bind",currentLoadedRankings:[]},n={};function $(){return`
     <div class="sub-tabs" id="rankingCategoryTabs">
         <div class="tab active" data-category="수호">수호</div>
         <div class="tab" data-category="탑승">탑승</div>
@@ -26,14 +26,14 @@ import{a as m,f as b,h as y,s as h}from"./index-7BHmx9Br.js";import{b as d}from"
         <h1 class="ranking-title">환수 <span id="rankingCategoryTitle">수호</span> <span id="rankingTypeTitle">결속</span> 랭킹</h1>
         <div id="rankingsContainer" class="rankings-list"></div>
     </div>
-  `}async function c(){m(n.rankingsContainer,"랭킹 데이터 로딩 중",`${r.currentCategory} ${r.currentRankingType==="bond"?"결속":"능력치"} 랭킹을 불러오고 있습니다.`);try{const t=await b(r.currentCategory,r.currentRankingType,r.currentStatKey);r.currentLoadedRankings=t.rankings||[],L(r.currentLoadedRankings)}catch(t){console.error("랭킹 데이터 로드 실패:",t),n.rankingsContainer.innerHTML=`<p class="error-message">랭킹 데이터를 불러오는 데 실패했습니다: ${t.message}</p>`}finally{y()}}function L(t){r.currentRankingType==="bond"?T(t):R(t)}function T(t){const i=n.rankingsContainer;if(!i)return;if(t.length===0){i.innerHTML='<p class="no-data-message">결속 랭킹 데이터가 없습니다.</p>';return}const a=`
+  `}async function c(){m(n.rankingsContainer,"랭킹 데이터 로딩 중",`${r.currentCategory} ${r.currentRankingType==="bond"?"결속":"능력치"} 랭킹을 불러오고 있습니다.`);try{const t=await b(r.currentCategory,r.currentRankingType,r.currentStatKey);r.currentLoadedRankings=t.rankings||[],L(r.currentLoadedRankings)}catch(t){console.error("랭킹 데이터 로드 실패:",t),n.rankingsContainer.innerHTML=`<p class="error-message">랭킹 데이터를 불러오는 데 실패했습니다: ${t.message}</p>`}finally{y()}}function L(t){r.currentRankingType==="bond"?T(t):R(t)}function T(t){const s=n.rankingsContainer;if(!s)return;if(t.length===0){s.innerHTML='<p class="no-data-message">결속 랭킹 데이터가 없습니다.</p>';return}const a=`
     <div class="ranking-table-container">
       <table class="ranking-table">
         <thead><tr><th>순위</th><th>조합</th><th>등급/세력</th><th>환산 점수</th><th class="action-column">상세</th></tr></thead>
         <tbody>
-          ${t.map((e,s)=>`
+          ${t.map((e,i)=>`
             <tr class="ranking-row">
-              <td class="rank-column"><div class="rank-badge rank-${s+1}">${s+1}</div></td>
+              <td class="rank-column"><div class="rank-badge rank-${i+1}">${i+1}</div></td>
               <td class="spirits-column"><div class="spirits-container">${e.spirits.map(o=>`<img src="${o.image}" alt="${o.name}" title="${o.name}" class="spirit-image" data-spirit-name="${o.name}">`).join("")}</div></td>
               <td class="faction-column"><div class="faction-tags">${E(e)}</div></td>
               <td class="score-column">
@@ -41,23 +41,23 @@ import{a as m,f as b,h as y,s as h}from"./index-7BHmx9Br.js";import{b as d}from"
                 <div class="score-breakdown">(등급: ${Math.round(e.gradeScore)} | 세력: ${Math.round(e.factionScore)} | 장착: ${Math.round(e.bindScore)})</div>
               </td>
               <td class="action-column">
-                <button class="btn btn-sm btn-info view-ranking-details" data-index="${s}">상세보기</button>
+                <button class="btn btn-sm btn-info view-ranking-details" data-index="${i}">상세보기</button>
               </td>
             </tr>
           `).join("")}
         </tbody>
       </table>
-    </div>`;i.innerHTML=a}function R(t){const i=n.rankingsContainer;if(!i)return;if(t.length===0){i.innerHTML='<p class="no-data-message">능력치 랭킹 데이터가 없습니다.</p>';return}let e=`<h3 class="stat-ranking-title">${n.statSelector.selectedOptions[0].text} 랭킹</h3><div class="stat-grid-container">`;t.forEach((s,o)=>{let l="";o===0?l="top-1":o===1?l="top-2":o===2&&(l="top-3");const f=typeof s.value=="number"&&!isNaN(s.value)?s.value.toLocaleString():s.value!==void 0&&s.value!==null?String(s.value):"N/A";e+=`
-      <div class="stat-card ${l}" data-spirit-name="${s.name}">
+    </div>`;s.innerHTML=a}function R(t){const s=n.rankingsContainer;if(!s)return;if(t.length===0){s.innerHTML='<p class="no-data-message">능력치 랭킹 데이터가 없습니다.</p>';return}let e=`<h3 class="stat-ranking-title">${n.statSelector.selectedOptions[0].text} 랭킹</h3><div class="stat-grid-container">`;t.forEach((i,o)=>{let l="";o===0?l="top-1":o===1?l="top-2":o===2&&(l="top-3");const f=typeof i.value=="number"&&!isNaN(i.value)?i.value.toLocaleString():i.value!==void 0&&i.value!==null?String(i.value):"N/A";e+=`
+      <div class="stat-card ${l}" data-spirit-name="${i.name}">
         <div class="rank-number">${o+1}</div>
-        <div class="spirit-image-container"><img src="${s.image}" alt="${s.name}" class="spirit-image"></div>
-        <div class="spirit-name">${s.name}</div>
+        <div class="spirit-image-container"><img src="${i.image}" alt="${i.name}" class="spirit-image"></div>
+        <div class="spirit-name">${i.name}</div>
         <div class="spirit-stat">${f}</div>
       </div>
-    `}),e+="</div>",i.innerHTML=e}function E(t){let i="";return t.gradeCounts&&(i+=Object.entries(t.gradeCounts).filter(([,a])=>a>=2).map(([a,e])=>`<span class="grade-tag grade-tag-${a==="전설"?"legend":"immortal"}">${a} x${e}</span>`).join(" ")),t.factionCounts&&(i+=Object.entries(t.factionCounts).filter(([,a])=>a>=2).map(([a,e])=>{const s=k[a]||"";return`<span class="faction-tag" title="${a}">
-                    <img src="${s}" class="faction-icon" alt="${a}">
+    `}),e+="</div>",s.innerHTML=e}function E(t){let s="";return t.gradeCounts&&(s+=Object.entries(t.gradeCounts).filter(([,a])=>a>=2).map(([a,e])=>`<span class="grade-tag grade-tag-${a==="전설"?"legend":"immortal"}">${a} x${e}</span>`).join(" ")),t.factionCounts&&(s+=Object.entries(t.factionCounts).filter(([,a])=>a>=2).map(([a,e])=>{const i=k[a]||"";return`<span class="faction-tag" title="${a}">
+                    <img src="${i}" class="faction-icon" alt="${a}">
                     ${a} x${e}
-                  </span>`}).join(" ")),i}function M(){const t=n.statSelector;t.innerHTML="",t.appendChild(d("option","",{value:"bind",text:"장착효과(환산)"})),t.appendChild(d("option","",{value:"registration",text:"등록효과(환산)"})),Object.keys(g).sort().forEach(a=>{t.appendChild(d("option","",{value:a,text:g[a]}))}),t.value=r.currentStatKey}function x(){n.container.addEventListener("click",u),n.statSelector.addEventListener("change",v),n.rankingsContainer.addEventListener("click",p)}function u(t){const i=t.target.closest("#rankingCategoryTabs .tab");if(i&&!i.classList.contains("active")){n.subTabs.querySelector(".tab.active").classList.remove("active"),i.classList.add("active"),r.currentCategory=i.dataset.category,document.getElementById("rankingCategoryTitle").textContent=r.currentCategory,c();return}const a=t.target.closest(".ranking-type-selector .filter-btn");if(a&&!a.classList.contains("active")){n.container.querySelector(".ranking-type-selector .filter-btn.active").classList.remove("active"),a.classList.add("active"),r.currentRankingType=a.dataset.type,n.statSelectorContainer.style.display=r.currentRankingType==="stat"?"flex":"none",document.getElementById("rankingTypeTitle").textContent=a.textContent,c();return}const e=t.target.closest(".spirit-image, .stat-card");if(e&&!t.target.classList.contains("view-ranking-details")){const s=e.alt||e.dataset.spiritName,o=h.allSpirits.find(l=>l.name===s);o&&S(o,null,!0)}}function p(t){const i=t.target;if(i.classList.contains("view-ranking-details")){const a=parseInt(i.dataset.index,10),e=r.currentLoadedRankings[a];if(e){const s={combination:e.spirits,gradeScore:e.gradeScore,factionScore:e.factionScore,bindScore:e.bindScore,gradeEffects:e.gradeEffects,factionEffects:e.factionEffects,bindStats:e.bindStats||e.bindStat,spirits:e.spirits};console.log("Debug: DataForModal contents for Ranking Details:",s),C(s,!0)}else console.error("랭킹 상세 데이터를 찾을 수 없습니다:",a),alert("랭킹 상세 정보를 불러오는 데 실패했습니다.")}}function v(t){r.currentStatKey=t.target.value,c()}async function q(t){t.innerHTML=$(),n.container=t,n.subTabs=t.querySelector("#rankingCategoryTabs"),n.rankingsContainer=t.querySelector("#rankingsContainer"),n.statSelectorContainer=t.querySelector("#statSelectorContainer"),n.statSelector=t.querySelector("#statSelector"),M(),x(),await c(),console.log("환수 랭킹 페이지 초기화 완료.")}function A(){return`
+                  </span>`}).join(" ")),s}function M(){const t=n.statSelector;t.innerHTML="",t.appendChild(d("option","",{value:"bind",text:"장착효과(환산)"})),t.appendChild(d("option","",{value:"registration",text:"등록효과(환산)"})),Object.keys(g).sort().forEach(a=>{t.appendChild(d("option","",{value:a,text:g[a]}))}),t.value=r.currentStatKey}function x(){n.container.addEventListener("click",u),n.statSelector.addEventListener("change",v),n.rankingsContainer.addEventListener("click",p)}function u(t){const s=t.target.closest("#rankingCategoryTabs .tab");if(s&&!s.classList.contains("active")){n.subTabs.querySelector(".tab.active").classList.remove("active"),s.classList.add("active"),r.currentCategory=s.dataset.category,document.getElementById("rankingCategoryTitle").textContent=r.currentCategory,c();return}const a=t.target.closest(".ranking-type-selector .filter-btn");if(a&&!a.classList.contains("active")){n.container.querySelector(".ranking-type-selector .filter-btn.active").classList.remove("active"),a.classList.add("active"),r.currentRankingType=a.dataset.type,n.statSelectorContainer.style.display=r.currentRankingType==="stat"?"flex":"none",document.getElementById("rankingTypeTitle").textContent=a.textContent,c();return}const e=t.target.closest(".spirit-image, .stat-card");if(e&&!t.target.classList.contains("view-ranking-details")){const i=e.alt||e.dataset.spiritName,o=h.allSpirits.find(l=>l.name===i);o&&S(o,null,!0)}}function p(t){const s=t.target;if(s.classList.contains("view-ranking-details")){const a=parseInt(s.dataset.index,10),e=r.currentLoadedRankings[a];if(e){const i={combination:e.spirits,gradeScore:e.gradeScore,factionScore:e.factionScore,bindScore:e.bindScore,gradeEffects:e.gradeEffects,factionEffects:e.factionEffects,bindStats:e.bindStats||e.bindStat,spirits:e.spirits};C(i,!0)}else console.error("랭킹 상세 데이터를 찾을 수 없습니다:",a),alert("랭킹 상세 정보를 불러오는 데 실패했습니다.")}}function v(t){r.currentStatKey=t.target.value,c()}async function q(t){t.innerHTML=$(),n.container=t,n.subTabs=t.querySelector("#rankingCategoryTabs"),n.rankingsContainer=t.querySelector("#rankingsContainer"),n.statSelectorContainer=t.querySelector("#statSelectorContainer"),n.statSelector=t.querySelector("#statSelector"),M(),x(),await c()}function A(){return`
         <div class="content-block">
             <h2>환수 랭킹 정보 사용 안내</h2>
             <p>'바연화연'의 환수 랭킹 페이지에서는 다양한 기준(결속 점수, 특정 능력치)으로 환수의 순위를 확인할 수 있습니다. 다른 유저들의 최상위 조합이나 강력한 환수 스탯을 참고하여 여러분의 육성 목표를 세워보세요.</p>
@@ -90,4 +90,4 @@ import{a as m,f as b,h as y,s as h}from"./index-7BHmx9Br.js";import{b as d}from"
                 <li><strong>메타 파악:</strong> 특정 능력치 랭킹이 높거나 결속 랭킹에 자주 등장하는 환수들을 통해 현재 게임 내 핵심 스탯 메타가 무엇인지 파악할 수 있습니다.</li>
             </ul>
         </div>
-    `}function D(){n.container&&n.container.removeEventListener("click",u),n.statSelector&&n.statSelector.removeEventListener("change",v),n.rankingsContainer&&n.rankingsContainer.removeEventListener("click",p),console.log("환수 랭킹 페이지 정리 완료.")}export{D as cleanup,A as getHelpContentHTML,q as init};
+    `}function K(){n.container&&n.container.removeEventListener("click",u),n.statSelector&&n.statSelector.removeEventListener("change",v),n.rankingsContainer&&n.rankingsContainer.removeEventListener("click",p)}export{K as cleanup,A as getHelpContentHTML,q as init};
