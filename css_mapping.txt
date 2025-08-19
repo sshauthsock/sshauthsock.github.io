@@ -1,2 +1,2 @@
 # CSS file mapping
-assets/css/main.css,assets/css/main.min.1755571283.css
+assets/css/main.css,assets/css/main.min.1755571941.css
