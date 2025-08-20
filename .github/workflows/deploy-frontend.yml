@@ -1,0 +1,55 @@
+name: Deploy Frontend with Vite # 워크플로우 이름 변경: Vite 사용
+
+on:
+  push:
+    branches:
+      - main
+    paths: # Vite 프로젝트 파일들을 감지
+      - "index.html" # 루트의 index.html
+      - "public/**" # public/ 디렉토리 (assets, ads.txt 등)
+      - "js/**" # js/ 디렉토리 (JS 소스 코드)
+      - "package.json" # 의존성 변경 감지용
+      - "package-lock.json" # 의존성 변경 감지용
+      - "vite.config.js" # Vite 설정 파일 변경 감지용
+      - "!.github/**" # 워크플로우 파일 제외
+      - "!backend/**" # 백엔드 디렉토리 제외
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages-frontend"
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20" # 여러분의 Node.js 버전에 맞춰
+
+      - name: Install dependencies # package.json에 정의된 모든 의존성 설치
+        run: npm install
+
+      - name: Build frontend with Vite # Vite를 사용하여 프론트엔드 빌드
+        run: npm run build # package.json의 "build" 스크립트 실행 (Vite가 자동으로 dist/ 생성)
+
+      - name: Add .nojekyll # GitHub Pages가 Jekyll 빌드 시스템을 사용하지 않도록 `.nojekyll` 파일 생성
+        # Vite 빌드 결과는 `dist/`에 있으므로, `dist/.nojekyll` 생성
+        run: touch dist/.nojekyll
+
+      - name: Deploy Frontend to GitHub Pages # JamesIves 액션을 사용하여 GitHub Pages 배포
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages # 배포할 브랜치
+          folder: dist # Vite 빌드 결과물은 dist/ 에 있음
+          clean: true # 이전 내용 정리
+          force: true # 충돌 시 강제 푸시 (필요에 따라)

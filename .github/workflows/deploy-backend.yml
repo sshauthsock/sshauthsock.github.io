@@ -1,0 +1,60 @@
+name: Deploy Backend # 워크플로우 이름: 백엔드 배포
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**" # backend 디렉토리 내의 변경사항에만 반응 (Go 소스 코드)
+      - "Dockerfile" # Dockerfile이 루트에 있으므로 이 파일 변경 시에도 트리거
+
+jobs:
+  deploy-backend: # 잡 이름: 백엔드 배포
+    runs-on: ubuntu-latest # GitHub Actions는 Ubuntu 가상 환경에서 실행
+
+    # 환경 변수 정의
+    env:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      AR_LOCATION: ${{ secrets.AR_LOCATION }} # asia-northeast3
+      AR_REPO_NAME: ${{ secrets.AR_REPO_NAME }}
+      CR_SERVICE_NAME: ${{ secrets.CR_SERVICE_NAME }}
+
+    permissions:
+      contents: read # 저장소 코드 체크아웃 권한
+      # id-token: write # JSON 키 사용 시 불필요 (제거)
+
+    steps:
+      - name: Checkout repository # GitHub 저장소 코드를 가상 환경으로 가져옴
+        uses: actions/checkout@v4 # 최신 버전 사용 권장
+
+      - name: Authenticate to Google Cloud with JSON Key # Google Cloud 인증 (JSON 키 사용)
+        uses: "google-github-actions/auth@v2"
+        with:
+          project_id: ${{ env.GCP_PROJECT_ID }}
+          credentials_json: ${{ secrets.GCP_SA_KEY_FOR_BUILD }}
+
+      - name: Set up Cloud SDK (gcloud CLI) # gcloud CLI 도구 설치 및 초기 설정
+        uses: "google-github-actions/setup-gcloud@v2"
+
+      - name: Configure Docker for Google Artifact Registry # Docker를 Artifact Registry에 인증하도록 설정
+        # ★★★ 핵심 수정: 환경 변수 참조 방식을 ${VAR} 대신 "$VAR" 또는 직접 ${{ env.VAR }} 로 변경 ★★★
+        # gcloud auth configure-docker 명령은 JSON 키로 인증된 gcloud CLI를 통해 Docker를 구성합니다.
+        # AR_LOCATION이 정확히 전달되도록 강제합니다.
+        run: gcloud auth configure-docker "${{ env.AR_LOCATION }}-docker.pkg.dev" --project="${{ env.GCP_PROJECT_ID }}"
+
+      - name: Build and Push Docker image # Docker 이미지 빌드 및 푸시
+        # ★★★ 이 스텝의 이미지 이름에서도 환경 변수 참조 방식 변경 ★★★
+        run: |
+          docker build -t "${{ env.AR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPO_NAME }}/${{ env.CR_SERVICE_NAME }}:latest" .
+          docker push "${{ env.AR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPO_NAME }}/${{ env.CR_SERVICE_NAME }}:latest"
+
+      - name: Deploy new image to Cloud Run # Cloud Run 서비스에 새로운 이미지 배포 (업데이트)
+        # ★★★ 이 스텝의 이미지 이름 및 리전/프로젝트 환경 변수 참조 방식 변경 ★★★
+        run: |
+          gcloud run deploy ${{ env.CR_SERVICE_NAME }} \
+            --image "${{ env.AR_LOCATION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPO_NAME }}/${{ env.CR_SERVICE_NAME }}:latest" \
+            --platform managed \
+            --region "${{ env.AR_LOCATION }}" \
+            --project="${{ env.GCP_PROJECT_ID }}" \
+            --allow-unauthenticated \
+            --service-account=${{ secrets.GCP_RUNTIME_SA_EMAIL }}

@@ -1,0 +1,69 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+node_modules/*
+/archived/*
+
+# Compiled Go binaries
+*.exe
+*.dll
+*.so
+*.dylib
+*.wasm
+*.bin
+
+# Test binaries
+*_test
+
+# Build artifacts
+/build/
+/dist/
+/pkg/
+
+# Dependency directories (if using Go Modules vendoring)
+/vendor/
+
+# Log files
+*.log
+
+# IDE-specific files
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# Environment variables (if used for local config)
+.env
+
+backend/serviceAccountKey.json
+
+# Terraform
+.terraform/
+*.tfplan
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform.lock.hcl
+terraform/*
