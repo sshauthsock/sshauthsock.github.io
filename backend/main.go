@@ -37,9 +37,7 @@ type CreatureInfo struct {
 	Image     string      `json:"image" firestore:"image"`
 	Stats     []StatValue `json:"stats" firestore:"stats"`
 }
-type FirestoreCreatureDocument struct {
-	Data []CreatureInfo `firestore:"data"`
-}
+
 type BondCalculationRequest struct {
 	Creatures []CreatureInput `json:"creatures"`
 }
@@ -166,8 +164,14 @@ type App struct {
 func NewApp(ctx context.Context) (*App, error) {
 	var appOpts []option.ClientOption
 
+	projectID := os.Getenv("GCP_PROJECT_ID")
+	if projectID == "" {
+		projectID = "baram-yeon"
+		log.Printf("Warning: GCP_PROJECT_ID environment variable not set. Using default: %s", projectID)
+	}
+
 	conf := &firebase.Config{
-		ProjectID: "baram-yeon",
+		ProjectID: projectID,
 	}
 
 	app, err := firebase.NewApp(ctx, conf, appOpts...)
@@ -204,11 +208,12 @@ func (a *App) loadAllCreatureData(ctx context.Context) error {
 	a.dataLoadMutex.Lock()
 	defer a.dataLoadMutex.Unlock()
 
-	log.Println("Loading and merging all creature data from Firestore...")
-	staticInfoMap := make(map[string]CreatureInfo)
-	statsMap := make(map[string]map[int]*StatValue)
-	iter := a.firestoreClient.Collection("jsonData").Documents(ctx)
+	log.Println("Loading all creature data from the 'creatures' collection...")
+
+	iter := a.firestoreClient.Collection("creatures").Documents(ctx)
 	defer iter.Stop()
+
+	var finalCreatureList []CreatureInfo
 
 	for {
 		doc, err := iter.Next()
@@ -216,61 +221,24 @@ func (a *App) loadAllCreatureData(ctx context.Context) error {
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("failed to iterate creature documents: %w", err)
+			return fmt.Errorf("failed to iterate creature documents from 'creatures' collection: %w", err)
 		}
 
-		var firestoreDoc FirestoreCreatureDocument
-		if err := doc.DataTo(&firestoreDoc); err != nil {
-			// Specific handling for common unmarshalling error which might not be fatal to all docs
-			if !strings.Contains(err.Error(), "firestore: cannot set value of type") {
-				log.Printf("Warning: Failed to convert document %s to CreatureData. Skipping. %v", doc.Ref.ID, err)
-			}
+		var creature CreatureInfo
+		if err := doc.DataTo(&creature); err != nil {
+			log.Printf("Warning: Failed to convert document %s to CreatureInfo from 'creatures' collection. Skipping. %v", doc.Ref.ID, err)
 			continue
 		}
 
-		for _, partialCreature := range firestoreDoc.Data {
-			staticInfoMap[partialCreature.Name] = CreatureInfo{
-				Grade:     partialCreature.Grade,
-				Type:      partialCreature.Type,
-				Influence: partialCreature.Influence,
-				Name:      partialCreature.Name,
-				Image:     partialCreature.Image,
-			}
-			if _, ok := statsMap[partialCreature.Name]; !ok {
-				statsMap[partialCreature.Name] = make(map[int]*StatValue)
-			}
-			for _, partialStat := range partialCreature.Stats {
-				if _, ok := statsMap[partialCreature.Name][partialStat.Level]; !ok {
-					statsMap[partialCreature.Name][partialStat.Level] = &StatValue{Level: partialStat.Level}
-				}
-				targetStat := statsMap[partialCreature.Name][partialStat.Level]
-				if partialStat.RegistrationStat != nil {
-					targetStat.RegistrationStat = partialStat.RegistrationStat
-				}
-				if partialStat.BindStat != nil {
-					targetStat.BindStat = partialStat.BindStat
-				}
-			}
-		}
+		sort.Slice(creature.Stats, func(i, j int) bool {
+			return creature.Stats[i].Level < creature.Stats[j].Level
+		})
+
+		finalCreatureList = append(finalCreatureList, creature)
 	}
 
-	finalCreatureList := make([]CreatureInfo, 0, len(staticInfoMap))
-	for name, staticInfo := range staticInfoMap {
-		completeCreature := staticInfo
-		if levelStats, ok := statsMap[name]; ok {
-			sortedStats := make([]StatValue, 0, len(levelStats))
-			for _, statValue := range levelStats {
-				sortedStats = append(sortedStats, *statValue)
-			}
-			sort.Slice(sortedStats, func(i, j int) bool {
-				return sortedStats[i].Level < sortedStats[j].Level
-			})
-			completeCreature.Stats = sortedStats
-		}
-		finalCreatureList = append(finalCreatureList, completeCreature)
-	}
 	a.creatureData = finalCreatureList
-	log.Printf("Successfully loaded and merged %d unique creature data entries.", len(a.creatureData))
+	log.Printf("Successfully loaded %d unique creature data entries from 'creatures' collection.", len(a.creatureData))
 	return nil
 }
 
@@ -289,6 +257,7 @@ func (a *App) loadChakDataFromFirestore(ctx context.Context) error {
 	a.dataLoadMutex.Lock()
 	defer a.dataLoadMutex.Unlock()
 	log.Println("Loading chak data from Firestore...")
+	// chakData still in jsonData
 	doc, err := a.firestoreClient.Collection("jsonData").Doc("data-1745204108850").Get(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get chakData from Firestore: %w", err)
@@ -336,8 +305,6 @@ func (a *App) loadChakDataFromFirestore(ctx context.Context) error {
 }
 
 func main() {
-	// 로컬 환경에서만 .env 파일을 로드하도록 설정 (프로덕션 환경에서는 환경 변수가 직접 주입됨)
-	// godotenv.Load()는 현재 작업 디렉토리에서 .env 파일을 찾습니다.
 	err := godotenv.Load()
 	if err != nil {
 		log.Printf("Warning: .env file not loaded: %v (This is normal in production environments)", err)
@@ -353,7 +320,7 @@ func main() {
 	defer app.Close()
 
 	var wg sync.WaitGroup
-	errChan := make(chan error, 2)
+	errChan := make(chan error, 2) // creature data와 chak data 로드
 
 	wg.Add(1)
 	go func() {
@@ -371,7 +338,7 @@ func main() {
 		}
 	}()
 
-	app.loadSoulExpTableData()
+	app.loadSoulExpTableData() // 이 함수는 Firestore에 접근하지 않으므로 그대로 둡니다.
 
 	wg.Wait()
 	close(errChan)
@@ -409,6 +376,7 @@ func main() {
 	router.Run(":" + os.Getenv("PORT"))
 }
 
+// ======== 핸들러 함수들 ========
 func (a *App) checkDataReady(c *gin.Context) bool {
 	a.dataLoadMutex.RLock()
 	defer a.dataLoadMutex.RUnlock()
@@ -428,7 +396,6 @@ func (a *App) getAllData(c *gin.Context) {
 	c.JSON(http.StatusOK, a.creatureData)
 }
 
-// calculateBond handles requests for bond calculation or optimal combination finding.
 func (a *App) calculateBond(c *gin.Context) {
 	if !a.checkDataReady(c) {
 		return
@@ -532,7 +499,7 @@ func (a *App) calculateSoulHandler(c *gin.Context) {
 	}
 	var req SoulCalculationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("ERROR: SoulCalculationRequest JSON binding failed: %v", err) // DEBUG: 추가 로그
+		log.Printf("ERROR: SoulCalculationRequest JSON binding failed: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: " + err.Error()})
 		return
 	}
@@ -542,7 +509,7 @@ func (a *App) calculateSoulHandler(c *gin.Context) {
 
 	result, err := calculateSoulStats(req, a.soulExpTable) // Pass a.soulExpTable
 	if err != nil {
-		log.Printf("ERROR: calculateSoulStats failed: %v", err) // DEBUG: 추가 로그
+		log.Printf("ERROR: calculateSoulStats failed: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -561,7 +528,7 @@ func (a *App) getChakData(c *gin.Context) {
 	a.dataLoadMutex.RLock()
 	defer a.dataLoadMutex.RUnlock()
 
-	if a.rawChakData == nil || a.chakConstants.Parts == nil { // Check both components of chak data
+	if a.rawChakData == nil || a.chakConstants.Parts == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Chak data not loaded"})
 		return
 	}
@@ -575,7 +542,6 @@ func (a *App) getChakData(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// calculateChakHandler handles chak calculation requests.
 func (a *App) calculateChakHandler(c *gin.Context) {
 	if !a.checkDataReady(c) {
 		return
@@ -589,14 +555,15 @@ func (a *App) calculateChakHandler(c *gin.Context) {
 	a.dataLoadMutex.RLock()
 	defer a.dataLoadMutex.RUnlock()
 
-	// Delegate calculation to a separate function
-	result, err := calculateChakStats(req, a.rawChakData, a.chakCosts) // Pass a.rawChakData and a.chakCosts
+	result, err := calculateChakStats(req, a.rawChakData, a.chakCosts)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, result)
 }
+
+// ======== 헬퍼 함수들 ========
 
 func calculateBondRankings(category string, allCreatureData []CreatureInfo) []BondRankingItem {
 	var allCategoryCreatures []CreatureInfo
@@ -625,7 +592,7 @@ func calculateBondRankings(category string, allCreatureData []CreatureInfo) []Bo
 					for k, v := range s.RegistrationStat {
 						// Summing up if key exists, otherwise add
 						if existingVal, ok := combinedStats[k]; ok {
-							combinedStats[k] = toFloat(existingVal) + toFloat(v)
+							combinedStats[k] = ToFloat(existingVal) + ToFloat(v) // utils.ToFloat 사용
 						} else {
 							combinedStats[k] = v
 						}
@@ -653,8 +620,8 @@ func calculateBondRankings(category string, allCreatureData []CreatureInfo) []Bo
 		return scoreA > scoreB
 	})
 
-	// 이 값을 조절하여 계산 부하를 관리하세요. (예: 10, 12, 15)
-	maxCandidatesForCombination := 15 // << 이 값을 조절하세요!
+	// maxCandidatesForCombination 값을 조절하여 계산 부하를 관리. (예: 10, 12, 15)
+	maxCandidatesForCombination := 15
 	var candidatesForRanking []CreatureInfo
 	if len(allCategoryCreatures) > maxCandidatesForCombination {
 		candidatesForRanking = allCategoryCreatures[:maxCandidatesForCombination]
@@ -720,19 +687,15 @@ func calculateStatRankings(category string, statKey string, allCreatureData []Cr
 					} else if isRegScore && stat.RegistrationStat != nil {
 						totalValue = calculateWeightedScore(stat.RegistrationStat)
 					} else { // Specific stat key (e.g., "damageResistance")
-						// 해당 statKey가 있는지 확인
 						bindVal, bindOk := stat.BindStat[statKey]
 						regVal, regOk := stat.RegistrationStat[statKey]
 
 						if !bindOk && !regOk {
-							// statKey가 BindStat과 RegistrationStat 둘 다에 없는 경우
-							// totalValue는 0으로 유지. (이 값이 프론트엔드로 전송됨)
 							totalValue = 0.0
 							log.Printf("Debug: StatKey '%s' not found for creature '%s' at Lv 25. Value set to 0.0", statKey, creature.Name)
 						} else {
-							// statKey가 하나라도 존재하면 toFloat로 변환하여 합산
-							convertedBindVal := toFloat(bindVal)
-							convertedRegVal := toFloat(regVal)
+							convertedBindVal := ToFloat(bindVal) // utils.ToFloat 사용
+							convertedRegVal := ToFloat(regVal)   // utils.ToFloat 사용
 							totalValue = convertedBindVal + convertedRegVal
 							log.Printf("Debug: Creature '%s' StatKey '%s' (Bind: %v, Reg: %v) -> Calculated totalValue: %f", creature.Name, statKey, bindVal, regVal, totalValue)
 						}
@@ -741,8 +704,6 @@ func calculateStatRankings(category string, statKey string, allCreatureData []Cr
 				}
 			}
 
-			// totalValue가 0이더라도 (해당 스탯이 0인 경우) StatRankingItem을 추가
-			// 이렇게 하면 프론트엔드에서 0으로 표시되며 N/A가 방지됨
 			results = append(results, StatRankingItem{
 				Name:      creature.Name,
 				Image:     creature.Image,
@@ -753,7 +714,6 @@ func calculateStatRankings(category string, statKey string, allCreatureData []Cr
 	}
 
 	sort.Slice(results, func(i, j int) bool {
-		// Value가 float64이므로 이제 toFloat로 감쌀 필요 없음
 		return results[i].Value > results[j].Value
 	})
 
@@ -792,64 +752,17 @@ func countFactions(combo []CreatureInfo) map[string]int {
 // calculateWeightedScore calculates a specific score based on predefined stats.
 func calculateWeightedScore(stats map[string]interface{}) float64 {
 	var score float64
-	score += toFloat(stats["damageResistancePenetration"])
-	score += toFloat(stats["damageResistance"])
-	score += toFloat(stats["pvpDamagePercent"]) * 10
-	score += toFloat(stats["pvpDefensePercent"]) * 10
+	score += ToFloat(stats["damageResistancePenetration"]) // utils.ToFloat 사용
+	score += ToFloat(stats["damageResistance"])            // utils.ToFloat 사용
+	score += ToFloat(stats["pvpDamagePercent"]) * 10       // utils.ToFloat 사용
+	score += ToFloat(stats["pvpDefensePercent"]) * 10      // utils.ToFloat 사용
 	return score
 }
-
-// toFloat safely converts an interface{} value to float64.
-// This is used for values read from Firestore which could be int64, float64, string etc.
-func toFloat(v interface{}) float64 {
-	if v == nil {
-		log.Printf("Debug: toFloat received nil value. Returning 0.0")
-		return 0.0 // nil인 경우 0.0 반환
-	}
-	switch val := v.(type) {
-	case float64:
-		return val
-	case float32:
-		return float64(val)
-	case int:
-		return float64(val)
-	case int32:
-		return float64(val)
-	case int64:
-		return float64(val)
-	case string:
-		// 문자열인 경우 콤마 제거 후 파싱 시도
-		cleanString := strings.ReplaceAll(val, ",", "")
-		parsedFloat, err := strconv.ParseFloat(cleanString, 64)
-		if err != nil {
-			log.Printf("Warning: toFloat: Could not parse string value '%s' to float. Error: %v", val, err)
-			return 0.0 // 파싱 실패 시 0.0 반환
-		}
-		return parsedFloat
-	case bool: // Firestore에서 bool도 올 수 있으므로 처리 (예: "is_active": true)
-		if val {
-			return 1.0
-		}
-		return 0.0
-	case map[string]interface{}: // JSON 객체로 넘어오는 경우 (오류 가능성)
-		log.Printf("Warning: toFloat: Received map[string]interface{} type, which cannot be converted to float: %v", val)
-		return 0.0
-	case []interface{}: // JSON 배열로 넘어오는 경우 (오류 가능성)
-		log.Printf("Warning: toFloat: Received []interface{} type, which cannot be converted to float: %v", val)
-		return 0.0
-	default:
-		// 예상치 못한 다른 타입이 들어온 경우 경고 로깅
-		log.Printf("Warning: toFloat: Unsupported type for conversion: %T. Value: %v", v, v)
-		return 0.0
-	}
-}
-
-// ================== 추가된 계산 로직 (App 외부에 유지, 필요한 데이터 인자로 받음) ==================
 
 // calculateSoulStats calculates required and reachable levels for soul enhancement.
 func calculateSoulStats(req SoulCalculationRequest, expTable map[string][]int) (SoulCalculationResult, error) {
 	log.Printf("DEBUG: calculateSoulStats called with CurrentLevel: %d, TargetLevel: %d, Type: %s, OwnedSouls: %+v",
-		req.CurrentLevel, req.TargetLevel, req.Type, req.OwnedSouls) // DEBUG: 입력값 로깅
+		req.CurrentLevel, req.TargetLevel, req.Type, req.OwnedSouls)
 
 	soulExpTableForType, ok := expTable[req.Type]
 	if !ok {
@@ -857,8 +770,6 @@ func calculateSoulStats(req SoulCalculationRequest, expTable map[string][]int) (
 	}
 
 	totalRequiredExp := 0
-	// targetLevel이 배열의 유효 인덱스 범위 내에 있는지 확인 (0부터 len-1까지)
-	// 배열 길이가 26이면 인덱스 0~25 사용 가능. targetLevel 25는 인덱스 25.
 	if req.TargetLevel > req.CurrentLevel {
 		if req.TargetLevel >= len(soulExpTableForType) {
 			return SoulCalculationResult{}, fmt.Errorf("target level %d is out of bounds for %s type (max %d)", req.TargetLevel, req.Type, len(soulExpTableForType)-1)
@@ -867,7 +778,6 @@ func calculateSoulStats(req SoulCalculationRequest, expTable map[string][]int) (
 			totalRequiredExp += soulExpTableForType[i]
 		}
 	} else if req.TargetLevel <= req.CurrentLevel {
-		// 목표 레벨이 현재 레벨보다 낮거나 같으면 경험치 필요 없음 (이미 도달)
 		log.Printf("DEBUG: TargetLevel (%d) is <= CurrentLevel (%d), no exp required.", req.TargetLevel, req.CurrentLevel)
 		totalRequiredExp = 0
 	}
@@ -906,15 +816,14 @@ func calculateSoulStats(req SoulCalculationRequest, expTable map[string][]int) (
 		}
 	}
 	maxLevelInfo.RemainingExp = remainingOwnedExp
-	// Check for potential out of bounds if maxLevelInfo.Level is already at the max level in table
-	if maxLevelInfo.Level < len(soulExpTableForType)-1 { // Max level index is typically len-1
+	if maxLevelInfo.Level < len(soulExpTableForType)-1 {
 		maxLevelInfo.NextLevelExp = soulExpTableForType[maxLevelInfo.Level+1]
 		if maxLevelInfo.NextLevelExp > 0 {
 			maxLevelInfo.ProgressPercent = (remainingOwnedExp * 100) / maxLevelInfo.NextLevelExp
 		}
 	} else {
-		maxLevelInfo.NextLevelExp = 0      // No next level
-		maxLevelInfo.ProgressPercent = 100 // At max level, progress is 100%
+		maxLevelInfo.NextLevelExp = 0
+		maxLevelInfo.ProgressPercent = 100
 	}
 	log.Printf("DEBUG: MaxLevelInfo after calculation: %+v", maxLevelInfo)
 
@@ -922,7 +831,7 @@ func calculateSoulStats(req SoulCalculationRequest, expTable map[string][]int) (
 	maxLevelInfo.IsTargetReachable = maxLevelInfo.Level >= req.TargetLevel
 	if !requiredSouls.IsSufficient {
 		neededExp := totalRequiredExp - ownedExp
-		if neededExp < 0 { // Should theoretically not happen if IsSufficient is false, but as a safeguard
+		if neededExp < 0 {
 			neededExp = 0
 		}
 		maxLevelInfo.ExpShortage = neededExp
@@ -930,7 +839,7 @@ func calculateSoulStats(req SoulCalculationRequest, expTable map[string][]int) (
 		neededExp %= SOUL_VALUES["high"]
 		requiredSouls.Needed["mid"] = neededExp / SOUL_VALUES["mid"]
 		neededExp %= SOUL_VALUES["mid"]
-		requiredSouls.Needed["low"] = (neededExp + SOUL_VALUES["low"] - 1) / SOUL_VALUES["low"] // Round up
+		requiredSouls.Needed["low"] = (neededExp + SOUL_VALUES["low"] - 1) / SOUL_VALUES["low"]
 		log.Printf("DEBUG: Needed souls (high: %d, mid: %d, low: %d)", requiredSouls.Needed["high"], requiredSouls.Needed["mid"], requiredSouls.Needed["low"])
 	}
 
@@ -945,11 +854,8 @@ func calculateChakStats(req ChakCalculationRequest, rawChakData map[string]map[s
 	summary := make(map[string]int)
 	var consumedGold, consumedBalls int
 
-	// First pass to aggregate stats
 	for _, state := range req.StatState {
 		if state.IsUnlocked {
-			// Frontend logic strips numbers from stat names for display.
-			// Replicate that here to match the frontend summary keys.
 			displayName := strings.TrimRightFunc(state.StatName, func(r rune) bool {
 				return unicode.IsDigit(r)
 			})
@@ -957,23 +863,15 @@ func calculateChakStats(req ChakCalculationRequest, rawChakData map[string]map[s
 		}
 	}
 
-	// Second pass to calculate costs
 	for _, state := range req.StatState {
 		if !state.IsUnlocked {
-			continue // Only unlocked stats incur costs
+			continue
 		}
 
 		if state.IsFirst {
-			// For the 'first' unlocked stat in a part/level combo,
-			// each level (including level 0 if considered 'unlocked') costs 'upgradeFirst'
-			// The frontend logic shows: Level 1 costs upgradeFirst (500), Level 2 costs another 500, Level 3 costs another 500.
-			// So, total cost is level * upgradeFirst.
 			consumedBalls += state.Level * chakCosts["upgradeFirst"]
 		} else {
-			// For subsequent unlocked stats in the same part/level combo:
-			// Unlock cost (Gold Button) is paid once regardless of level.
 			consumedGold += chakCosts["unlockOther"]
-			// Upgrade costs (FiveColoredBeads) are cumulative based on level.
 			if state.Level >= 1 {
 				consumedBalls += chakCosts["upgradeOther0"]
 			}

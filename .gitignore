@@ -67,3 +67,10 @@ backend/serviceAccountKey.json
 *.tfvars
 .terraform.lock.hcl
 terraform/*
+
+data_backup/*
+integrated_creatures_data/*
+generate_integrated_creatures_json.py
+upload_integrated_creatures_to_firestore.py
+
+db-admin-tool/*

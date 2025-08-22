@@ -8277,10 +8277,8 @@ input:focus {
 /* === Optimal Result Modal Improvements === */
 #optimalModal .modal-content {
     max-width: 1000px;
-    /* 모달 너비 확장 */
     width: 95%;
     padding-right: 45px;
-    /* 닫기 버튼 공간 확보 */
     overflow-x: hidden;
 }
 
@@ -8294,7 +8292,6 @@ input:focus {
     border-radius: var(--radius-md);
     margin-bottom: var(--space-md);
     position: relative;
-    /* 닫기 버튼과 겹치지 않도록 */
 }
 
 .modal-main-title {
@@ -8428,7 +8425,6 @@ input:focus {
 .combination-results-container {
     background-color: var(--bg-lighter);
     padding: var(--space-md);
-    /* 그리드 주변에 여백 추가 */
     border-radius: var(--radius-md);
     margin-bottom: var(--space-lg);
 }
@@ -8438,7 +8434,6 @@ input:focus {
     grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     gap: var(--radius-sm);
     justify-content: center;
-    /* 그리드 아이템이 남을 경우 중앙 정렬 */
 }
 
 .spirit-info-item {
@@ -8475,7 +8470,6 @@ input:focus {
     font-size: var(--text-xs);
     line-height: 1.2;
     height: 20px;
-    /* 2줄 높이 확보 */
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -8491,7 +8485,6 @@ input:focus {
 /* Effects Sections */
 .results-container {
     display: grid;
-    /* 화면 크기에 따라 1~3단으로 자동 조절, 각 컬럼의 최소 너비 280px */
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: var(--space-md);
     margin-bottom: var(--space-lg);
@@ -8620,6 +8613,37 @@ input:focus {
     font-size: var(--text-xs);
 }
 
+.seo-hidden-content {
+    /* 초기에는 화면에서 숨기지만, 크롤러는 읽을 수 있도록. */
+    /* display: none; 보다는 position: absolute; left: -9999px; 가 더 안전하다고 알려져 있습니다. */
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+
+}
+
+/* SEO 콘텐츠 섹션의 기본 스타일 (시각적으로 숨겨져 있어도 구조 유지를 위함) */
+.seo-hidden-content h2,
+.seo-hidden-content h3,
+.seo-hidden-content p,
+.seo-hidden-content ul {
+    margin-bottom: 1em;
+    line-height: 1.6;
+    color: #333;
+}
+
+.seo-hidden-content ul {
+    list-style-type: disc;
+    padding-left: 1.5em;
+}
+
+.seo-hidden-content strong {
+    font-weight: bold;
+}
+
 @media (max-width: 768px) {
     .results-container {
         grid-template-columns: repeat(2, 1fr);
@@ -8627,7 +8651,6 @@ input:focus {
 
     #optimalModal .modal-content {
         padding-right: var(--space-md);
-        /* 모바일에서는 패딩 기본값으로 */
     }
 
     .optimal-header {
@@ -8674,7 +8697,6 @@ input:focus {
 .spirits-stats-table tr.stat-damage-resistance-penetration th,
 .spirits-stats-table tr.stat-pvp-defense-percent th,
 .spirits-stats-table tr.stat-pvp-damage-percent th {
-    /* highlighted row의 th는 배경색을 유지하거나 살짝 다르게 */
     background-color: inherit;
 }
 
@@ -8711,27 +8733,18 @@ input:focus {
 /* 랭킹 테이블 내 '상세보기' 버튼의 크기 및 패딩 조정 */
 .btn.view-ranking-details {
     padding: 4px 8px;
-    /* 더 작은 패딩 */
     font-size: var(--text-xs);
-    /* 더 작은 글꼴 */
     min-height: 24px;
-    /* 최소 높이 조정 */
     line-height: 1;
-    /* 텍스트 정렬 */
     border-radius: var(--radius-sm);
-    /* 좀 더 둥근 모서리 */
 }
 
 /* 랭킹 테이블의 '상세보기' 버튼이 들어갈 열 스타일 */
 .ranking-table .action-column {
     width: 80px;
-    /* 적절한 너비 설정 */
     text-align: center;
-    /* 버튼을 중앙 정렬 */
     vertical-align: middle;
-    /* 세로 중앙 정렬 */
     padding: var(--space-sm) var(--radius-sm);
-    /* 패딩 조정 */
 }
 
 /* 랭킹 테이블 헤더의 '상세' 열 */
@@ -8744,31 +8757,24 @@ input:focus {
 @media (max-width: 768px) {
     .ranking-table .action-column {
         width: 60px;
-        /* 모바일에서 너비 더 줄임 */
         padding: 4px 2px;
-        /* 모바일에서 패딩 더 줄임 */
     }
 
     .btn.view-ranking-details {
         padding: 2px 4px;
-        /* 모바일에서 패딩 더 줄임 */
         font-size: 8px;
-        /* 모바일에서 글꼴 더 줄임 */
         min-height: 20px;
     }
 
     .ranking-table th,
     .ranking-table td {
         padding: 3px 2px;
-        /* 모바일에서 테이블 셀 패딩 조정 */
     }
 }
 
 .kakao-gift-btn {
     background-color: #FFEB00;
-    /* 카카오톡 대표 색상 (노란색) */
     color: #3C1E1E;
-    /* 어두운 갈색 텍스트 */
     padding: var(--radius-sm) 12px;
     border-radius: 4px;
     font-weight: 500;
@@ -8785,7 +8791,6 @@ input:focus {
 
 .kakao-gift-btn:hover {
     background-color: #FEE500;
-    /* 호버 시 색상 변경 */
     transform: translateY(-2px);
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
@@ -8799,26 +8804,18 @@ input:focus {
     display: none;
 }
 
-/* 모바일 환경 (최대 768px) */
 @media (max-width: 768px) {
-
-    /* 모바일에서는 데스크탑 광고 숨기기 */
     .ad-container.desktop-kakao-ad {
         display: none;
     }
 
-    /* 모바일에서는 모바일 광고 보이기 */
     .ad-container.mobile-kakao-ad {
         display: flex;
-        /* .ad-container의 display 속성 */
     }
 
-    /* 모바일 광고 컨테이너의 최소 높이 조정 */
     .ad-container {
         min-height: 50px;
-        /* 모바일 배너 기준 높이 (예: 320x50, 320x100) */
         margin: var(--space-sm) auto;
-        /* 모바일 마진 조정 */
     }
 }
 
@@ -8826,25 +8823,17 @@ input:focus {
     display: none;
 }
 
-/* 모바일 환경 (최대 768px) */
 @media (max-width: 768px) {
-
-    /* 모바일에서는 데스크탑 광고 숨기기 */
     .kakao-ad-modal-container.desktop-modal-ad {
         display: none;
     }
 
-    /* 모바일에서는 모바일 광고 보이기 */
     .kakao-ad-modal-container.mobile-modal-ad {
         display: flex;
-        /* .kakao-ad-modal-container의 display 속성 */
     }
 
-    /* 모바일 광고 컨테이너의 최소 높이 조정 */
     .kakao-ad-modal-container {
         min-height: 50px;
-        /* 모바일 배너 높이 기준으로 공간 확보 (320x50) */
         margin: var(--space-sm) auto;
-        /* 모바일 마진 조정 */
     }
 }

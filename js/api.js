@@ -3,6 +3,8 @@
 
 const BASE_URL = "https://wind-app-backend-y7qnnpfkrq-du.a.run.app";
 
+// const BASE_URL = "http://localhost:8080"; // for the local test
+
 const memoryCache = {};
 
 function _transformSpiritImagePath(spirit) {

@@ -5,15 +5,9 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
-	"strings"
 	"unicode"
 )
 
-// ================== 데이터 정의 시작 ==================
-
-// NOTE: percentStats and gradeSetEffects, factionSetEffects are constants.
-// For larger applications, these might be loaded from config files or a database.
-// For this scope, hardcoding them here is acceptable and aligns with the original design.
 var percentStats = map[string]bool{
 	"healthIncreasePercent":   true,
 	"magicIncreasePercent":    true,
@@ -114,7 +108,6 @@ var gradeSetEffects = map[string]map[string]map[string]map[string]float64{
 	},
 }
 
-// FactionEffectStep 구조체: 세력 효과의 각 단계를 정의
 type FactionEffectStep struct {
 	CriticalChance                int `json:"criticalChance,omitempty"`
 	HealthIncreasePercent         int `json:"healthIncreasePercent,omitempty"`
@@ -274,10 +267,6 @@ var factionSetEffects = map[string]map[string][]FactionEffectStep{
 	},
 }
 
-// ================== 데이터 정의 끝 ====================
-
-// calculateCombinationStats calculates the total stats, grade effects, and faction effects for a given combination of creatures.
-// It now explicitly receives allCreatureData.
 func calculateCombinationStats(combination []CreatureInput, category string, allCreatureData []CreatureInfo) CalculationResult {
 	// 1. 점수 계산용 맵: 오직 'bindStat'만 합산하여 저장
 	totalBondStats := make(map[string]float64)
@@ -345,14 +334,14 @@ func calculateCombinationStats(combination []CreatureInput, category string, all
 		// 화면 표시용으로 registrationStat 합산
 		if levelStat.RegistrationStat != nil {
 			for key, value := range levelStat.RegistrationStat {
-				totalDisplayStats[key] += parseFloat(value)
+				totalDisplayStats[key] += ToFloat(value) // utils.ToFloat 사용
 			}
 		}
 
 		// bindStat은 점수 계산용과 화면 표시용 맵 모두에 합산
 		if levelStat.BindStat != nil {
 			for key, value := range levelStat.BindStat {
-				parsedValue := parseFloat(value)
+				parsedValue := ToFloat(value)         // utils.ToFloat 사용
 				totalBondStats[key] += parsedValue    // 점수 계산용 (only bind stats contribute to 'bindScore' from problem description)
 				totalDisplayStats[key] += parsedValue // 화면 표시용 (all stats contribute to 'bindStats' in response)
 			}
@@ -479,30 +468,6 @@ func calculateScore(stats map[string]float64) float64 {
 		(stats["pvpDefensePercent"] * 10)
 }
 
-// parseFloat safely converts an interface{} value to float64.
-// This is duplicated from main.go. Consider moving to a common 'utils.go' if more such conversions are needed.
-func parseFloat(value interface{}) float64 {
-	var numValue float64
-	switch v := value.(type) {
-	case string:
-		cleanString := strings.ReplaceAll(v, ",", "")
-		if parsed, err := strconv.ParseFloat(cleanString, 64); err == nil {
-			numValue = parsed
-		} else {
-			log.Printf("Warning: Could not parse string value '%s' to float. Error: %v", v, err)
-		}
-	case float64:
-		numValue = v
-	case int64:
-		numValue = float64(v)
-	case int:
-		numValue = float64(v)
-	default:
-		log.Printf("Warning: Unsupported type for stat conversion: %T. Value: %v", v, v)
-	}
-	return numValue
-}
-
 // toStatDetailSlice converts a map of stats to a slice of StatDetail for frontend display.
 func toStatDetailSlice(m map[string]float64) []StatDetail {
 	details := make([]StatDetail, 0, len(m))
@@ -517,9 +482,6 @@ func toStatDetailSlice(m map[string]float64) []StatDetail {
 			koreanName = key // Use English key if no Korean mapping found
 		}
 
-		// Format percentage stats (assuming they end with 'Percent' or are known)
-		// This formatting might be better handled on the frontend for display flexibility.
-		// For now, keep as float64 and let frontend handle formatting.
 		details = append(details, StatDetail{
 			Name:  koreanName,
 			Key:   key,
