@@ -73,4 +73,10 @@ integrated_creatures_data/*
 generate_integrated_creatures_json.py
 upload_integrated_creatures_to_firestore.py
 
+# Firebase Service Account Key and local .env files
 db-admin-tool/*
+config/*
+
+# Local run scripts
+start-backend.sh
+start-admin-tool.sh

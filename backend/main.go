@@ -164,6 +164,11 @@ type App struct {
 func NewApp(ctx context.Context) (*App, error) {
 	var appOpts []option.ClientOption
 
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Printf("Warning: .env file not loaded from ../.env: %v (This is normal in production environments, but unexpected in local build. Check path/encoding/permissions.)", err)
+	}
+
 	projectID := os.Getenv("GCP_PROJECT_ID")
 	if projectID == "" {
 		projectID = "baram-yeon"
@@ -172,6 +177,16 @@ func NewApp(ctx context.Context) (*App, error) {
 
 	conf := &firebase.Config{
 		ProjectID: projectID,
+	}
+
+	serviceAccountPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+	if serviceAccountPath == "" {
+
+		log.Fatalf("FATAL: GOOGLE_APPLICATION_CREDENTIALS 환경 변수가 설정되지 않았습니다. 로컬 실행을 위해 .env 파일 또는 시스템 환경 변수를 통해 키 파일 경로를 지정해야 합니다 (예: ./config/serviceAccountKey.json).")
+	} else {
+		// 환경 변수가 설정되었다면, 명시적으로 서비스 계정 키 파일을 사용합니다.
+		appOpts = append(appOpts, option.WithCredentialsFile(serviceAccountPath))
+		log.Printf("Firebase 앱이 '%s' 경로의 서비스 계정 키를 사용하여 초기화됩니다.", serviceAccountPath)
 	}
 
 	app, err := firebase.NewApp(ctx, conf, appOpts...)

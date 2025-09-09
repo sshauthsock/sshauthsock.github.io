@@ -243,15 +243,11 @@ function updateResultView(result, isFromRanking) {
         <div class="spirits-grid-container">${spirits
           .map(
             (spirit) => `
-                <div class="spirit-info-item" title="${spirit.name} (Lv.${
-              spirit.level || 25
-            })">
+                <div class="spirit-info-item" title="${spirit.name} (Lv.${spirit.stats[0].level})">
                     <img src="${spirit.image}" alt="${spirit.name}">
                     <div class="spirit-info-details">
                         <div class="spirit-info-name">${spirit.name}</div>
-                        <div class="spirit-info-level">Lv.${
-                          spirit.level || 25
-                        }</div>
+                        <div class="spirit-info-level">Lv.${spirit.stats[0].level}</div>
                     </div>
                 </div>`
           )
@@ -414,7 +410,7 @@ function renderSpiritDetailsTable(spirits) {
       const fullSpiritData = globalState.allSpirits.find(
         (s) => s.name === spirit.name && s.type === spirit.type
       );
-      const actualLevel = spirit.level || 25;
+      const actualLevel = spirit.stats[0].level;
       const levelStats = fullSpiritData?.stats.find(
         (s) => s.level === actualLevel
       );

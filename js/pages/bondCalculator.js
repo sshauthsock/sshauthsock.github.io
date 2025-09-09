@@ -460,6 +460,8 @@ async function handleFindOptimal() {
     return;
   }
 
+  // console.log("creaturesForCalc = ", creaturesForCalc);
+
   const appContainer = document.getElementById("app-container");
   showLoading(
     appContainer,
@@ -472,6 +474,9 @@ async function handleFindOptimal() {
     if (!result || !result.spirits) {
       throw new Error("API에서 유효한 응답을 받지 못했습니다.");
     }
+
+    // console.log("result = ", JSON.stringify(result));
+
     addHistory(result);
     showOptimalResultModal(result, false);
   } catch (error) {
