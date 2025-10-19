@@ -353,7 +353,7 @@ func main() {
 		}
 	}()
 
-	app.loadSoulExpTableData() // 이 함수는 Firestore에 접근하지 않으므로 그대로 둡니다.
+	app.loadSoulExpTableData()
 
 	wg.Wait()
 	close(errChan)
