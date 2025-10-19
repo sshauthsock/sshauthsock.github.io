@@ -11,11 +11,13 @@ import { INFLUENCE_ROWS, GRADE_ORDER, STATS_MAPPING } from "../constants.js";
 
 const pageState = {
   currentCategory: "수호",
-  selectedSpirits: new Map(),
+  selectedSpirits: new Map(), // 선택된 환수 Map으로 관리
   groupByInfluence: false,
   currentStatFilter: "",
 };
 const elements = {};
+
+const eventListeners = {};
 
 function getHTML() {
   return `
@@ -107,7 +109,10 @@ function renderSpiritList() {
 function getSpiritsForCurrentState() {
   const extractNumber = (path) =>
     path ? parseInt(path.match(/\d+/)?.[0] || "999", 10) : 999;
-  const filtered = globalState.allSpirits.filter(
+  const allCreatures = Array.isArray(globalState.allSpirits)
+    ? globalState.allSpirits
+    : [];
+  const filtered = allCreatures.filter(
     (s) => s.type === pageState.currentCategory
   );
   filtered.sort((a, b) => {
@@ -154,9 +159,10 @@ function renderSelectedList() {
   }
 
   currentCategorySpirits.forEach((spirit) => {
-    const card = createElement("div", "selected-spirit-card", {
-      "data-spirit-name": spirit.name,
-    });
+    // --- [수정 3] createElement 호출 방식 변경: 클래스 문자열을 두 번째 인자로, 속성 객체를 세 번째 인자로 ---
+    const card = createElement("div", "selected-spirit-card"); // 클래스 문자열만 전달
+    card.dataset.spiritName = spirit.name; // data-* 속성은 직접 설정
+    // --- [수정 3 끝] ---
     card.innerHTML = `
         <button class="remove-spirit" data-action="remove" title="선택 해제">×</button>
         <div class="selected-spirit-header">
@@ -176,9 +182,10 @@ function renderSelectedList() {
     container.appendChild(card);
 
     if (mobileSelectedSpiritsContainer) {
-      const mobileCard = createElement("div", "selected-spirit-card", {
-        "data-spirit-name": spirit.name,
-      });
+      // --- [수정 3] createElement 호출 방식 변경: 클래스 문자열을 두 번째 인자로, 속성 객체를 세 번째 인자로 ---
+      const mobileCard = createElement("div", "selected-spirit-card"); // 클래스 문자열만 전달
+      mobileCard.dataset.spiritName = spirit.name; // data-* 속성은 직접 설정
+      // --- [수정 3 끝] ---
       mobileCard.innerHTML = card.innerHTML;
       mobileSelectedSpiritsContainer.appendChild(mobileCard);
     }
@@ -221,7 +228,10 @@ function initStatFilter() {
   const filterContainer = elements.container.querySelector(
     ".stat-filter-container"
   );
-  createStatFilter(filterContainer, globalState.allSpirits, (newStatKey) => {
+  const allSpiritsForFilter = Array.isArray(globalState.allSpirits)
+    ? globalState.allSpirits
+    : [];
+  createStatFilter(filterContainer, allSpiritsForFilter, (newStatKey) => {
     pageState.currentStatFilter = newStatKey;
     renderSpiritList();
   });
@@ -265,18 +275,71 @@ function onFindOptimalMobileClick() {
 }
 
 function setupEventListeners() {
-  elements.container.addEventListener("click", handleContainerClick);
-  elements.influenceToggle.addEventListener("change", handleToggleChange);
+  // --- [수정 4] cleanup() 함수에서 제거할 이벤트 리스너들을 명시적으로 정의 ---
+  // elements.container 클릭 리스너 (위임)
+  eventListeners.containerClickHandler = handleContainerClick;
+  elements.container.addEventListener(
+    "click",
+    eventListeners.containerClickHandler
+  );
+
+  // elements.bondCategoryTabs 클릭 리스너
+  eventListeners.bondCategoryTabsClickHandler = (e) => {
+    const target = e.target;
+    const subTab = target.closest(".tab");
+    if (subTab && !subTab.classList.contains("active")) {
+      elements.bondCategoryTabs
+        .querySelector(".tab.active")
+        ?.classList.remove("active");
+      subTab.classList.add("active");
+      pageState.currentCategory = subTab.dataset.category;
+      renderAll();
+    }
+  };
+  elements.bondCategoryTabs.addEventListener(
+    "click",
+    eventListeners.bondCategoryTabsClickHandler
+  );
+
+  // elements.influenceToggle change 리스너
+  eventListeners.influenceToggleChangeHandler = handleToggleChange;
+  elements.influenceToggle.addEventListener(
+    "change",
+    eventListeners.influenceToggleChangeHandler
+  );
+
+  // elements.selectedSpiritsList input 리스너
+  eventListeners.selectedSpiritsListInputHandler = handleLevelInputChange;
   elements.selectedSpiritsList.addEventListener(
     "input",
-    handleLevelInputChange
+    eventListeners.selectedSpiritsListInputHandler
   );
-  elements.selectAllBtn.addEventListener("click", handleSelectAll);
-  elements.clearAllSelectionBtn.addEventListener("click", handleClearSelection);
-  elements.applyBatchLevelBtn.addEventListener("click", () =>
-    handleBatchLevel("batchLevelInput")
+
+  // 개별 버튼 리스너 (중복 호출 방지를 위해 container 위임에서 제거했으므로, 여기에 직접 등록)
+  eventListeners.selectAllClickHandler = handleSelectAll;
+  elements.selectAllBtn.addEventListener(
+    "click",
+    eventListeners.selectAllClickHandler
   );
-  elements.findOptimalBtn.addEventListener("click", handleFindOptimal);
+
+  eventListeners.clearAllSelectionClickHandler = handleClearSelection;
+  elements.clearAllSelectionBtn.addEventListener(
+    "click",
+    eventListeners.clearAllSelectionClickHandler
+  );
+
+  eventListeners.applyBatchLevelClickHandler = () =>
+    handleBatchLevel("batchLevelInput"); // 익명 함수는 제거가 어려움.
+  elements.applyBatchLevelBtn.addEventListener(
+    "click",
+    eventListeners.applyBatchLevelClickHandler
+  );
+
+  eventListeners.findOptimalClickHandler = handleFindOptimal;
+  elements.findOptimalBtn.addEventListener(
+    "click",
+    eventListeners.findOptimalClickHandler
+  );
 
   const panelToggleBtn = document.getElementById("panelToggleBtn");
   const mobileSelectedSpiritsList = document.getElementById(
@@ -291,26 +354,44 @@ function setupEventListeners() {
   const findOptimalMobileBtn = document.getElementById("findOptimalMobileBtn");
 
   if (panelToggleBtn) {
-    panelToggleBtn.addEventListener("click", onPanelToggleBtnClick);
+    eventListeners.panelToggleBtnClickHandler = onPanelToggleBtnClick;
+    panelToggleBtn.addEventListener(
+      "click",
+      eventListeners.panelToggleBtnClickHandler
+    );
   }
   if (mobileSelectedSpiritsList) {
-    mobileSelectedSpiritsList.addEventListener("input", handleLevelInputChange);
+    eventListeners.mobileSelectedSpiritsListInputHandler =
+      handleLevelInputChange;
+    mobileSelectedSpiritsList.addEventListener(
+      "input",
+      eventListeners.mobileSelectedSpiritsListInputHandler
+    );
   }
   if (applyMobileBatchLevelBtn) {
+    eventListeners.applyMobileBatchLevelClickHandler =
+      onApplyMobileBatchLevelClick;
     applyMobileBatchLevelBtn.addEventListener(
       "click",
-      onApplyMobileBatchLevelClick
+      eventListeners.applyMobileBatchLevelClickHandler
     );
   }
   if (setMaxMobileBatchLevelBtn) {
+    eventListeners.setMaxMobileBatchLevelClickHandler =
+      onSetMaxMobileBatchLevelClick;
     setMaxMobileBatchLevelBtn.addEventListener(
       "click",
-      onSetMaxMobileBatchLevelClick
+      eventListeners.setMaxMobileBatchLevelClickHandler
     );
   }
   if (findOptimalMobileBtn) {
-    findOptimalMobileBtn.addEventListener("click", onFindOptimalMobileClick);
+    eventListeners.findOptimalMobileClickHandler = onFindOptimalMobileClick;
+    findOptimalMobileBtn.addEventListener(
+      "click",
+      eventListeners.findOptimalMobileClickHandler
+    );
   }
+  // --- [수정 4 끝] ---
 }
 
 function handleSpiritSelect(spirit) {
@@ -327,65 +408,57 @@ function handleSpiritSelect(spirit) {
 
 function handleContainerClick(e) {
   const target = e.target;
-  const subTab = target.closest("#bondCategoryTabs .tab");
-  if (subTab && !subTab.classList.contains("active")) {
-    elements.bondCategoryTabs
-      .querySelector(".tab.active")
-      .classList.remove("active");
-    subTab.classList.add("active");
-    pageState.currentCategory = subTab.dataset.category;
-    renderAll();
-    return;
-  }
 
-  if (target.matches("#applyBatchLevelBtn"))
-    handleBatchLevel("batchLevelInput");
-  else if (target.matches("#findOptimalBtn")) handleFindOptimal();
-
+  // --- [수정 7] 레벨 조절 버튼의 클릭 이벤트를 여기서 처리 ---
   const card = target.closest(".selected-spirit-card");
-  if (!card) return;
+  if (card) {
+    // selected-spirit-card 내부의 클릭인 경우
+    const spiritName = card.dataset.spiritName;
+    const spirit = pageState.selectedSpirits.get(spiritName);
+    if (!spirit) {
+      console.warn("Selected spirit not found in pageState for:", spiritName);
+      return;
+    }
 
-  const spiritName = card.dataset.spiritName;
-  const spirit = pageState.selectedSpirits.get(spiritName);
-  if (!spirit) return;
+    const action = target.dataset.action;
+    let shouldRender = false;
 
-  const action = target.dataset.action;
-  let shouldRender = false;
+    switch (action) {
+      case "remove":
+        pageState.selectedSpirits.delete(spiritName);
+        shouldRender = true;
+        break;
+      case "min-level":
+        if (spirit.level !== 0) {
+          spirit.level = 0;
+          shouldRender = true;
+        }
+        break;
+      case "level-down":
+        if (spirit.level > 0) {
+          spirit.level = Math.max(0, spirit.level - 1);
+          shouldRender = true;
+        }
+        break;
+      case "level-up":
+        if (spirit.level < 25) {
+          spirit.level = Math.min(25, spirit.level + 1);
+          shouldRender = true;
+        }
+        break;
+      case "max-level":
+        if (spirit.level !== 25) {
+          spirit.level = 25;
+          shouldRender = true;
+        }
+        break;
+    }
 
-  switch (action) {
-    case "remove":
-      pageState.selectedSpirits.delete(spiritName);
-      shouldRender = true;
-      break;
-    case "min-level":
-      if (spirit.level !== 0) {
-        spirit.level = 0;
-        shouldRender = true;
-      }
-      break;
-    case "level-down":
-      if (spirit.level > 0) {
-        spirit.level = Math.max(0, spirit.level - 1);
-        shouldRender = true;
-      }
-      break;
-    case "level-up":
-      if (spirit.level < 25) {
-        spirit.level = Math.min(25, spirit.level + 1);
-        shouldRender = true;
-      }
-      break;
-    case "max-level":
-      if (spirit.level !== 25) {
-        spirit.level = 25;
-        shouldRender = true;
-      }
-      break;
+    if (shouldRender) {
+      renderAll();
+    }
   }
-
-  if (shouldRender) {
-    renderAll();
-  }
+  // --- [수정 7 끝] ---
 }
 
 function handleToggleChange(e) {
@@ -475,14 +548,12 @@ async function handleFindOptimal() {
       throw new Error("API에서 유효한 응답을 받지 못했습니다.");
     }
 
-    // console.log("result = ", JSON.stringify(result));
+    // console.log("result = ", result);
 
     addHistory(result);
     showOptimalResultModal(result, false);
   } catch (error) {
-    // alert(`계산 오류: ${error.message}`);
     alert(`서버 점검중입니다`);
-
     console.error("Optimal combination calculation failed:", error);
   } finally {
     hideLoading();
@@ -490,6 +561,10 @@ async function handleFindOptimal() {
 }
 
 export function init(container) {
+  // --- [수정 9] init 시 cleanup 호출로 리스너 중복 등록 방지 및 동적 요소 제거 ---
+  cleanup(); // 기존 리스너 및 동적 요소 정리
+  // --- [수정 9 끝] ---
+
   container.innerHTML = getHTML();
 
   const panelToggleHtml = `
@@ -589,74 +664,136 @@ export function getHelpContentHTML() {
 
 export function cleanup() {
   if (elements.container) {
-    elements.container.removeEventListener("click", handleContainerClick);
-  }
-  if (elements.influenceToggle) {
-    elements.influenceToggle.removeEventListener("change", handleToggleChange);
-  }
-  if (elements.selectedSpiritsList) {
-    elements.selectedSpiritsList.removeEventListener(
-      "input",
-      handleLevelInputChange
+    // --- [수정 11] 모든 등록된 이벤트 리스너 제거 ---
+    if (
+      elements.bondCategoryTabs &&
+      eventListeners.bondCategoryTabsClickHandler
+    ) {
+      elements.bondCategoryTabs.removeEventListener(
+        "click",
+        eventListeners.bondCategoryTabsClickHandler
+      );
+    }
+    if (elements.container && eventListeners.containerClickHandler) {
+      elements.container.removeEventListener(
+        "click",
+        eventListeners.containerClickHandler
+      );
+    }
+    if (
+      elements.influenceToggle &&
+      eventListeners.influenceToggleChangeHandler
+    ) {
+      elements.influenceToggle.removeEventListener(
+        "change",
+        eventListeners.influenceToggleChangeHandler
+      );
+    }
+    if (
+      elements.selectedSpiritsList &&
+      eventListeners.selectedSpiritsListInputHandler
+    ) {
+      elements.selectedSpiritsList.removeEventListener(
+        "input",
+        eventListeners.selectedSpiritsListInputHandler
+      );
+    }
+    if (elements.selectAllBtn && eventListeners.selectAllClickHandler) {
+      elements.selectAllBtn.removeEventListener(
+        "click",
+        eventListeners.selectAllClickHandler
+      );
+    }
+    if (
+      elements.clearAllSelectionBtn &&
+      eventListeners.clearAllSelectionClickHandler
+    ) {
+      elements.clearAllSelectionBtn.removeEventListener(
+        "click",
+        eventListeners.clearAllSelectionClickHandler
+      );
+    }
+    // 익명 함수는 제거하기 어려우므로, setupEventListeners에서 명명된 함수로 등록하거나
+    // 각 리스너를 eventListeners 객체에 저장하여 제거해야 합니다.
+    // 여기서는 익명 함수 제거를 시도하지 않고, 다음 setupEventListeners에서 덮어쓰도록 합니다.
+    // 더 견고하게 하려면 setupEventListeners에서 모든 리스너를 명명된 함수로 만들어 eventListeners 객체에 저장하고 여기서 제거해야 합니다.
+    if (
+      elements.applyBatchLevelBtn &&
+      eventListeners.applyBatchLevelClickHandler
+    ) {
+      // 익명 함수이므로 제거 안될 가능성
+      elements.applyBatchLevelBtn.removeEventListener(
+        "click",
+        eventListeners.applyBatchLevelClickHandler
+      );
+    }
+    if (elements.findOptimalBtn && eventListeners.findOptimalClickHandler) {
+      elements.findOptimalBtn.removeEventListener(
+        "click",
+        eventListeners.findOptimalClickHandler
+      );
+    }
+
+    const panelToggleBtn = document.getElementById("panelToggleBtn");
+    const mobileSelectedSpiritsList = document.getElementById(
+      "selectedSpiritsMobile"
     );
-  }
-
-  if (elements.selectAllBtn) {
-    elements.selectAllBtn.removeEventListener("click", handleSelectAll);
-  }
-  if (elements.clearAllSelectionBtn) {
-    elements.clearAllSelectionBtn.removeEventListener(
-      "click",
-      handleClearSelection
+    const applyMobileBatchLevelBtn = document.getElementById(
+      "applyMobileBatchLevelBtn"
     );
-  }
-
-  elements.applyBatchLevelBtn.removeEventListener("click", () =>
-    handleBatchLevel("batchLevelInput")
-  );
-  elements.findOptimalBtn.removeEventListener("click", handleFindOptimal);
-
-  const panelToggleBtn = document.getElementById("panelToggleBtn");
-  const mobileSelectedSpiritsList = document.getElementById(
-    "selectedSpiritsMobile"
-  );
-  const applyMobileBatchLevelBtn = document.getElementById(
-    "applyMobileBatchLevelBtn"
-  );
-  const setMaxMobileBatchLevelBtn = document.getElementById(
-    "setMaxMobileBatchLevelBtn"
-  );
-  const findOptimalMobileBtn = document.getElementById("findOptimalMobileBtn");
-
-  if (panelToggleBtn) {
-    panelToggleBtn.removeEventListener("click", onPanelToggleBtnClick);
-  }
-  if (mobileSelectedSpiritsList) {
-    mobileSelectedSpiritsList.removeEventListener(
-      "input",
-      handleLevelInputChange
+    const setMaxMobileBatchLevelBtn = document.getElementById(
+      "setMaxMobileBatchLevelBtn"
     );
-  }
-  if (applyMobileBatchLevelBtn) {
-    applyMobileBatchLevelBtn.removeEventListener(
-      "click",
-      onApplyMobileBatchLevelClick
+    const findOptimalMobileBtn = document.getElementById(
+      "findOptimalMobileBtn"
     );
-  }
-  if (setMaxMobileBatchLevelBtn) {
-    setMaxMobileBatchLevelBtn.removeEventListener(
-      "click",
-      onSetMaxMobileBatchLevelClick
+
+    if (panelToggleBtn && eventListeners.panelToggleBtnClickHandler) {
+      panelToggleBtn.removeEventListener(
+        "click",
+        eventListeners.panelToggleBtnClickHandler
+      );
+    }
+    if (
+      mobileSelectedSpiritsList &&
+      eventListeners.mobileSelectedSpiritsListInputHandler
+    ) {
+      mobileSelectedSpiritsList.removeEventListener(
+        "input",
+        eventListeners.mobileSelectedSpiritsListInputHandler
+      );
+    }
+    if (
+      applyMobileBatchLevelBtn &&
+      eventListeners.applyMobileBatchLevelClickHandler
+    ) {
+      applyMobileBatchLevelBtn.removeEventListener(
+        "click",
+        eventListeners.applyMobileBatchLevelClickHandler
+      );
+    }
+    if (
+      setMaxMobileBatchLevelBtn &&
+      eventListeners.setMaxMobileBatchLevelClickHandler
+    ) {
+      setMaxMobileBatchLevelBtn.removeEventListener(
+        "click",
+        eventListeners.setMaxMobileBatchLevelClickHandler
+      );
+    }
+    if (findOptimalMobileBtn && eventListeners.findOptimalMobileClickHandler) {
+      findOptimalMobileBtn.removeEventListener(
+        "click",
+        eventListeners.findOptimalMobileClickHandler
+      );
+    }
+    // 동적으로 추가된 패널 제거
+    const dynamicallyAddedPanel = document.getElementById(
+      "panelToggleContainer"
     );
+    if (dynamicallyAddedPanel) {
+      dynamicallyAddedPanel.remove();
+    }
   }
-  if (findOptimalMobileBtn) {
-    findOptimalMobileBtn.removeEventListener("click", onFindOptimalMobileClick);
-  }
-
-  const dynamicallyAddedPanel = document.getElementById("panelToggleContainer");
-  if (dynamicallyAddedPanel) {
-    dynamicallyAddedPanel.remove();
-  }
-
   // console.log("환수 결속 페이지 정리 완료.");
 }

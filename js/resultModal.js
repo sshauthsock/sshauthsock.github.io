@@ -101,6 +101,11 @@ function createBaseModal() {
 }
 
 export function showResultModal(result, isFromRanking = false) {
+  // console.log(
+  //   "#################################result in showResultModal:",
+  //   result
+  // );
+
   if (
     !result ||
     !Array.isArray(result.combination) ||
@@ -273,7 +278,11 @@ function updateResultView(result, isFromRanking) {
       }, {}),
     }
   );
-  renderEffects("optimalBindEffects", "장착 효과", bindStats, bindScore);
+
+  // console.log("######Rendering bind effects with stats:", bindStats);
+  // console.log("Bind score:", bindScore);
+
+  renderEffects("optimalBindEffects", "결속 효과", bindStats, bindScore);
 
   renderSpiritDetailsTable(spirits);
 }
@@ -355,6 +364,7 @@ function renderHistoryTabs(category) {
 }
 
 function renderSpiritDetailsTable(spirits) {
+  // console.log("Rendering spirit details table for spirits:", spirits);
   const container = document.getElementById("optimalSpiritsDetails");
   if (!container) return;
 
@@ -363,6 +373,10 @@ function renderSpiritDetailsTable(spirits) {
     const fullSpiritData = globalState.allSpirits.find(
       (s) => s.name === spirit.name && s.type === spirit.type
     );
+
+    // console.log("globalState.allSpirits:", globalState.allSpirits);
+    // console.log("fullSpiritData ,", fullSpiritData);
+
     if (!fullSpiritData) return;
 
     const actualLevel = spirit.level || 25;

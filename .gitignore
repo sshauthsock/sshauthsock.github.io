@@ -80,3 +80,5 @@ config/*
 # Local run scripts
 start-backend.sh
 start-admin-tool.sh
+
+backend/myapp*

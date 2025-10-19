@@ -131,6 +131,7 @@ export async function calculateOptimalCombination(creatures) {
     body: JSON.stringify({ creatures }),
   });
   const result = await handleResponse(response);
+
   if (result && Array.isArray(result.spirits)) {
     result.spirits = _transformSpiritsArrayPaths(result.spirits);
   }

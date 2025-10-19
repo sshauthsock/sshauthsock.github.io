@@ -1,5 +1,5 @@
 import * as api from "./api.js";
-import { setAllSpirits } from "./state.js";
+import { setAllSpirits, state as globalState } from "./state.js"; // setAllSpirits와 globalState를 함께 import
 import { showLoading, hideLoading } from "./loadingIndicator.js";
 
 const pageModules = {
@@ -12,7 +12,6 @@ const pageModules = {
 
 const appContainer = document.getElementById("app-container");
 const mainTabs = document.getElementById("mainTabs");
-let currentPageModule = null;
 
 const helpBtn = document.getElementById("helpBtn");
 const helpTooltip = document.getElementById("helpTooltip");
@@ -66,12 +65,12 @@ async function route() {
   const pageName = activeTab ? activeTab.dataset.page : "spiritInfo";
   const pageTitle = activeTab ? activeTab.textContent : "환수 정보";
 
-  if (currentPageModule?.cleanup) {
+  if (globalState.currentPageModule?.cleanup) {
     try {
-      currentPageModule.cleanup();
+      globalState.currentPageModule.cleanup(); // 현재 활성화된 페이지 모듈의 cleanup 호출
       // console.log(`[Router] Cleaned up previous page.`);
     } catch (e) {
-      // console.error("[Router] Error during page cleanup:", e);
+      console.error("[Router] Error during page cleanup:", e);
     }
   }
 
@@ -89,9 +88,18 @@ async function route() {
     }
 
     const pageModule = await moduleLoader();
-    currentPageModule = pageModule;
+    globalState.currentPageModule = pageModule;
 
     if (pageModule.init) {
+      if (
+        !Array.isArray(globalState.allSpirits) ||
+        globalState.allSpirits.length === 0
+      ) {
+        console.warn(
+          "Global spirits data is empty or not an array when routing. This might cause errors on pages depending on it."
+        );
+      }
+
       await pageModule.init(appContainer);
       // console.log(`[Router] Initialized page: ${pageName}`);
 
@@ -177,6 +185,7 @@ async function initializeApp() {
       };
     });
     setAllSpirits(allSpiritsTransformed);
+    // console.log("Global state (allSpirits) updated:", globalState.allSpirits);
 
     await route();
   } catch (error) {

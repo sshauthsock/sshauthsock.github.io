@@ -134,7 +134,7 @@ function renderSpiritInfo(
     "registrationList",
     "registration-sum"
   );
-  const bindCol = createStatsColumn("장착 효과", "bindList", "bind-sum");
+  const bindCol = createStatsColumn("결속 효과", "bindList", "bind-sum");
   statsContainer.appendChild(registrationCol);
   statsContainer.appendChild(bindCol);
   container.appendChild(statsContainer);

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"reflect"
 	"sort"
 	"strconv"
@@ -22,7 +21,7 @@ var statsMapping = map[string]string{
 	"movementSpeed":                 "이동속도",
 	"damageResistancePenetration":   "피해저항관통",
 	"healthIncreasePercent":         "체력증가%",
-	"magicIncreasePercent":          "마력증가%",
+	"magicIncreasePercent":    	     "마력증가%",
 	"damageResistance":              "피해저항",
 	"pvpDamagePercent":              "대인피해%",
 	"pvpDefensePercent":             "대인방어%",
@@ -34,7 +33,7 @@ var statsMapping = map[string]string{
 	"normalMonsterPenetration":      "일반몬스터관통",
 	"normalMonsterResistance":       "일반몬스터저항",
 	"bossMonsterAdditionalDamage":   "보스몬스터추가피해",
-	"bossMonsterPenetration":        "보스몬스터관통",
+	"bossMonsterPenetration":      	 "보스몬스터관통",
 	"bossMonsterResistance":         "보스몬스터저항",
 	"criticalPowerPercent":          "치명위력%",
 	"destructionPowerIncrease":      "파괴력증가",
@@ -262,43 +261,40 @@ var factionSetEffects = map[string]map[string][]FactionEffectStep{
 			{ExperienceGainIncrease: 6, Count: 3, CastingSpeedIncrease: 150, DamageResistancePenetration: 50},
 			{Count: 4, ExperienceGainIncrease: 10, CastingSpeedIncrease: 250, DamageResistancePenetration: 80},
 			{CastingSpeedIncrease: 270, Count: 5, ExperienceGainIncrease: 12, DamageResistancePenetration: 90},
-			{ExperienceGainIncrease: 15, CastingSpeedIncrease: 400, DamageResistancePenetration: 130, Count: 6},
+			{Count: 6, ExperienceGainIncrease: 15, CastingSpeedIncrease: 400, DamageResistancePenetration: 130},
 		},
 	},
 }
 
 func calculateCombinationStats(combination []CreatureInput, category string, allCreatureData []CreatureInfo) CalculationResult {
-	// 1. 점수 계산용 맵: 오직 'bindStat'만 합산하여 저장
+	
 	totalBondStats := make(map[string]float64)
 
-	// 2. 화면 표시용 맵: 'registrationStat'과 'bindStat'을 모두 합산하여 저장
 	totalDisplayStats := make(map[string]float64)
 
-	// 3. 등급 및 세력 효과 계산에 필요한 변수들
+
 	gradeCounts := make(map[string]int)
 	factionCounts := make(map[string]int)
 
-	// 4. 응답에 포함될 상세 정보용 변수들
 	var combinationSpirits []CreatureInfo
 	var combinationNames []string
 
-	// 5. 빠른 조회를 위해 모든 환수 데이터를 맵으로 변환 (for efficient lookup)
 	creatureMap := make(map[string]CreatureInfo)
 	for i := range allCreatureData {
 		creatureMap[allCreatureData[i].Name] = allCreatureData[i]
 	}
 
-	// 6. 사용자가 선택한 각 환수에 대해 반복 처리
 	for _, selected := range combination {
 		combinationNames = append(combinationNames, selected.Name)
 
 		creatureData, ok := creatureMap[selected.Name]
 		if !ok {
-			log.Printf("Warning: Creature data not found for %s during combination calculation", selected.Name)
+			// log.Printf("Warning: Creature data not found for %s during combination calculation. Skipping.", selected.Name)
 			continue
 		}
 
 		var levelStat *StatValue
+		// Find the StatValue for the selected.Level
 		for i := range creatureData.Stats {
 			if creatureData.Stats[i].Level == selected.Level {
 				levelStat = &creatureData.Stats[i]
@@ -313,7 +309,7 @@ func calculateCombinationStats(combination []CreatureInput, category string, all
 			Influence: creatureData.Influence,
 			Name:      creatureData.Name,
 			Image:     creatureData.Image,
-			// Only include the stats for the *selected* level
+			// SelectedLevel: selected.Level,
 			Stats: []StatValue{},
 		}
 		if levelStat != nil {
@@ -326,42 +322,33 @@ func calculateCombinationStats(combination []CreatureInput, category string, all
 		factionCounts[creatureData.Influence]++
 
 		if levelStat == nil {
-			log.Printf("Warning: Stats for %s at level %d not found.", selected.Name, selected.Level)
-			continue
+			// log.Printf("Warning: Stats for %s at level %d not found. Using zero stats for calculation.", selected.Name, selected.Level)
+			continue // Skip stat accumulation for this creature if its level stats are not found
 		}
 
-		// [핵심 로직]
-		// 화면 표시용으로 registrationStat 합산
-		if levelStat.RegistrationStat != nil {
-			for key, value := range levelStat.RegistrationStat {
-				totalDisplayStats[key] += ToFloat(value) // utils.ToFloat 사용
-			}
-		}
 
-		// bindStat은 점수 계산용과 화면 표시용 맵 모두에 합산
 		if levelStat.BindStat != nil {
 			for key, value := range levelStat.BindStat {
-				parsedValue := ToFloat(value)         // utils.ToFloat 사용
-				totalBondStats[key] += parsedValue    // 점수 계산용 (only bind stats contribute to 'bindScore' from problem description)
-				totalDisplayStats[key] += parsedValue // 화면 표시용 (all stats contribute to 'bindStats' in response)
+				parsedValue := ToFloat(value)
+				totalBondStats[key] += parsedValue   
+				totalDisplayStats[key] += parsedValue 
+
 			}
 		}
 	}
 
-	// 7. 등급 및 세력 세트 효과 계산
+
+
 	totalGradeEffects := calculateGradeEffects(gradeCounts, category)
 	totalFactionEffects := calculateFactionEffects(factionCounts, category)
 
-	// 8. 각 부분별 점수 계산
 	// Assuming 'calculateScore' uses the specific stats as defined in problem (pvp, dmg resistance)
 	gradeScore := calculateScore(totalGradeEffects)
 	factionScore := calculateScore(totalFactionEffects)
-	bondScore := calculateScore(totalBondStats)
+	bindScore := calculateScore(totalBondStats)
 
-	// 9. 최종 환산 합산 점수
-	finalScore := gradeScore + factionScore + bondScore
+	finalScore := gradeScore + factionScore + bindScore
 
-	// 10. 최종 결과 구조체 생성
 	result := CalculationResult{
 		Combination:    combinationNames,
 		Spirits:        combinationSpirits,
@@ -370,14 +357,12 @@ func calculateCombinationStats(combination []CreatureInput, category string, all
 		BindStats:      toStatDetailSlice(totalDisplayStats), // Display all accumulated stats from bond + registration
 		GradeScore:     gradeScore,
 		FactionScore:   factionScore,
-		BindScore:      bondScore, // Score is only from bindStat as per definition
+		BindScore:      bindScore, // Score is only from bindStat as per definition
 		ScoreWithBind:  finalScore,
 	}
-
 	return result
 }
 
-// calculateGradeEffects: 등급별 개수를 받아 세트 효과를 계산
 func calculateGradeEffects(gradeCounts map[string]int, category string) map[string]float64 {
 	effects := make(map[string]float64)
 	categoryEffects, ok := gradeSetEffects[category]
@@ -409,7 +394,6 @@ func calculateGradeEffects(gradeCounts map[string]int, category string) map[stri
 	return effects
 }
 
-// calculateFactionEffects: 세력별 개수를 받아 세트 효과를 계산
 func calculateFactionEffects(factionCounts map[string]int, category string) map[string]float64 {
 	effects := make(map[string]float64)
 	categoryRules, ok := factionSetEffects[category]
