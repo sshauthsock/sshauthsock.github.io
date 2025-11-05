@@ -1,199 +1,355 @@
 <!DOCTYPE html>
 <html lang="ko">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
-    <meta property="og:title" content="바연화연 | 바람의나라: 연 환수, 결속, 착, 랭킹 정보 계산기">
-    <meta property="og:description" content="바람의나라: 연 환수, 결속, 환수혼, 착, 랭킹 정보 계산기. 최적의 환수 조합, 착 세팅, 환수혼 필요량 등을 제공합니다.">
-    <meta property="og:image" content="https://sshauthsock.github.io/assets/img/BHY.png"> <!-- 여러분의 로고 이미지 URL -->
-    <meta property="og:url" content="https://sshauthsock.github.io/">
-    <meta property="og:type" content="website">
-    <meta property="og:locale" content="ko_KR">
+    <meta
+      property="og:title"
+      content="바연화연 | 바람의나라: 연 환수, 결속, 착, 랭킹 정보 계산기"
+    />
+    <meta
+      property="og:description"
+      content="바람의나라: 연 환수, 결속, 환수혼, 착, 랭킹 정보 계산기. 최적의 환수 조합, 착 세팅, 환수혼 필요량 등을 제공합니다."
+    />
+    <meta
+      property="og:image"
+      content="https://sshauthsock.github.io/assets/img/BHY.png"
+    />
+    <!-- 여러분의 로고 이미지 URL -->
+    <meta property="og:url" content="https://sshauthsock.github.io/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ko_KR" />
     <title>바연화연 | 바람의나라: 연 환수, 결속, 착, 랭킹 정보 계산기</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <meta name="google-site-verification" content="4cylBv-RfaBNgu0nSsUeP16DztEmL9rElYCAkuSG6dE" />
+    <meta
+      name="google-site-verification"
+      content="4cylBv-RfaBNgu0nSsUeP16DztEmL9rElYCAkuSG6dE"
+    />
 
-    <link rel="icon" type="image/png" href="assets/img/BHY.png">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
-    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="icon" type="image/png" href="assets/img/BHY.png" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap"
+    />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <link rel="stylesheet" href="public/assets/css/chakra-results-modern.css" />
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WDMWC3L1Q1"></script>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-WDMWC3L1Q1"
+    ></script>
     <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
 
-        gtag('config', 'G-WDMWC3L1Q1');
+      gtag("config", "G-WDMWC3L1Q1");
     </script>
 
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9431279832646125"
-        crossorigin="anonymous"></script>
-</head>
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9431279832646125"
+      crossorigin="anonymous"
+    ></script>
+  </head>
 
-<body>
+  <body>
     <header class="header">
-        <div class="logo-container">
-            <a href="#">
-                <img src="assets/img/BHY.png" alt="바연화연 로고" class="logo">
-            </a>
-        </div>
-        <nav class="tabs" id="mainTabs">
-            <div class="tab active" data-page="spiritInfo">환수 정보</div>
-            <div class="tab" data-page="bondCalculator">환수 결속</div>
-            <div class="tab" data-page="soulCalculator">환수 혼 계산</div>
-            <div class="tab" data-page="spiritRanking">환수 랭킹</div>
-            <div class="tab" data-page="chakCalculator">착 계산</div>
-        </nav>
+      <div class="logo-container">
+        <a href="#">
+          <img src="assets/img/BHY.png" alt="바연화연 로고" class="logo" />
+        </a>
+      </div>
+      <nav class="tabs" id="mainTabs">
+        <div class="tab active" data-page="spiritInfo">환수 정보</div>
+        <div class="tab" data-page="bondCalculator">환수 결속</div>
+        <div class="tab" data-page="soulCalculator">환수 혼 계산</div>
+        <div class="tab" data-page="spiritRanking">환수 랭킹</div>
+        <div class="tab" data-page="chakCalculator">착 계산</div>
+      </nav>
     </header>
 
     <div class="ad-container desktop-kakao-ad">
-        <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-4SL1sGVDcNLWucqG" data-ad-width="728"
-            data-ad-height="90"></ins>
-        <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js" async></script>
+      <ins
+        class="kakao_ad_area"
+        style="display: none"
+        data-ad-unit="DAN-4SL1sGVDcNLWucqG"
+        data-ad-width="728"
+        data-ad-height="90"
+      ></ins>
+      <script
+        type="text/javascript"
+        src="//t1.daumcdn.net/kas/static/ba.min.js"
+        async
+      ></script>
     </div>
 
     <div class="ad-container mobile-kakao-ad">
-        <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-DaeGmhIwBjPFzlLR" data-ad-width="320"
-            data-ad-height="50"></ins>
-        <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js" async></script>
-
+      <ins
+        class="kakao_ad_area"
+        style="display: none"
+        data-ad-unit="DAN-DaeGmhIwBjPFzlLR"
+        data-ad-width="320"
+        data-ad-height="50"
+      ></ins>
+      <script
+        type="text/javascript"
+        src="//t1.daumcdn.net/kas/static/ba.min.js"
+        async
+      ></script>
     </div>
 
-    <main id="app-container">
-    </main>
+    <main id="app-container"></main>
 
-    <div id="seo-content-sections" style="display: none;">
-        <!-- 환수 정보 페이지 설명 -->
-        <section id="seo-spiritInfo" class="seo-hidden-content">
-            <h2>환수 정보 상세 안내: 바람의나라: 연 환수 도감 및 스탯 분석</h2>
-            <p>바람의나라: 연 게임의 모든 환수 정보를 한눈에 확인할 수 있는 페이지입니다. 수호, 탑승, 변신 환수 각 타입별로 분류되어 있으며, 각 환수의 고유한 능력치, 등록 효과, 장착 효과를
-                상세히 제공합니다. 플레이어는 이 정보를 통해 자신의 캐릭터에 최적화된 환수를 선택하고 육성하는 데 필요한 전략적 인사이트를 얻을 수 있습니다.</p>
-            <h3>🔎 환수 스탯 분석의 중요성</h3>
-            <ul>
-                <li>**능력치 이해:** 환수별로 피해저항관통, 피해저항, 대인피해%, 대인방어% 등 다양한 핵심 스탯을 비교 분석할 수 있습니다.</li>
-                <li>**등록/장착 효과:** 환수 등록 시 얻는 기본 능력치와 25레벨 달성 시 활성화되는 강력한 장착 효과를 명확하게 제시합니다.</li>
-                <li>**세력 시너지:** 각 환수가 속한 세력(결의, 고요, 의지 등)에 따른 추가 시너지 효과를 파악하여 결속 조합에 활용할 수 있습니다.</li>
-            </ul>
-            <p>바연화연은 플레이어 여러분의 효율적인 환수 관리를 돕기 위해 정확하고 신뢰할 수 있는 데이터를 제공합니다. 원하는 환수를 검색하고, 필터링하여 필요한 정보를 빠르게 찾아보세요. 강력한
-                환수들과 함께 바람의나라: 연 세계를 지배하세요!</p>
-        </section>
+    <div id="seo-content-sections" style="display: none">
+      <!-- 환수 정보 페이지 설명 -->
+      <section id="seo-spiritInfo" class="seo-hidden-content">
+        <h2>환수 정보 상세 안내: 바람의나라: 연 환수 도감 및 스탯 분석</h2>
+        <p>
+          바람의나라: 연 게임의 모든 환수 정보를 한눈에 확인할 수 있는
+          페이지입니다. 수호, 탑승, 변신 환수 각 타입별로 분류되어 있으며, 각
+          환수의 고유한 능력치, 등록 효과, 장착 효과를 상세히 제공합니다.
+          플레이어는 이 정보를 통해 자신의 캐릭터에 최적화된 환수를 선택하고
+          육성하는 데 필요한 전략적 인사이트를 얻을 수 있습니다.
+        </p>
+        <h3>🔎 환수 스탯 분석의 중요성</h3>
+        <ul>
+          <li>
+            **능력치 이해:** 환수별로 피해저항관통, 피해저항, 대인피해%,
+            대인방어% 등 다양한 핵심 스탯을 비교 분석할 수 있습니다.
+          </li>
+          <li>
+            **등록/장착 효과:** 환수 등록 시 얻는 기본 능력치와 25레벨 달성 시
+            활성화되는 강력한 장착 효과를 명확하게 제시합니다.
+          </li>
+          <li>
+            **세력 시너지:** 각 환수가 속한 세력(결의, 고요, 의지 등)에 따른
+            추가 시너지 효과를 파악하여 결속 조합에 활용할 수 있습니다.
+          </li>
+        </ul>
+        <p>
+          바연화연은 플레이어 여러분의 효율적인 환수 관리를 돕기 위해 정확하고
+          신뢰할 수 있는 데이터를 제공합니다. 원하는 환수를 검색하고, 필터링하여
+          필요한 정보를 빠르게 찾아보세요. 강력한 환수들과 함께 바람의나라: 연
+          세계를 지배하세요!
+        </p>
+      </section>
 
-        <!-- 환수 결속 계산기 페이지 설명 -->
-        <section id="seo-bondCalculator" class="seo-hidden-content">
-            <h2>환수 결속 계산기: 최적의 조합으로 전투력 극대화!</h2>
-            <p>환수 결속 시스템은 바람의나라: 연에서 전투력을 비약적으로 상승시킬 수 있는 핵심 콘텐츠입니다. 바연화연 결속 계산기는 여러분이 보유한 환수들로 달성할 수 있는 가장 강력한 5마리 조합을
-                찾아드립니다. 복잡한 유전 알고리즘을 통해 수많은 경우의 수를 탐색하며, 피해저항, 피해저항관통, 대인피해%, 대인방어% 등을 종합적으로 고려한 '환산 점수'를 기준으로 최적의 결과를
-                제시합니다.</p>
-            <h3>💡 결속 조합 전략</h3>
-            <ul>
-                <li>**PvE/PvP 맞춤형:** 보스 사냥을 위한 피해저항관통, 보스몬스터추가피해 중심 조합과 PvP를 위한 대인방어%, 피해저해 중심 조합을 모두 시뮬레이션할 수 있습니다.
-                </li>
-                <li>**등급 및 세력 시너지:** 전설/불멸 등급 시너지와 동일 세력 환수 시너지를 동시에 고려하여 가장 효율적인 조합을 탐색합니다.</li>
-                <li>**레벨 최적화:** 각 환수의 레벨(0~25)에 따른 장착 효과 변화를 반영하여, 현재 보유 환수로 얻을 수 있는 최대 잠재력을 분석합니다.</li>
-            </ul>
-            <p>이제 복잡한 계산은 바연화연에 맡기고, 여러분은 최적화된 결속 조합으로 바람의나라: 연 전투의 승자가 되세요!</p>
-        </section>
+      <!-- 환수 결속 계산기 페이지 설명 -->
+      <section id="seo-bondCalculator" class="seo-hidden-content">
+        <h2>환수 결속 계산기: 최적의 조합으로 전투력 극대화!</h2>
+        <p>
+          환수 결속 시스템은 바람의나라: 연에서 전투력을 비약적으로 상승시킬 수
+          있는 핵심 콘텐츠입니다. 바연화연 결속 계산기는 여러분이 보유한
+          환수들로 달성할 수 있는 가장 강력한 5마리 조합을 찾아드립니다. 복잡한
+          유전 알고리즘을 통해 수많은 경우의 수를 탐색하며, 피해저항,
+          피해저항관통, 대인피해%, 대인방어% 등을 종합적으로 고려한 '환산
+          점수'를 기준으로 최적의 결과를 제시합니다.
+        </p>
+        <h3>💡 결속 조합 전략</h3>
+        <ul>
+          <li>
+            **PvE/PvP 맞춤형:** 보스 사냥을 위한 피해저항관통,
+            보스몬스터추가피해 중심 조합과 PvP를 위한 대인방어%, 피해저해 중심
+            조합을 모두 시뮬레이션할 수 있습니다.
+          </li>
+          <li>
+            **등급 및 세력 시너지:** 전설/불멸 등급 시너지와 동일 세력 환수
+            시너지를 동시에 고려하여 가장 효율적인 조합을 탐색합니다.
+          </li>
+          <li>
+            **레벨 최적화:** 각 환수의 레벨(0~25)에 따른 장착 효과 변화를
+            반영하여, 현재 보유 환수로 얻을 수 있는 최대 잠재력을 분석합니다.
+          </li>
+        </ul>
+        <p>
+          이제 복잡한 계산은 바연화연에 맡기고, 여러분은 최적화된 결속 조합으로
+          바람의나라: 연 전투의 승자가 되세요!
+        </p>
+      </section>
 
-        <!-- 환수 혼 계산 페이지 설명 -->
-        <section id="seo-soulCalculator" class="seo-hidden-content">
-            <h2>환수 혼 계산기: 효율적인 레벨업 계획 수립</h2>
-            <p>환수 혼 계산기는 환수를 성장시키는 데 필요한 환수혼(최상급, 상급, 하급)의 소모량을 정확히 예측하고, 보유한 환수혼으로 도달할 수 있는 최대 레벨을 파악하는 데 도움을 줍니다. 불필요한
-                자원 낭비 없이 환수를 효율적으로 육성하세요.</p>
-            <h3>📊 환수혼 계산의 장점</h3>
-            <ul>
-                <li>**정확한 필요량:** 현재 레벨부터 목표 레벨까지 필요한 총 경험치와 이를 충족하는 최적의 환수혼 조합을 제시합니다.</li>
-                <li>**자원 관리:** 보유한 환수혼의 양을 입력하여, 목표 레벨 달성 가능 여부와 부족한 자원량을 명확히 파악할 수 있습니다.</li>
-                <li>**전설/불멸 구분:** 전설 및 불멸 환수 종류별로 다른 경험치 테이블을 적용하여 정확한 계산 결과를 제공합니다.</li>
-            </ul>
-            <p>환수 혼 계산기로 스마트하게 환수를 육성하고, 바람의나라: 연에서의 모험을 더욱 즐겁게 만드세요!</p>
-        </section>
+      <!-- 환수 혼 계산 페이지 설명 -->
+      <section id="seo-soulCalculator" class="seo-hidden-content">
+        <h2>환수 혼 계산기: 효율적인 레벨업 계획 수립</h2>
+        <p>
+          환수 혼 계산기는 환수를 성장시키는 데 필요한 환수혼(최상급, 상급,
+          하급)의 소모량을 정확히 예측하고, 보유한 환수혼으로 도달할 수 있는
+          최대 레벨을 파악하는 데 도움을 줍니다. 불필요한 자원 낭비 없이 환수를
+          효율적으로 육성하세요.
+        </p>
+        <h3>📊 환수혼 계산의 장점</h3>
+        <ul>
+          <li>
+            **정확한 필요량:** 현재 레벨부터 목표 레벨까지 필요한 총 경험치와
+            이를 충족하는 최적의 환수혼 조합을 제시합니다.
+          </li>
+          <li>
+            **자원 관리:** 보유한 환수혼의 양을 입력하여, 목표 레벨 달성 가능
+            여부와 부족한 자원량을 명확히 파악할 수 있습니다.
+          </li>
+          <li>
+            **전설/불멸 구분:** 전설 및 불멸 환수 종류별로 다른 경험치 테이블을
+            적용하여 정확한 계산 결과를 제공합니다.
+          </li>
+        </ul>
+        <p>
+          환수 혼 계산기로 스마트하게 환수를 육성하고, 바람의나라: 연에서의
+          모험을 더욱 즐겁게 만드세요!
+        </p>
+      </section>
 
-        <!-- 환수 랭킹 페이지 설명 -->
-        <section id="seo-spiritRanking" class="seo-hidden-content">
-            <h2>환수 랭킹 정보: 최강 조합 벤치마킹!</h2>
-            <p>바연화연의 환수 랭킹 페이지에서는 다양한 기준(결속 점수, 특정 능력치)으로 환수의 순위를 확인할 수 있습니다. 다른 유저들의 최상위 조합이나 강력한 환수 스탯을 참고하여 여러분의 육성
-                목표를 세워보세요. 모든 랭킹은 25레벨 환수를 기준으로 계산됩니다.</p>
-            <h3>🏆 랭킹 활용 전략</h3>
-            <ul>
-                <li>**결속 랭킹:** 등급, 세력, 장착 효과를 종합한 '환산 점수'를 기준으로 5마리 환수 조합의 순위를 확인하고, 상위 조합의 특징을 분석할 수 있습니다.</li>
-                <li>**능력치 랭킹:** '피해저항관통', '대인방어%' 등 특정 능력치를 가장 높게 올려주는 환수의 순위를 파악하여, 자신의 캐릭터에 필요한 핵심 스탯을 극대화할 환수를 찾아낼 수
-                    있습니다.</li>
-                <li>**메타 파악:** 랭킹에 자주 등장하는 환수와 스탯을 통해 현재 게임 내 핵심 메타가 무엇인지 파악하고, 자신의 육성 방향을 설정할 수 있습니다.</li>
-            </ul>
-            <p>최고의 환수 조합과 스탯을 참고하여 바람의나라: 연에서 누구보다 강력한 플레이어가 되세요!</p>
-        </section>
+      <!-- 환수 랭킹 페이지 설명 -->
+      <section id="seo-spiritRanking" class="seo-hidden-content">
+        <h2>환수 랭킹 정보: 최강 조합 벤치마킹!</h2>
+        <p>
+          바연화연의 환수 랭킹 페이지에서는 다양한 기준(결속 점수, 특정
+          능력치)으로 환수의 순위를 확인할 수 있습니다. 다른 유저들의 최상위
+          조합이나 강력한 환수 스탯을 참고하여 여러분의 육성 목표를 세워보세요.
+          모든 랭킹은 25레벨 환수를 기준으로 계산됩니다.
+        </p>
+        <h3>🏆 랭킹 활용 전략</h3>
+        <ul>
+          <li>
+            **결속 랭킹:** 등급, 세력, 장착 효과를 종합한 '환산 점수'를 기준으로
+            5마리 환수 조합의 순위를 확인하고, 상위 조합의 특징을 분석할 수
+            있습니다.
+          </li>
+          <li>
+            **능력치 랭킹:** '피해저항관통', '대인방어%' 등 특정 능력치를 가장
+            높게 올려주는 환수의 순위를 파악하여, 자신의 캐릭터에 필요한 핵심
+            스탯을 극대화할 환수를 찾아낼 수 있습니다.
+          </li>
+          <li>
+            **메타 파악:** 랭킹에 자주 등장하는 환수와 스탯을 통해 현재 게임 내
+            핵심 메타가 무엇인지 파악하고, 자신의 육성 방향을 설정할 수
+            있습니다.
+          </li>
+        </ul>
+        <p>
+          최고의 환수 조합과 스탯을 참고하여 바람의나라: 연에서 누구보다 강력한
+          플레이어가 되세요!
+        </p>
+      </section>
 
-        <!-- 착 계산 페이지 설명 -->
-        <section id="seo-chakCalculator" class="seo-hidden-content">
-            <h2>착 계산기: 장비 강화 스탯 최적화</h2>
-            <p>바람의나라: 연의 '착' 시스템은 장비 부위별로 추가 능력치를 개방하고 강화하여 캐릭터를 세밀하게 육성할 수 있는 핵심 콘텐츠입니다. 바연화연 착 계산기는 각 부위의 스탯 정보를 확인하고,
-                원하는 스탯을 가진 부위를 찾아 효과적으로 강화 계획을 세울 수 있도록 돕습니다.</p>
-            <h3>🛠️ 착 시스템 활용 팁</h3>
-            <ul>
-                <li>**장비 부위/레벨별 스탯:** 투구, 갑옷 등 각 장비 부위의 강화 레벨별로 개방 가능한 능력치 목록을 상세히 확인합니다.</li>
-                <li>**비용 예측:** '황금 단추'와 '오색 구슬'의 보유 수량을 입력하여, 스탯 개방/강화에 필요한 자원 소모량을 미리 예측하고 효율적인 자원 관리를 할 수 있습니다.</li>
-                <li>**프리셋 및 검색:** '보스용 조합', 'PvP용 조합' 프리셋을 통해 추천 스탯 조합을 확인하거나, 특정 능력치를 검색하여 해당 스탯이 부여되는 착 부위를 빠르게 찾을 수
-                    있습니다.</li>
-            </ul>
-            <p>착 계산기로 현명한 장비 강화를 계획하고, 바람의나라: 연에서 최고의 캐릭터 성능을 달성하세요!</p>
-        </section>
+      <!-- 착 계산 페이지 설명 -->
+      <section id="seo-chakCalculator" class="seo-hidden-content">
+        <h2>착 계산기: 장비 강화 스탯 최적화</h2>
+        <p>
+          바람의나라: 연의 '착' 시스템은 장비 부위별로 추가 능력치를 개방하고
+          강화하여 캐릭터를 세밀하게 육성할 수 있는 핵심 콘텐츠입니다. 바연화연
+          착 계산기는 각 부위의 스탯 정보를 확인하고, 원하는 스탯을 가진 부위를
+          찾아 효과적으로 강화 계획을 세울 수 있도록 돕습니다.
+        </p>
+        <h3>🛠️ 착 시스템 활용 팁</h3>
+        <ul>
+          <li>
+            **장비 부위/레벨별 스탯:** 투구, 갑옷 등 각 장비 부위의 강화
+            레벨별로 개방 가능한 능력치 목록을 상세히 확인합니다.
+          </li>
+          <li>
+            **비용 예측:** '황금 단추'와 '오색 구슬'의 보유 수량을 입력하여,
+            스탯 개방/강화에 필요한 자원 소모량을 미리 예측하고 효율적인 자원
+            관리를 할 수 있습니다.
+          </li>
+          <li>
+            **프리셋 및 검색:** '보스용 조합', 'PvP용 조합' 프리셋을 통해 추천
+            스탯 조합을 확인하거나, 특정 능력치를 검색하여 해당 스탯이 부여되는
+            착 부위를 빠르게 찾을 수 있습니다.
+          </li>
+        </ul>
+        <p>
+          착 계산기로 현명한 장비 강화를 계획하고, 바람의나라: 연에서 최고의
+          캐릭터 성능을 달성하세요!
+        </p>
+      </section>
     </div>
 
     <div class="ad-container desktop-kakao-ad">
-        <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-YqliJCvODxsxRmUd" data-ad-width="728"
-            data-ad-height="90"></ins>
-        <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js" async></script>
+      <ins
+        class="kakao_ad_area"
+        style="display: none"
+        data-ad-unit="DAN-YqliJCvODxsxRmUd"
+        data-ad-width="728"
+        data-ad-height="90"
+      ></ins>
+      <script
+        type="text/javascript"
+        src="//t1.daumcdn.net/kas/static/ba.min.js"
+        async
+      ></script>
     </div>
 
     <div class="ad-container mobile-kakao-ad">
-        <ins class="kakao_ad_area" style="display:none;" data-ad-unit="DAN-ZO9rOvmbVz6Asxry" data-ad-width="320"
-            data-ad-height="50"></ins>
-        <script type="text/javascript" src="//t1.daumcdn.net/kas/static/ba.min.js" async></script>
+      <ins
+        class="kakao_ad_area"
+        style="display: none"
+        data-ad-unit="DAN-ZO9rOvmbVz6Asxry"
+        data-ad-width="320"
+        data-ad-height="50"
+      ></ins>
+      <script
+        type="text/javascript"
+        src="//t1.daumcdn.net/kas/static/ba.min.js"
+        async
+      ></script>
     </div>
 
     <div class="help-container">
-        <button class="help-btn" id="helpBtn" aria-label="도움말">
-            <span class="help-icon">?</span>
-        </button>
-        <div class="help-tooltip" id="helpTooltip">
-            <div class="help-content">
-                <div class="help-header">
-                    <h3 id="currentHelpTitle">도움말</h3>
-                    <button class="close-help" id="closeHelp">&times;</button>
-                </div>
-                <div id="pageSpecificHelpContent">
-                </div>
-
-            </div>
+      <button class="help-btn" id="helpBtn" aria-label="도움말">
+        <span class="help-icon">?</span>
+      </button>
+      <div class="help-tooltip" id="helpTooltip">
+        <div class="help-content">
+          <div class="help-header">
+            <h3 id="currentHelpTitle">도움말</h3>
+            <button class="close-help" id="closeHelp">&times;</button>
+          </div>
+          <div id="pageSpecificHelpContent"></div>
         </div>
+      </div>
     </div>
 
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9431279832646125"
-        crossorigin="anonymous"></script>
-    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-9431279832646125" data-ad-slot="2857703752"
-        data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9431279832646125"
+      crossorigin="anonymous"
+    ></script>
+    <ins
+      class="adsbygoogle"
+      style="display: block"
+      data-ad-client="ca-pub-9431279832646125"
+      data-ad-slot="2857703752"
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+    ></ins>
     <script>
-        (adsbygoogle = window.adsbygoogle || []).push({});
+      (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
 
     <footer class="site-footer">
-        <div class="footer-links">
-
-            <a href="https://open.kakao.com/o/gZdiGDsh" target="_blank" class="footer-report-btn">오류 제보 및 건의</a>
-
-        </div>
-        <div class="footer-info">
-            <p><strong>관리자:</strong> 정 (화연), 부 (싹)</p>
-            <p><strong>스킬:</strong> 권력</p>
-            <p>&copy; 2025 바연화연 (Bayeon Hwayeon). All rights reserved.</p>
-            <p>본 사이트는 <a href="https://baramy.nexon.com/" target="_blank">바람의나라: 연</a>과 공식적인 관련이 없습니다.</p>
-            <p>게임 내 모든 콘텐츠의 저작권은 넥슨(NEXON)에 있습니다.</p>
-        </div>
+      <div class="footer-links">
+        <a
+          href="https://open.kakao.com/o/gZdiGDsh"
+          target="_blank"
+          class="footer-report-btn"
+          >오류 제보 및 건의</a
+        >
+      </div>
+      <div class="footer-info">
+        <p><strong>관리자:</strong> 정 (화연), 부 (싹)</p>
+        <p><strong>스킬:</strong> 권력</p>
+        <p>&copy; 2025 바연화연 (Bayeon Hwayeon). All rights reserved.</p>
+        <p>
+          본 사이트는
+          <a href="https://baramy.nexon.com/" target="_blank">바람의나라: 연</a
+          >과 공식적인 관련이 없습니다.
+        </p>
+        <p>게임 내 모든 콘텐츠의 저작권은 넥슨(NEXON)에 있습니다.</p>
+      </div>
     </footer>
 
     <script src="js/main.js" type="module"></script>
-
-</body>
-
+  </body>
 </html>

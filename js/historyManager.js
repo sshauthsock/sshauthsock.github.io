@@ -65,9 +65,6 @@ export function addResult(result) {
   if (counter[category] === undefined) {
     counter[category] = 0;
   }
-  counter[category]++;
-
-  const index = (counter[category] - 1) % MAX_HISTORY;
 
   const now = new Date();
   const newEntry = {
@@ -76,9 +73,56 @@ export function addResult(result) {
     id: now.getTime(),
   };
 
-  history[category][index] = newEntry;
+  let insertIndex = -1;
+  for (let i = 0; i < MAX_HISTORY; i++) {
+    if (!history[category][i]) {
+      insertIndex = i;
+      break;
+    }
+  }
+
+  if (insertIndex === -1) {
+    const oldestIndex =
+      history[category]
+        .map((entry, index) => ({ entry, index }))
+        .filter(({ entry }) => entry !== null)
+        .reduce((oldest, current) => {
+          if (!oldest || current.entry.id < oldest.entry.id) {
+            return current;
+          }
+          return oldest;
+        }, null)?.index || 0;
+
+    insertIndex = oldestIndex;
+  }
+
+  history[category][insertIndex] = newEntry;
+  counter[category]++;
 
   saveHistory(history, counter);
+}
+
+export function removeResult(category, id) {
+  const history = loadHistory();
+  const counter = loadCounter();
+
+  if (!history[category]) {
+    console.warn(`Attempted to remove from unknown category: ${category}`);
+    return false;
+  }
+
+  const entryIndex = history[category].findIndex(
+    (entry) => entry && entry.id === id
+  );
+  if (entryIndex === -1) {
+    console.warn(`Entry with id ${id} not found in category ${category}`);
+    return false;
+  }
+
+  history[category][entryIndex] = null;
+
+  saveHistory(history, counter);
+  return true;
 }
 
 export function getHistoryForCategory(category) {

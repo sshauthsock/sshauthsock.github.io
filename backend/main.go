@@ -161,73 +161,21 @@ type App struct {
 	isDataLoaded    bool
 }
 
-// func NewApp(ctx context.Context) (*App, error) {
-// 	var appOpts []option.ClientOption
-
-// 	err := godotenv.Load("../.env")
-// 	if err != nil {
-// 		log.Printf("Warning: .env file not loaded from ../.env: %v (This is normal in production environments, but unexpected in local build. Check path/encoding/permissions.)", err)
-// 	}
-
-// 	projectID := os.Getenv("GCP_PROJECT_ID")
-// 	if projectID == "" {
-// 		projectID = "baram-yeon"
-// 		log.Printf("Warning: GCP_PROJECT_ID environment variable not set. Using default: %s", projectID)
-// 	}
-
-// 	conf := &firebase.Config{
-// 		ProjectID: projectID,
-// 	}
-
-// 	serviceAccountPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
-// 	if serviceAccountPath == "" {
-
-// 		log.Fatalf("FATAL: GOOGLE_APPLICATION_CREDENTIALS 환경 변수가 설정되지 않았습니다. 로컬 실행을 위해 .env 파일 또는 시스템 환경 변수를 통해 키 파일 경로를 지정해야 합니다 (예: ./config/serviceAccountKey.json).")
-// 	} else {
-// 		// 환경 변수가 설정되었다면, 명시적으로 서비스 계정 키 파일을 사용합니다.
-// 		appOpts = append(appOpts, option.WithCredentialsFile(serviceAccountPath))
-// 		log.Printf("Firebase 앱이 '%s' 경로의 서비스 계정 키를 사용하여 초기화됩니다.", serviceAccountPath)
-// 	}
-
-// 	app, err := firebase.NewApp(ctx, conf, appOpts...)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error initializing firebase app: %w", err)
-// 	}
-// 	client, err := app.Firestore(ctx)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("error initializing firestore client: %w", err)
-// 	}
-// 	return &App{
-// 		firestoreClient: client,
-// 		chakCosts: map[string]int{
-// 			"unlockFirst":   500,
-// 			"unlockOther":   500,
-// 			"upgradeFirst":  500,
-// 			"upgradeOther0": 400,
-// 			"upgradeOther1": 500,
-// 			"upgradeOther2": 500,
-// 		},
-// 		dataLoadMutex: sync.RWMutex{},
-// 		isDataLoaded:  true,
-// 	}, nil
-// }
 
 func NewApp(ctx context.Context) (*App, error) {
 	var appOpts []option.ClientOption
 
-	// .env 파일을 로컬에서 로드 시도. 프로덕션 환경에서는 이 파일이 없을 것이므로 에러를 무시.
-	err := godotenv.Load("../.env") // main.go가 backend 폴더 안에 있으므로 '../.env'
+	err := godotenv.Load("../.env") 
 	if err != nil {
 		log.Printf("Warning: .env file not loaded from ../.env: %v (This is normal in production environments, but unexpected in local build. Check path/encoding/permissions.)", err)
 	}
 
 	projectID := os.Getenv("GCP_PROJECT_ID")
 	if projectID == "" {
-		// GCP_PROJECT_ID가 설정되지 않은 경우 .env의 GOOGLE_CLOUD_PROJECT를 폴백으로 사용
-		// 또는 직접 프로젝트 ID를 하드코딩 (현재 "baram-yeon"으로 설정됨)
-		projectID = os.Getenv("GOOGLE_CLOUD_PROJECT") // .env에서 GOOGLE_CLOUD_PROJECT도 읽어옴
+	
+		projectID = os.Getenv("GOOGLE_CLOUD_PROJECT")
 		if projectID == "" {
-			projectID = "baram-yeon" // 최종 폴백
+			projectID = "baram-yeon" 
 			log.Printf("Warning: GCP_PROJECT_ID and GOOGLE_CLOUD_PROJECT environment variables not set. Using default: %s", projectID)
 		} else {
 			log.Printf("Info: GCP_PROJECT_ID not set, using GOOGLE_CLOUD_PROJECT: %s", projectID)
@@ -243,8 +191,6 @@ func NewApp(ctx context.Context) (*App, error) {
 
 	serviceAccountPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	if serviceAccountPath != "" {
-		// GOOGLE_APPLICATION_CREDENTIALS 환경 변수가 설정되어 있다면,
-		// 해당 경로의 서비스 계정 키 파일을 사용하여 인증합니다. (주로 로컬 개발 환경)
 		appOpts = append(appOpts, option.WithCredentialsFile(serviceAccountPath))
 		log.Printf("Firebase 앱이 '%s' 경로의 서비스 계정 키를 사용하여 초기화됩니다.", serviceAccountPath)
 	} else {

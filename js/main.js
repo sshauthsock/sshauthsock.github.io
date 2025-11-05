@@ -1,5 +1,5 @@
 import * as api from "./api.js";
-import { setAllSpirits, state as globalState } from "./state.js"; // setAllSpirits와 globalState를 함께 import
+import { setAllSpirits, state as globalState } from "./state.js";
 import { showLoading, hideLoading } from "./loadingIndicator.js";
 
 const pageModules = {

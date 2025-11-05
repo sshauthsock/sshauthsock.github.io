@@ -1,0 +1,653 @@
+/* =================================================================
+   FORMS.CSS - 폼 및 입력 요소 스타일
+   ================================================================= */
+
+/* Base Form Styles */
+.form-group {
+  margin-bottom: var(--space-md);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--radius-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-control {
+  width: 100%;
+  padding: var(--space-sm) 10px;
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-md);
+  transition: var(--transition-fast);
+}
+
+.form-control:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.15);
+  outline: none;
+}
+
+/* Number Input Styles */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Level Batch Control */
+.level-batch-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* Selector/Level Button 개선 */
+.selector-btn,
+.level-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 90px;
+  max-width: 180px;
+  font-size: var(--text-sm);
+  padding: 6px 12px;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+  background: var(--color-primary-light);
+  color: var(--color-dark-text);
+  border: 1px solid var(--color-primary);
+}
+
+.level-btn.min-btn,
+.level-btn.max-btn {
+  background: var(--color-primary);
+  color: var(--text-white);
+  border: 1px solid var(--color-primary-dark);
+}
+
+.selector-btn .level-status,
+.level-btn .level-status {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+/* .selector-btn .level-progress-bar,
+.level-btn .level-progress-bar {
+  flex: 1 1 40px;
+  min-width: 30px;
+  max-width: 80px;
+  height: 6px;
+  background: var(--color-primary-light);
+  border-radius: 3px;
+  margin-left: 4px;
+  margin-right: 2px;
+} */
+
+.level-batch-control input {
+  font-weight: bold;
+  font-size: var(--text-md);
+  color: var(--text-primary);
+  background-color: var(--color-primary-light);
+  padding: var(--radius-sm) 10px;
+  border-radius: var(--radius-xl);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-primary);
+  text-align: center;
+  width: 60px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.level-batch-control button {
+  padding: var(--radius-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-btn-primary);
+}
+
+.level-batch-control button:hover {
+  background-color: var(--color-primary-dark);
+  transform: scale(1.05);
+}
+
+/* Search Components */
+.search-container {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: var(--space-md);
+}
+
+.search-results-container {
+  min-height: 120px;
+  max-height: 350px;
+  overflow-y: auto;
+  padding-bottom: var(--space-md);
+}
+
+.search-header {
+  margin-bottom: var(--space-sm);
+}
+
+.search-header h4 {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.search-controls {
+  position: relative;
+}
+
+.search-input-wrapper {
+  display: flex;
+  gap: var(--radius-sm);
+}
+
+#search-input,
+#mobile-search-input,
+.search-input {
+  flex: 1;
+  padding: var(--space-sm) 12px;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary-light);
+  font-size: var(--text-md);
+  outline: none;
+  box-sizing: border-box;
+  min-height: 44px;
+}
+
+#search-button,
+#mobile-search-button,
+.search-btn {
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-primary);
+  color: var(--text-white);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition-fast);
+}
+
+#search-button:hover,
+#mobile-search-button:hover,
+.search-btn:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider,
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 26px;
+}
+
+.slider:before,
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-white);
+  transition: 0.4s;
+  border-radius: var(--radius-round);
+}
+
+input:checked + .slider,
+input:checked + .toggle-slider {
+  background-color: var(--color-primary);
+}
+
+input:focus + .slider,
+input:focus + .toggle-slider {
+  box-shadow: 0 0 1px var(--color-primary);
+}
+
+input:checked + .slider:before,
+input:checked + .toggle-slider:before {
+  transform: translateX(24px);
+}
+
+/* Level Selector 개선 */
+.level-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 15px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+  min-height: 90px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+/* level-selector 버튼 내부 구조 개선 */
+.level-selector .selector-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  min-width: 100px;
+  max-width: 130px;
+  height: 70px;
+  font-size: 12px;
+  padding: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  color: #2c3e50;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.level-selector .selector-btn:hover {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border-color: #1976d2;
+  color: #0d47a1;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.level-selector .selector-btn.selected {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  border-color: #0d47a1;
+  color: #ffffff;
+  font-weight: 600;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(25, 118, 210, 0.3), 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.level-selector .selector-btn.selected .level-text {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.level-selector .selector-btn.selected .level-progress-container .level-status {
+  color: #ffffff;
+  opacity: 0.95;
+}
+
+.level-selector .selector-btn:hover .level-text {
+  color: #0d47a1;
+  font-weight: 700;
+}
+
+.level-selector .selector-btn:hover .level-progress-container .level-status {
+  color: #0d47a1;
+}
+
+/* 레벨 텍스트와 상태 */
+.level-selector .selector-btn .level-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #2c3e50;
+  text-align: center;
+  line-height: 1.1;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: block;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 프로그레스 바 컨테이너 */
+.level-selector .selector-btn .level-progress-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+}
+
+/* level-status는 level-progress-container 안에 있음 */
+.level-selector .selector-btn .level-progress-container .level-status {
+  font-size: 9px;
+  font-weight: 500;
+  color: #555555;
+  text-align: center;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: block;
+}
+
+.level-selector .selector-btn .level-progress-bar {
+  width: 75%;
+  min-width: 50px;
+  max-width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #e9ecef 0%, #f8f9fa 100%);
+  border-radius: 3px;
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.level-selector .selector-btn:hover .level-progress-bar {
+  background: rgba(33, 150, 243, 0.2);
+}
+
+.level-selector .selector-btn.selected .level-progress-bar {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* 프로그레스 바 채움 */
+.level-selector .selector-btn .level-progress-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+  border-radius: 3px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(25, 118, 210, 0.3);
+}
+
+.level-selector .selector-btn.selected .level-progress-bar::after {
+  background: linear-gradient(90deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 0 1px 3px rgba(255, 255, 255, 0.5);
+}
+/* progress-dots 버튼 내부 배치 및 스타일 */
+.level-selector .selector-btn .progress-dots {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  height: 12px;
+}
+
+/* 애니메이션 효과 추가 */
+.level-selector .selector-btn .progress-dot:hover {
+  transform: scale(1.2);
+}
+
+.level-selector .selector-btn:hover .progress-dot.yellow {
+  box-shadow: 0 2px 6px rgba(243, 156, 18, 0.4);
+  transform: scale(1.1);
+}
+
+.level-selector .selector-btn:hover .progress-dot.blue {
+  box-shadow: 0 2px 6px rgba(9, 132, 227, 0.4);
+  transform: scale(1.1);
+}
+
+/* 포커스 접근성 개선 */
+.level-selector .selector-btn:focus {
+  outline: 3px solid rgba(25, 118, 210, 0.3);
+  outline-offset: 2px;
+}
+
+.level-selector .selector-btn:active {
+  transform: translateY(0) scale(0.98);
+  transition: all 0.1s ease;
+}
+.level-selector .selector-btn .progress-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid #adb5bd;
+  background: #e9ecef;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 0 0 6px;
+  box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.level-selector .selector-btn .progress-dot.gray {
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  border-color: #adb5bd;
+}
+.level-selector .selector-btn .progress-dot.yellow {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-color: #f39c12;
+  box-shadow: 0 1px 3px rgba(243, 156, 18, 0.3);
+}
+.level-selector .selector-btn .progress-dot.blue {
+  background: linear-gradient(135deg, #cce5ff 0%, #74b9ff 100%);
+  border-color: #0984e3;
+  box-shadow: 0 1px 3px rgba(9, 132, 227, 0.3);
+}
+
+/* Spirit Level Control 최적화 */
+.spirit-level-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  width: fit-content;
+  margin: var(--space-xs) 0;
+}
+
+.spirit-level-control button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-white);
+  color: var(--text-secondary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.spirit-level-control button:hover {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  transform: scale(1.05);
+}
+
+.spirit-level-control button:active {
+  transform: scale(0.95);
+}
+
+.spirit-level-control input {
+  width: 60px;
+  height: 28px;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--bg-white);
+  /* color: var(--color-dark-text); */
+  outline: none;
+  margin: 0 2px;
+  transition: all 0.2s ease;
+}
+
+.spirit-level-control input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.15);
+}
+
+.spirit-level-control .min-btn {
+  background: var(--color-warning);
+  color: var(--text-white);
+}
+
+.spirit-level-control .min-btn:hover {
+  background: var(--color-warning-dark);
+  color: var(--text-white);
+}
+
+.spirit-level-control .max-btn {
+  background: var(--color-success);
+  color: var(--text-white);
+}
+
+.spirit-level-control .max-btn:hover {
+  background: var(--color-success-dark);
+  color: var(--text-white);
+}
+
+.spirit-level-control .minus-btn {
+  color: var(--color-danger);
+}
+
+.spirit-level-control .minus-btn:hover {
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+}
+
+.spirit-level-control .plus-btn {
+  color: var(--color-success);
+}
+
+.spirit-level-control .plus-btn:hover {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+
+/* View Toggle */
+.view-toggle-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 15px;
+  gap: var(--space-md);
+  flex-wrap: nowrap;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.toggle-label {
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* Mobile Level Selector Optimization */
+@media (max-width: 768px) {
+  .level-selector {
+    height: auto;
+    min-height: 50px;
+  }
+
+  .level-selector .selector-btn {
+    height: 50px;
+    padding: 8px 12px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .level-selector .selector-btn .level-text {
+    font-size: 14px;
+    margin: 0;
+    flex: 1;
+    text-align: left;
+  }
+
+  .level-selector .selector-btn .level-progress-container {
+    display: none;
+  }
+
+  .level-selector .selector-btn .level-progress-bar {
+    display: none;
+  }
+
+  .level-selector .selector-btn .progress-dots {
+    display: flex;
+    gap: 4px;
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .level-selector .selector-btn .progress-dot {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .level-selector .selector-btn {
+    height: 45px;
+    padding: 6px 10px;
+  }
+
+  .level-selector .selector-btn .level-text {
+    font-size: 13px;
+  }
+
+  .level-selector .selector-btn .progress-dots {
+    gap: 3px;
+  }
+
+  .level-selector .selector-btn .progress-dot {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 6px;
+  }
+}

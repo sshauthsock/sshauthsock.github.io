@@ -74,3 +74,30 @@ export const EFFECTIVE_STATS = [
   "pvpDamagePercent",
   "pvpDefensePercent",
 ];
+
+// 25레벨 고정 환수들 (레벨 변경 불가)
+export const FIXED_LEVEL_SPIRITS = [
+  "냉정의 수호",
+  "침착의 수호",
+  "결의의 수호",
+  "고요의 수호",
+  "활력의 수호",
+  "의지의 수호",
+  "냉정의 탑승",
+  "침착의 탑승",
+  "결의의 탑승",
+  "고요의 탑승",
+  "활력의 탑승",
+  "의지의 탑승",
+  "냉정의 변신",
+  "침착의 변신",
+  "결의의 변신",
+  "고요의 변신",
+  "활력의 변신",
+  "의지의 변신",
+];
+
+// 환수가 레벨 고정인지 확인하는 함수
+export function isFixedLevelSpirit(spiritName) {
+  return FIXED_LEVEL_SPIRITS.includes(spiritName);
+}

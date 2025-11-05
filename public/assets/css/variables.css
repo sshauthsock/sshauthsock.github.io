@@ -1,0 +1,234 @@
+/* =================================================================
+   VARIABLES.CSS - CSS 변수 및 키프레임
+   ================================================================= */
+
+:root {
+  /* Colors - Primary Palette */
+  --color-primary: #3498db;
+  --color-primary-dark: #2980b9;
+  --color-primary-light: #e3f2fd;
+  --color-secondary: #4caf50;
+  --color-secondary-dark: #388e3c;
+  --color-secondary-light: #e8f5e9;
+  --color-danger: #f44336;
+  --color-danger-dark: #d32f2f;
+  --color-danger-light: #fee2e2;
+  --color-warning: #ffc107;
+  --color-warning-dark: #ff8f00;
+  --color-warning-light: #fff8e1;
+  --color-success: #10b981;
+  --color-success-dark: #059669;
+  --color-success-light: #dcfce7;
+  --color-info: #2563eb;
+  --color-info-dark: #1d4ed8;
+  --color-info-light: #dbeafe;
+  --color-gray: #64748b;
+  --color-gray-dark: #475569;
+  --color-gray-light: #f1f5f9;
+
+    /* Contrast Colors (for auto text color) */
+    --color-light-text: #222831;
+    --color-dark-text: #fff;
+    --color-btn-light-bg: #f5f7fa;
+    --color-btn-dark-bg: #2563eb;
+    --color-btn-light-border: #e0e0e0;
+    --color-btn-dark-border: #1d4ed8;
+
+  /* Text Colors */
+  --text-primary: #1a2a3a;
+  --text-secondary: #4b5563;
+  --text-light: #94a3b8;
+  --text-white: #ffffff;
+
+  /* Background Colors */
+  --bg-white: #ffffff;
+  --bg-light: #f5f7fa;
+  --bg-lighter: #f9f9f9;
+  --bg-gray: #f1f5f9;
+  --bg-dark: #1a2a3a;
+  --bg-darker: #0f172a;
+
+  /* Border Colors */
+  --border-light: #eaeaea;
+  --border-medium: #ddd;
+  --border-primary: #d1e7f8;
+  --border-gray: #e5e7eb;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+  --shadow-btn-primary: 0 3px 8px rgba(52, 152, 219, 0.3);
+  --shadow-btn-success: 0 3px 8px rgba(16, 185, 129, 0.3);
+  --shadow-btn-info: 0 3px 8px rgba(59, 130, 246, 0.3);
+  --shadow-btn-warning: 0 4px 10px rgba(255, 152, 0, 0.3);
+
+  /* Border Radius */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-round: 50%;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 15px;
+  --space-lg: 20px;
+  --space-xl: 30px;
+
+  /* Transitions */
+  --transition-fast: all 0.2s ease;
+  --transition-normal: all 0.3s ease;
+  --transition-slow: all 0.4s ease;
+
+  /* Typography */
+  --text-xs: 10px;
+  --text-sm: 12px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-xxl: 20px;
+
+  /* Z-Index Scale */
+  --z-behind: -1;
+  --z-normal: 1;
+  --z-dropdown: 100;
+  --z-sticky: 500;
+  --z-fixed: 1000;
+  --z-modal: 2000;
+  --z-popover: 5000;
+  --z-tooltip: 9000;
+  --z-top: 9999;
+
+  /* Component Dimensions */
+  --card-padding: var(--space-md);
+  --button-height-default: 36px;
+  --button-height-mobile: 32px;
+  --input-height-default: 36px;
+  --input-height-mobile: 32px;
+
+  /* Breakpoints */
+  --breakpoint-xs: 0;
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+
+  /* Animation Variables */
+  --angle: 0deg;
+}
+
+/* =================================================================
+   KEYFRAMES - 애니메이션
+   ================================================================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes flash-animation {
+  0% {
+    box-shadow: 0 0 0 rgba(52, 152, 219, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(52, 152, 219, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(52, 152, 219, 0.3);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(25, 118, 210, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(25, 118, 210, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(25, 118, 210, 0);
+  }
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  70% {
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(100, 100);
+    opacity: 0;
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes rotate-border {
+  0% {
+    --angle: 0deg;
+  }
+  100% {
+    --angle: 360deg;
+  }
+}

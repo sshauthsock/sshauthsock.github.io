@@ -16,6 +16,196 @@ const pageState = {
 };
 const elements = {};
 
+// 등급 세트 효과 정의
+const GRADE_SET_EFFECTS = {
+  수호: {
+    전설: {
+      2: { damageResistance: 100, pvpDefensePercent: 1 },
+      3: { damageResistance: 200, pvpDefensePercent: 2 },
+      4: { damageResistance: 350, pvpDefensePercent: 3.5 },
+      5: { damageResistance: 550, pvpDefensePercent: 5.5 },
+    },
+    불멸: {
+      2: { damageResistance: 150, pvpDefensePercent: 1.5 },
+      3: { damageResistance: 300, pvpDefensePercent: 3 },
+      4: { damageResistance: 525, pvpDefensePercent: 5.25 },
+      5: { damageResistance: 825, pvpDefensePercent: 8.25 },
+    },
+  },
+  탑승: {
+    전설: {
+      2: { damageResistancePenetration: 100, pvpDamagePercent: 1 },
+      3: { damageResistancePenetration: 200, pvpDamagePercent: 2 },
+      4: { damageResistancePenetration: 350, pvpDamagePercent: 3.5 },
+      5: { damageResistancePenetration: 550, pvpDamagePercent: 5.5 },
+    },
+    불멸: {
+      2: { damageResistancePenetration: 150, pvpDamagePercent: 1.5 },
+      3: { damageResistancePenetration: 300, pvpDamagePercent: 3 },
+      4: { damageResistancePenetration: 525, pvpDamagePercent: 5.25 },
+      5: { damageResistancePenetration: 825, pvpDamagePercent: 8.25 },
+    },
+  },
+  변신: {
+    전설: {
+      2: {
+        damageResistance: 50,
+        damageResistancePenetration: 50,
+        pvpDefensePercent: 0.5,
+        pvpDamagePercent: 0.5,
+      },
+      3: {
+        damageResistance: 100,
+        damageResistancePenetration: 100,
+        pvpDefensePercent: 1,
+        pvpDamagePercent: 1,
+      },
+      4: {
+        damageResistance: 175,
+        damageResistancePenetration: 175,
+        pvpDefensePercent: 1.75,
+        pvpDamagePercent: 1.75,
+      },
+      5: {
+        damageResistance: 275,
+        damageResistancePenetration: 275,
+        pvpDefensePercent: 2.75,
+        pvpDamagePercent: 2.75,
+      },
+    },
+    불멸: {
+      2: {
+        damageResistance: 75,
+        damageResistancePenetration: 75,
+        pvpDefensePercent: 0.75,
+        pvpDamagePercent: 0.75,
+      },
+      3: {
+        damageResistance: 150,
+        damageResistancePenetration: 150,
+        pvpDefensePercent: 1.5,
+        pvpDamagePercent: 1.5,
+      },
+      4: {
+        damageResistance: 262,
+        damageResistancePenetration: 262,
+        pvpDefensePercent: 2.62,
+        pvpDamagePercent: 2.62,
+      },
+      5: {
+        damageResistance: 412,
+        damageResistancePenetration: 412,
+        pvpDefensePercent: 4.12,
+        pvpDamagePercent: 4.12,
+      },
+    },
+  },
+};
+
+// 세력 세트 효과 정의 (모든 카테고리 동일)
+const FACTION_SET_EFFECTS = {
+  결의: {
+    2: { damageResistance: 200 },
+    3: { damageResistance: 400 },
+    4: { damageResistance: 600 },
+    5: { damageResistance: 800 },
+  },
+  고요: {
+    2: { damageResistancePenetration: 200 },
+    3: { damageResistancePenetration: 400 },
+    4: { damageResistancePenetration: 600 },
+    5: { damageResistancePenetration: 800 },
+  },
+  의지: {
+    2: { pvpDamagePercent: 2 },
+    3: { pvpDamagePercent: 4 },
+    4: { pvpDamagePercent: 6 },
+    5: { pvpDamagePercent: 8 },
+  },
+  침착: {
+    2: { pvpDefensePercent: 2 },
+    3: { pvpDefensePercent: 4 },
+    4: { pvpDefensePercent: 6 },
+    5: { pvpDefensePercent: 8 },
+  },
+  냉정: {
+    2: { damageResistance: 100, damageResistancePenetration: 100 },
+    3: { damageResistance: 200, damageResistancePenetration: 200 },
+    4: { damageResistance: 300, damageResistancePenetration: 300 },
+    5: { damageResistance: 400, damageResistancePenetration: 400 },
+  },
+  활력: {
+    2: { pvpDamagePercent: 1, pvpDefensePercent: 1 },
+    3: { pvpDamagePercent: 2, pvpDefensePercent: 2 },
+    4: { pvpDamagePercent: 3, pvpDefensePercent: 3 },
+    5: { pvpDamagePercent: 4, pvpDefensePercent: 4 },
+  },
+};
+
+// 등급 효과 계산 함수
+function calculateGradeEffects(gradeCounts, category) {
+  const effects = [];
+  const categoryEffects = GRADE_SET_EFFECTS[category];
+  if (!categoryEffects) return effects;
+
+  Object.entries(gradeCounts).forEach(([grade, count]) => {
+    const gradeRules = categoryEffects[grade];
+    if (!gradeRules) return;
+
+    // 가장 높은 세트 효과 단계 찾기
+    let highestStep = 0;
+    for (let step = 2; step <= count; step++) {
+      if (gradeRules[step.toString()]) {
+        highestStep = step;
+      }
+    }
+
+    if (highestStep > 0) {
+      const stepEffects = gradeRules[highestStep.toString()];
+      Object.entries(stepEffects).forEach(([statKey, value]) => {
+        effects.push({
+          key: statKey,
+          name: STATS_MAPPING[statKey] || statKey,
+          value: value,
+        });
+      });
+    }
+  });
+
+  return effects;
+}
+
+// 세력 효과 계산 함수
+function calculateFactionEffects(factionCounts, category) {
+  const effects = [];
+
+  Object.entries(factionCounts).forEach(([faction, count]) => {
+    const factionRules = FACTION_SET_EFFECTS[faction];
+    if (!factionRules) return;
+
+    // 가장 높은 세트 효과 단계 찾기
+    let highestStep = 0;
+    for (let step = 2; step <= count; step++) {
+      if (factionRules[step.toString()]) {
+        highestStep = step;
+      }
+    }
+
+    if (highestStep > 0) {
+      const stepEffects = factionRules[highestStep.toString()];
+      Object.entries(stepEffects).forEach(([statKey, value]) => {
+        effects.push({
+          key: statKey,
+          name: STATS_MAPPING[statKey] || statKey,
+          value: value,
+        });
+      });
+    }
+  });
+
+  return effects;
+}
+
 function getHTML() {
   return `
     <div class="sub-tabs" id="rankingCategoryTabs">
@@ -305,21 +495,75 @@ function handleRankingAction(e) {
     const selectedRankingData = pageState.currentLoadedRankings[index];
 
     if (selectedRankingData) {
+      // 환수들을 25레벨로 설정
+      const spiritsWithLevel25 = selectedRankingData.spirits.map((spirit) => ({
+        ...spirit,
+        stats: [{ level: 25 }], // 모든 환수를 25레벨로 설정
+      }));
+
+      // 등급 카운트 계산
+      const gradeCounts = {};
+      selectedRankingData.spirits.forEach((spirit) => {
+        const grade = spirit.grade;
+        gradeCounts[grade] = (gradeCounts[grade] || 0) + 1;
+      });
+
+      // 세력 카운트 계산
+      const factionCounts = {};
+      selectedRankingData.spirits.forEach((spirit) => {
+        if (spirit.influence) {
+          const faction = spirit.influence;
+          factionCounts[faction] = (factionCounts[faction] || 0) + 1;
+        }
+      });
+
+      // 등급효과와 세력효과를 수동으로 계산 (API 데이터가 불완전한 경우)
+      let gradeEffects = selectedRankingData.gradeEffects || [];
+      let factionEffects = selectedRankingData.factionEffects || [];
+
+      // 배열이 아닌 경우 빈 배열로 변환
+      if (!Array.isArray(gradeEffects)) {
+        gradeEffects = [];
+      }
+      if (!Array.isArray(factionEffects)) {
+        factionEffects = [];
+      }
+
+      // 효과가 비어있으면 수동으로 계산
+      if (gradeEffects.length === 0) {
+        gradeEffects = calculateGradeEffects(
+          gradeCounts,
+          pageState.currentCategory
+        );
+      }
+      if (factionEffects.length === 0) {
+        factionEffects = calculateFactionEffects(
+          factionCounts,
+          pageState.currentCategory
+        );
+      }
+
       const dataForModal = {
-        combination: selectedRankingData.spirits,
+        combination: selectedRankingData.spirits.map((s) => s.name),
         gradeScore: selectedRankingData.gradeScore,
         factionScore: selectedRankingData.factionScore,
         bindScore: selectedRankingData.bindScore,
-        gradeEffects: selectedRankingData.gradeEffects, // <-- 이 값이 무엇인지 확인
-        factionEffects: selectedRankingData.factionEffects, // <-- 이 값이 무엇인지 확인
+        gradeEffects: gradeEffects,
+        factionEffects: factionEffects,
         bindStats:
-          selectedRankingData.bindStats || selectedRankingData.bindStat, // <-- 이 값이 무엇인지 확인
-        spirits: selectedRankingData.spirits,
+          selectedRankingData.bindStats || selectedRankingData.bindStat,
+        spirits: spiritsWithLevel25, // 25레벨로 설정된 환수 데이터 사용
+        gradeCounts: gradeCounts, // 등급 카운트 추가
+        factionCounts: factionCounts, // 세력 카운트 추가
       };
-      // console.log(
-      //   "Debug: DataForModal contents for Ranking Details:",
-      //   dataForModal
-      // );
+
+      // 디버깅을 위해 데이터 구조 확인 (필요시 주석 해제)
+      // console.log("Debug: selectedRankingData:", selectedRankingData);
+      // console.log("Debug: gradeCounts:", gradeCounts);
+      // console.log("Debug: factionCounts:", factionCounts);
+      // console.log("Debug: gradeEffects:", gradeEffects);
+      // console.log("Debug: factionEffects:", factionEffects);
+
       showOptimalResultModal(dataForModal, true);
     } else {
       console.error("랭킹 상세 데이터를 찾을 수 없습니다:", index);
@@ -384,8 +628,9 @@ export function getHelpContentHTML() {
                 <li><strong>능력치 선택 (능력치 랭킹 선택 시):</strong> 능력치 랭킹을 선택하면 나타나는 드롭다운에서 '장착효과(환산)', '등록효과(환산)' 또는 원하는 특정 능력치를 선택하여 해당 능력치 랭킹을 볼 수 있습니다.</li>
                 <li><strong>환수/조합 클릭:</strong>
                     <ul>
-                        <li>결속 랭킹에서 조합 내 환수 이미지를 클릭하거나, 능력치 랭킹에서 환수 카드를 클릭하면 해당 환수의 25레벨 상세 정보를 모달 창으로 확인할 수 있습니다.</li>
-                        <li>랭킹 모드에서는 환수 상세 정보의 레벨이 25로 고정됩니다.</li>
+                        <li>결속 랭킹에서 조합 내 환수 이미지를 클릭하거나, 능력치 랭킹에서 환수 카드를 클릭하면 해당 환수의 상세 정보를 모달 창으로 확인할 수 있습니다.</li>
+                        <li>랭킹 모드에서 열리는 환수 상세 정보는 고정 레벨 시스템으로, 18개 파벌 환수(냉정, 침착, 결의, 고요, 활력, 의지)는 25레벨로 고정되고 레벨 조정이 불가능합니다.</li>
+                        <li>고정 레벨 환수가 아닌 경우 +/- 버튼으로 레벨 조정이 가능하며, 장기 누르기 기능과 모바일 터치도 지원합니다.</li>
                     </ul>
                 </li>
             </ul>

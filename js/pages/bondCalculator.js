@@ -7,11 +7,34 @@ import { renderSpiritGrid } from "../components/spritGrid.js";
 import { showLoading, hideLoading } from "../loadingIndicator.js";
 import { checkSpiritStats, checkItemForStatEffect } from "../utils.js";
 import { createStatFilter } from "../components/statFilter.js";
-import { INFLUENCE_ROWS, GRADE_ORDER, STATS_MAPPING } from "../constants.js";
+import {
+  INFLUENCE_ROWS,
+  isFixedLevelSpirit,
+  GRADE_ORDER,
+  STATS_MAPPING,
+  PERCENT_STATS,
+} from "../constants.js";
+
+// 길게 누르기를 위한 상태 변수들
+let longPressState = {
+  isPressed: false,
+  intervalId: null,
+  timeoutId: null,
+  hintElement: null,
+  bridgeElement: null,
+  hintHovered: false,
+  button: null,
+  spiritName: null,
+  action: null,
+  mouseDownTime: null,
+  touchStartTime: null,
+  touchMoveHandler: null,
+  ignoreMouseUp: false, // mouseup 무시 플래그 추가
+};
 
 const pageState = {
   currentCategory: "수호",
-  selectedSpirits: new Map(), // 선택된 환수 Map으로 관리
+  selectedSpirits: new Map(),
   groupByInfluence: false,
   currentStatFilter: "",
 };
@@ -159,10 +182,8 @@ function renderSelectedList() {
   }
 
   currentCategorySpirits.forEach((spirit) => {
-    // --- [수정 3] createElement 호출 방식 변경: 클래스 문자열을 두 번째 인자로, 속성 객체를 세 번째 인자로 ---
-    const card = createElement("div", "selected-spirit-card"); // 클래스 문자열만 전달
-    card.dataset.spiritName = spirit.name; // data-* 속성은 직접 설정
-    // --- [수정 3 끝] ---
+    const card = createElement("div", "selected-spirit-card");
+    card.dataset.spiritName = spirit.name;
     card.innerHTML = `
         <button class="remove-spirit" data-action="remove" title="선택 해제">×</button>
         <div class="selected-spirit-header">
@@ -172,20 +193,22 @@ function renderSelectedList() {
             </div>
         </div>
         <div class="spirit-level-control">
-            <button class="level-btn min-btn" data-action="min-level" title="레벨 0으로 설정">0</button>
-            <button class="level-btn minus-btn" data-action="level-down" title="레벨 감소">-</button>
-            <input type="number" class="level-input" min="0" max="25" value="${spirit.level}">
-            <button class="level-btn plus-btn" data-action="level-up" title="레벨 증가">+</button>
-            <button class="level-btn max-btn" data-action="max-level" title="레벨 25로 설정">25</button>
+            ${
+              isFixedLevelSpirit(spirit.name)
+                ? `<div class="fixed-level-control">
+                <span class="fixed-level-label">25 (고정)</span>
+              </div>`
+                : `<button class="level-btn minus-btn" data-action="level-down">-</button>
+              <input type="number" class="level-input" min="0" max="25" value="${spirit.level}">
+              <button class="level-btn plus-btn" data-action="level-up">+</button>`
+            }
         </div>
         `;
     container.appendChild(card);
 
     if (mobileSelectedSpiritsContainer) {
-      // --- [수정 3] createElement 호출 방식 변경: 클래스 문자열을 두 번째 인자로, 속성 객체를 세 번째 인자로 ---
-      const mobileCard = createElement("div", "selected-spirit-card"); // 클래스 문자열만 전달
-      mobileCard.dataset.spiritName = spirit.name; // data-* 속성은 직접 설정
-      // --- [수정 3 끝] ---
+      const mobileCard = createElement("div", "selected-spirit-card");
+      mobileCard.dataset.spiritName = spirit.name;
       mobileCard.innerHTML = card.innerHTML;
       mobileSelectedSpiritsContainer.appendChild(mobileCard);
     }
@@ -275,15 +298,50 @@ function onFindOptimalMobileClick() {
 }
 
 function setupEventListeners() {
-  // --- [수정 4] cleanup() 함수에서 제거할 이벤트 리스너들을 명시적으로 정의 ---
-  // elements.container 클릭 리스너 (위임)
   eventListeners.containerClickHandler = handleContainerClick;
   elements.container.addEventListener(
     "click",
     eventListeners.containerClickHandler
   );
 
-  // elements.bondCategoryTabs 클릭 리스너
+  // 길게 누르기 기능을 위한 mousedown/mouseup 이벤트 리스너
+  eventListeners.containerMouseDownHandler = handleContainerMouseDown;
+  eventListeners.globalMouseUpHandler = handleGlobalMouseUp;
+
+  // 모바일 터치 이벤트 리스너
+  eventListeners.containerTouchStartHandler = handleContainerTouchStart;
+  eventListeners.containerTouchEndHandler = handleContainerTouchEnd;
+  eventListeners.globalTouchEndHandler = handleGlobalTouchEnd;
+
+  elements.container.addEventListener(
+    "mousedown",
+    eventListeners.containerMouseDownHandler
+  );
+
+  // 모바일 터치 이벤트 추가
+  elements.container.addEventListener(
+    "touchstart",
+    eventListeners.containerTouchStartHandler,
+    { passive: false }
+  );
+
+  // 컨테이너에서 touchend 감지 (버튼에서 터치를 뗄 때)
+  elements.container.addEventListener(
+    "touchend",
+    eventListeners.containerTouchEndHandler,
+    { passive: false }
+  );
+
+  // 전역 mouseup 이벤트로 확실하게 감지
+  document.addEventListener("mouseup", eventListeners.globalMouseUpHandler);
+
+  // 전역 touchend 이벤트로 모바일 지원 - passive: false 추가
+  document.addEventListener("touchend", eventListeners.globalTouchEndHandler, {
+    passive: false,
+  });
+
+  elements.container.addEventListener("mouseleave", handleContainerMouseLeave);
+
   eventListeners.bondCategoryTabsClickHandler = (e) => {
     const target = e.target;
     const subTab = target.closest(".tab");
@@ -301,21 +359,18 @@ function setupEventListeners() {
     eventListeners.bondCategoryTabsClickHandler
   );
 
-  // elements.influenceToggle change 리스너
   eventListeners.influenceToggleChangeHandler = handleToggleChange;
   elements.influenceToggle.addEventListener(
     "change",
     eventListeners.influenceToggleChangeHandler
   );
 
-  // elements.selectedSpiritsList input 리스너
   eventListeners.selectedSpiritsListInputHandler = handleLevelInputChange;
   elements.selectedSpiritsList.addEventListener(
     "input",
     eventListeners.selectedSpiritsListInputHandler
   );
 
-  // 개별 버튼 리스너 (중복 호출 방지를 위해 container 위임에서 제거했으므로, 여기에 직접 등록)
   eventListeners.selectAllClickHandler = handleSelectAll;
   elements.selectAllBtn.addEventListener(
     "click",
@@ -329,7 +384,7 @@ function setupEventListeners() {
   );
 
   eventListeners.applyBatchLevelClickHandler = () =>
-    handleBatchLevel("batchLevelInput"); // 익명 함수는 제거가 어려움.
+    handleBatchLevel("batchLevelInput");
   elements.applyBatchLevelBtn.addEventListener(
     "click",
     eventListeners.applyBatchLevelClickHandler
@@ -367,6 +422,17 @@ function setupEventListeners() {
       "input",
       eventListeners.mobileSelectedSpiritsListInputHandler
     );
+
+    // 모바일 리스트에도 터치 이벤트 추가
+    mobileSelectedSpiritsList.addEventListener(
+      "touchstart",
+      eventListeners.containerTouchStartHandler,
+      { passive: false }
+    );
+    mobileSelectedSpiritsList.addEventListener(
+      "mousedown",
+      eventListeners.containerMouseDownHandler
+    );
   }
   if (applyMobileBatchLevelBtn) {
     eventListeners.applyMobileBatchLevelClickHandler =
@@ -391,7 +457,6 @@ function setupEventListeners() {
       eventListeners.findOptimalMobileClickHandler
     );
   }
-  // --- [수정 4 끝] ---
 }
 
 function handleSpiritSelect(spirit) {
@@ -401,7 +466,12 @@ function handleSpiritSelect(spirit) {
   if (pageState.selectedSpirits.has(spiritName)) {
     pageState.selectedSpirits.delete(spiritName);
   } else {
-    pageState.selectedSpirits.set(spiritName, { ...spirit, level: 0 });
+    // 고정 레벨 환수는 25레벨로 설정, 나머지는 0레벨
+    const initialLevel = isFixedLevelSpirit(spiritName) ? 25 : 0;
+    pageState.selectedSpirits.set(spiritName, {
+      ...spirit,
+      level: initialLevel,
+    });
   }
   renderAll();
 }
@@ -409,10 +479,19 @@ function handleSpiritSelect(spirit) {
 function handleContainerClick(e) {
   const target = e.target;
 
-  // --- [수정 7] 레벨 조절 버튼의 클릭 이벤트를 여기서 처리 ---
+  // 길게 누르기 상태에서는 클릭 이벤트 무시
+  if (longPressState.isPressed) {
+    return;
+  }
+
+  // 짧은 터치인지 확인 (300ms 이내)
+  const touchDuration = longPressState.mouseDownTime
+    ? Date.now() - longPressState.mouseDownTime
+    : 0;
+  const isShortTouch = touchDuration > 0 && touchDuration < 300;
+
   const card = target.closest(".selected-spirit-card");
   if (card) {
-    // selected-spirit-card 내부의 클릭인 경우
     const spiritName = card.dataset.spiritName;
     const spirit = pageState.selectedSpirits.get(spiritName);
     if (!spirit) {
@@ -428,37 +507,763 @@ function handleContainerClick(e) {
         pageState.selectedSpirits.delete(spiritName);
         shouldRender = true;
         break;
-      case "min-level":
-        if (spirit.level !== 0) {
-          spirit.level = 0;
-          shouldRender = true;
-        }
-        break;
       case "level-down":
+        // 고정 레벨 환수는 변경 불가
+        if (isFixedLevelSpirit(spiritName)) break;
         if (spirit.level > 0) {
           spirit.level = Math.max(0, spirit.level - 1);
           shouldRender = true;
         }
         break;
       case "level-up":
+        // 고정 레벨 환수는 변경 불가
+        if (isFixedLevelSpirit(spiritName)) break;
         if (spirit.level < 25) {
           spirit.level = Math.min(25, spirit.level + 1);
-          shouldRender = true;
-        }
-        break;
-      case "max-level":
-        if (spirit.level !== 25) {
-          spirit.level = 25;
           shouldRender = true;
         }
         break;
     }
 
     if (shouldRender) {
+      saveStateToStorage();
       renderAll();
     }
   }
-  // --- [수정 7 끝] ---
+
+  // 클릭 처리 후 mouseDownTime 초기화
+  longPressState.mouseDownTime = null;
+}
+
+function handleContainerMouseDown(e) {
+  const target = e.target;
+  const card = target.closest(".selected-spirit-card");
+
+  if (!card) return;
+
+  const action = target.dataset.action;
+  if (action !== "level-down" && action !== "level-up") return;
+
+  e.preventDefault();
+  e.stopPropagation(); // 이벤트 전파 중지
+
+  const spiritName = card.dataset.spiritName;
+  const spirit = pageState.selectedSpirits.get(spiritName);
+  if (!spirit) return;
+
+  // 이전 상태 정리
+  if (longPressState.timeoutId) {
+    clearTimeout(longPressState.timeoutId);
+  }
+  if (longPressState.intervalId) {
+    clearInterval(longPressState.intervalId);
+  }
+
+  // 길게 누르기 상태 설정
+  longPressState.isPressed = false;
+  longPressState.button = target;
+  longPressState.spiritName = spiritName;
+  longPressState.action = action;
+  longPressState.hintHovered = false;
+  longPressState.mouseDownTime = Date.now(); // 마우스 다운 시간 기록
+
+  // 300ms 후에 길게 누르기 시작
+  longPressState.timeoutId = setTimeout(() => {
+    // console.log("⏱️ timeout 실행 - startLongPress 호출 예정");
+    if (longPressState.button === target) {
+      startLongPress();
+    } else {
+      // console.log("❌ timeout 실행되었지만 button이 다름");
+    }
+  }, 300);
+}
+
+// 모바일 터치 이벤트 핸들러
+function handleContainerTouchStart(e) {
+  const target = e.target;
+  const card = target.closest(".selected-spirit-card");
+
+  if (!card) {
+    return;
+  }
+
+  // 레벨 버튼인지 확인 (클래스와 data-action 모두 확인)
+  const isLevelBtn =
+    target.classList.contains("level-btn") ||
+    target.classList.contains("minus-btn") ||
+    target.classList.contains("plus-btn");
+
+  const action = target.dataset.action;
+
+  if (!isLevelBtn || (action !== "level-down" && action !== "level-up")) {
+    return;
+  }
+
+  // 터치 이벤트를 preventDefault 처리 (클릭 이벤트와 중복 방지)
+  e.preventDefault();
+  e.stopPropagation();
+
+  // 터치 시작 시간 저장 (짧은 터치 판별용)
+  longPressState.touchStartTime = Date.now();
+
+  // 직접 handleContainerMouseDown 호출
+  const syntheticEvent = {
+    target: e.target,
+    preventDefault: () => {},
+    stopPropagation: () => {},
+  };
+
+  handleContainerMouseDown(syntheticEvent);
+}
+
+// 컨테이너에서 터치 종료 처리
+function handleContainerTouchEnd(e) {
+  // 길게 누르기가 활성화된 상태라면 반드시 중지
+  if (longPressState.isPressed) {
+    const touch = e.changedTouches[0];
+
+    // 터치 위치로 힌트와의 충돌 감지
+    if (longPressState.hintElement) {
+      const hintRect = longPressState.hintElement.getBoundingClientRect();
+      const isWithinHint =
+        touch.clientX >= hintRect.left &&
+        touch.clientX <= hintRect.right &&
+        touch.clientY >= hintRect.top &&
+        touch.clientY <= hintRect.bottom;
+
+      if (isWithinHint) {
+        longPressState.hintHovered = true;
+        // 힌트에서 터치를 뗐으므로 값 적용
+        const targetValue = longPressState.action === "level-down" ? 0 : 25;
+        const spirit = pageState.selectedSpirits.get(longPressState.spiritName);
+        if (spirit) {
+          spirit.level = targetValue;
+          saveStateToStorage();
+          renderAll();
+        }
+      }
+    }
+
+    stopLongPress();
+    e.preventDefault();
+    e.stopPropagation();
+  }
+}
+
+function handleTouchMove(e) {
+  if (!longPressState.isPressed) return;
+
+  const touch = e.touches[0];
+  const elementUnderTouch = document.elementFromPoint(
+    touch.clientX,
+    touch.clientY
+  );
+  const hint = longPressState.hintElement;
+  const bridge = longPressState.bridgeElement;
+
+  if (!hint) return;
+
+  // 힌트나 브리지 영역에 있는지 확인
+  const isOnHint =
+    elementUnderTouch === hint || hint.contains(elementUnderTouch);
+  const isOnBridge = elementUnderTouch === bridge;
+
+  if (isOnHint) {
+    if (!longPressState.hintHovered) {
+      longPressState.hintHovered = true;
+      hint.style.transform = "scale(1.2)";
+      hint.style.fontSize = "12px";
+      hint.style.fontWeight = "900";
+      hint.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+    }
+  } else if (longPressState.hintHovered && !isOnBridge) {
+    longPressState.hintHovered = false;
+    hint.style.transform = "scale(1)";
+    hint.style.fontSize = "10px";
+    hint.style.fontWeight = "bold";
+    hint.style.boxShadow = "0 1px 3px rgba(0,0,0,0.2)";
+  }
+}
+
+function handleGlobalTouchEnd(e) {
+  // 아무 상태도 없으면 무시
+  if (!longPressState.isPressed && !longPressState.timeoutId) {
+    return;
+  }
+
+  const touch = e.changedTouches[0];
+
+  // 짧은 터치인지 확인 (300ms 이내)
+  const touchDuration = longPressState.touchStartTime
+    ? Date.now() - longPressState.touchStartTime
+    : 0;
+  const isShortTouch = touchDuration > 0 && touchDuration < 300;
+
+  // 짧은 터치이고 길게 누르기가 시작되지 않았다면
+  if (isShortTouch && !longPressState.isPressed) {
+    // timeout 취소
+    if (longPressState.timeoutId) {
+      clearTimeout(longPressState.timeoutId);
+      longPressState.timeoutId = null;
+    }
+
+    // 레벨 증감 처리
+    const spiritName = longPressState.spiritName;
+    const action = longPressState.action;
+    const spirit = pageState.selectedSpirits.get(spiritName);
+
+    if (spirit && action) {
+      // 고정 레벨 환수는 변경 불가
+      if (!isFixedLevelSpirit(spiritName)) {
+        let shouldRender = false;
+
+        if (action === "level-down" && spirit.level > 0) {
+          spirit.level = Math.max(0, spirit.level - 1);
+          shouldRender = true;
+        } else if (action === "level-up" && spirit.level < 25) {
+          spirit.level = Math.min(25, spirit.level + 1);
+          shouldRender = true;
+        }
+
+        if (shouldRender) {
+          saveStateToStorage();
+          renderAll();
+        }
+      }
+    }
+
+    // 상태 초기화
+    longPressState.button = null;
+    longPressState.spiritName = null;
+    longPressState.action = null;
+    longPressState.touchStartTime = null;
+    return;
+  }
+
+  // 길게 누르기가 활성화된 상태라면 반드시 중지
+  if (longPressState.isPressed) {
+    // console.log("✅ 길게 누르기 활성 상태 - stopLongPress 호출 예정");
+
+    // 터치 위치로 힌트와의 충돌 감지
+    if (longPressState.hintElement) {
+      const hintRect = longPressState.hintElement.getBoundingClientRect();
+      const isWithinHint =
+        touch.clientX >= hintRect.left &&
+        touch.clientX <= hintRect.right &&
+        touch.clientY >= hintRect.top &&
+        touch.clientY <= hintRect.bottom;
+
+      if (isWithinHint) {
+        longPressState.hintHovered = true;
+        // 힌트에서 터치를 뗐으므로 값 적용
+        const targetValue = longPressState.action === "level-down" ? 0 : 25;
+        const spirit = pageState.selectedSpirits.get(longPressState.spiritName);
+        if (spirit) {
+          spirit.level = targetValue;
+          saveStateToStorage();
+          renderAll();
+        }
+      }
+    }
+
+    // 반드시 stopLongPress 호출 (힌트 여부와 관계없이)
+    // console.log("🛑 stopLongPress 호출");
+    stopLongPress();
+
+    // 터치 이동 리스너 제거
+    if (longPressState.touchMoveHandler) {
+      document.removeEventListener(
+        "touchmove",
+        longPressState.touchMoveHandler
+      );
+      longPressState.touchMoveHandler = null;
+    }
+
+    // touchStartTime 초기화
+    longPressState.touchStartTime = null;
+    return;
+  }
+
+  // 길게 누르기가 시작되지 않았지만 timeout이 있다면
+  if (longPressState.timeoutId) {
+    // 터치 위치로 가상의 마우스 이벤트 생성
+    const fakeEvent = {
+      target: document.elementFromPoint(touch.clientX, touch.clientY),
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      type: "touchend",
+    };
+
+    // 터치 종료를 마우스 업으로 처리
+    handleGlobalMouseUp(fakeEvent);
+  }
+
+  // 터치 이동 리스너 제거
+  if (longPressState.touchMoveHandler) {
+    document.removeEventListener("touchmove", longPressState.touchMoveHandler);
+    longPressState.touchMoveHandler = null;
+  }
+
+  // touchStartTime 초기화
+  longPressState.touchStartTime = null;
+}
+
+function handleGlobalMouseUp(e) {
+  // ignoreMouseUp 플래그가 true면 무시
+  if (longPressState.ignoreMouseUp) {
+    return;
+  }
+
+  // 길게 누르기가 시작되지 않았다면 timeout만 취소
+  if (longPressState.timeoutId && !longPressState.isPressed) {
+    clearTimeout(longPressState.timeoutId);
+    longPressState.timeoutId = null;
+
+    // 짧은 터치/클릭이었으므로 일반 클릭 이벤트로 처리되도록 함
+    // mouseDownTime은 유지해서 handleContainerClick에서 판단 가능하도록
+    longPressState.button = null;
+    longPressState.spiritName = null;
+    longPressState.action = null;
+    return;
+  }
+
+  // 길게 누르기가 활성화된 상태라면 중지
+  if (longPressState.isPressed) {
+    // console.log("🔄 길게 누르기 활성 상태 - stopLongPress 호출 예정");
+
+    // 터치 이벤트인 경우 힌트와의 충돌 감지
+    if (e.type === "touchend" && longPressState.hintElement) {
+      const hintRect = longPressState.hintElement.getBoundingClientRect();
+      const isWithinHint =
+        e.clientX >= hintRect.left &&
+        e.clientX <= hintRect.right &&
+        e.clientY >= hintRect.top &&
+        e.clientY <= hintRect.bottom;
+
+      if (isWithinHint) {
+        longPressState.hintHovered = true;
+      }
+    }
+
+    // 힌트에 마우스가 올려져 있다면 해당 값으로 적용
+    if (longPressState.hintHovered) {
+      const targetValue = longPressState.action === "level-down" ? 0 : 25;
+      const spirit = pageState.selectedSpirits.get(longPressState.spiritName);
+      if (spirit) {
+        spirit.level = targetValue;
+        saveStateToStorage();
+        renderAll();
+      }
+    }
+    stopLongPress();
+  }
+}
+
+function handleContainerMouseLeave(e) {
+  // 컨테이너를 벗어날 때 길게 누르기 중지
+  // 단, 힌트나 브리지로 이동하는 경우는 제외
+  if (longPressState.isPressed) {
+    const isMovingToHint =
+      e.relatedTarget === longPressState.hintElement ||
+      longPressState.hintElement?.contains(e.relatedTarget);
+    const isMovingToBridge =
+      e.relatedTarget === longPressState.bridgeElement ||
+      longPressState.bridgeElement?.contains(e.relatedTarget);
+
+    if (isMovingToHint || isMovingToBridge) {
+      return;
+    }
+
+    stopLongPress();
+  }
+}
+
+// 레벨 표시만 업데이트하는 함수 (DOM 재렌더링 방지)
+function updateSpiritLevelDisplay(spiritName, newLevel) {
+  // console.log("🔄 updateSpiritLevelDisplay 호출:", spiritName, newLevel);
+
+  // 데스크톱 카드 찾기
+  const card = elements.selectedSpiritsList.querySelector(
+    `[data-spirit-name="${spiritName}"]`
+  );
+  // console.log("🔍 데스크톱 카드 찾기:", card);
+
+  if (card) {
+    const levelInput = card.querySelector(".level-input");
+    // console.log("🔍 레벨 input 찾기:", levelInput);
+
+    if (levelInput) {
+      // console.log("📝 레벨 업데이트:", levelInput.value, "→", newLevel);
+      // value 속성과 프로퍼티 모두 설정
+      levelInput.value = newLevel;
+      levelInput.setAttribute("value", newLevel);
+      // 강제로 input 이벤트 발생시켜 업데이트 보장
+      levelInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }
+
+  // 모바일 카드도 업데이트
+  const mobileContainer = document.getElementById("selectedSpiritsMobile");
+  if (mobileContainer) {
+    const mobileCard = mobileContainer.querySelector(
+      `[data-spirit-name="${spiritName}"]`
+    );
+    if (mobileCard) {
+      const levelInput = mobileCard.querySelector(".level-input");
+      if (levelInput) {
+        levelInput.value = newLevel;
+        levelInput.setAttribute("value", newLevel);
+        levelInput.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    }
+  }
+
+  // 선택된 환수 카운트는 변경되지 않으므로 업데이트 불필요
+}
+
+function startLongPress() {
+  if (!longPressState.button) return;
+
+  longPressState.isPressed = true;
+
+  // 힌트 생성 직후 발생하는 mouseup 무시하기 위한 플래그 설정
+  longPressState.ignoreMouseUp = true;
+  setTimeout(() => {
+    longPressState.ignoreMouseUp = false;
+  }, 100); // 100ms 동안만 무시
+
+  // 힌트 요소 생성
+  try {
+    createHint();
+  } catch (error) {
+    console.error("createHint 에러:", error);
+  } // 연속 증감 함수
+  const performLevelChange = () => {
+    if (!longPressState.isPressed) {
+      return false;
+    }
+
+    const spirit = pageState.selectedSpirits.get(longPressState.spiritName);
+    if (!spirit) {
+      return false;
+    }
+
+    // 고정 레벨 환수는 레벨 변경 불가
+    if (isFixedLevelSpirit(longPressState.spiritName)) {
+      return false;
+    }
+
+    const currentLevel = spirit.level;
+    let changed = false;
+    if (longPressState.action === "level-down" && spirit.level > 0) {
+      spirit.level = Math.max(0, spirit.level - 1);
+      changed = true;
+    } else if (longPressState.action === "level-up" && spirit.level < 25) {
+      spirit.level = Math.min(25, spirit.level + 1);
+      changed = true;
+    }
+
+    if (changed) {
+      // console.log(
+      //   "✅ performLevelChange: 레벨 변경",
+      //   currentLevel,
+      //   "→",
+      //   spirit.level
+      // );
+      saveStateToStorage();
+
+      // renderAll() 대신 레벨 표시만 업데이트 (DOM 재렌더링 방지)
+      updateSpiritLevelDisplay(longPressState.spiritName, spirit.level);
+      return true;
+    } else {
+      // console.log("⚠️ performLevelChange: 변경 불가", {
+      //   level: spirit.level,
+      //   action: longPressState.action,
+      // });
+    }
+    return false;
+  };
+
+  // 첫 번째 변경 즉시 실행
+  performLevelChange();
+
+  // 연속 증감 시작
+  longPressState.intervalId = setInterval(() => {
+    if (!performLevelChange()) {
+      stopLongPress();
+    }
+  }, 200);
+}
+
+function stopLongPress() {
+  if (longPressState.intervalId) {
+    clearInterval(longPressState.intervalId);
+    longPressState.intervalId = null;
+  }
+
+  if (longPressState.timeoutId) {
+    clearTimeout(longPressState.timeoutId);
+    longPressState.timeoutId = null;
+  }
+
+  removeHint(); // 터치 이동 리스너 정리
+  if (longPressState.touchMoveHandler) {
+    document.removeEventListener("touchmove", longPressState.touchMoveHandler);
+    longPressState.touchMoveHandler = null;
+  }
+
+  longPressState.isPressed = false;
+  longPressState.hintHovered = false;
+  longPressState.bridgeElement = null;
+  longPressState.button = null;
+  longPressState.spiritName = null;
+  longPressState.action = null;
+  longPressState.mouseDownTime = null;
+  longPressState.touchStartTime = null;
+  longPressState.ignoreMouseUp = false;
+}
+function restartLongPressInterval() {
+  if (!longPressState.isPressed) return;
+
+  // 연속 증감 재시작
+  longPressState.intervalId = setInterval(() => {
+    const spirit = pageState.selectedSpirits.get(longPressState.spiritName);
+    if (!spirit) {
+      stopLongPress();
+      return;
+    }
+
+    let changed = false;
+    if (longPressState.action === "level-down" && spirit.level > 0) {
+      spirit.level = Math.max(0, spirit.level - 1);
+      changed = true;
+    } else if (longPressState.action === "level-up" && spirit.level < 25) {
+      spirit.level = Math.min(25, spirit.level + 1);
+      changed = true;
+    }
+
+    if (changed) {
+      saveStateToStorage();
+      renderAll();
+    } else {
+      stopLongPress(); // 최대/최소에 도달하면 중지
+    }
+  }, 150); // 150ms마다 증감
+}
+
+function createHint() {
+  if (!longPressState.button) return;
+
+  // console.log("🎨 createHint 시작:", longPressState.action);
+
+  const targetValue = longPressState.action === "level-down" ? 0 : 25;
+  const hintText = targetValue.toString();
+
+  const hint = document.createElement("div");
+  hint.className = "level-hint";
+  hint.textContent = hintText;
+
+  // 버튼 바로 옆에 힌트 배치 (마이너스는 왼쪽, 플러스는 오른쪽)
+  const buttonRect = longPressState.button.getBoundingClientRect();
+
+  hint.style.position = "fixed";
+  hint.style.top = buttonRect.top + "px";
+  hint.style.zIndex = "1000";
+  hint.style.color = "white";
+  hint.style.padding = "0px 4px";
+  hint.style.margin = "0";
+  hint.style.border = "none";
+  hint.style.borderRadius = "3px";
+  hint.style.fontSize = "10px";
+  hint.style.fontWeight = "bold";
+  hint.style.pointerEvents = "none"; // 먼저 none으로 설정하여 버튼 방해 방지
+  hint.style.cursor = "pointer";
+  hint.style.whiteSpace = "nowrap";
+  hint.style.boxShadow = "0 1px 3px rgba(0,0,0,0.2)";
+  hint.style.textAlign = "center";
+  hint.style.height = buttonRect.height + "px";
+  hint.style.lineHeight = buttonRect.height + "px";
+  hint.style.width = "32px"; // 텍스트가 잘리지 않도록 증가
+  hint.style.display = "flex";
+  hint.style.alignItems = "center";
+  hint.style.justifyContent = "center";
+  hint.style.transition = "all 0.2s ease";
+
+  if (longPressState.action === "level-down") {
+    // 마이너스 버튼: 왼쪽에 배치 (버튼과 겹치지 않도록 간격 추가)
+    hint.style.left = buttonRect.left - 36 + "px"; // 32px(힌트 너비) + 4px(간격)
+    hint.style.backgroundColor = "#f44336"; // 빨간색
+  } else {
+    // 플러스 버튼: 오른쪽에 배치 (버튼과 겹치지 않도록 간격 추가)
+    hint.style.left = buttonRect.right + 4 + "px"; // 4px 간격
+    hint.style.backgroundColor = "#4CAF50"; // 초록색
+  }
+
+  document.body.appendChild(hint);
+  longPressState.hintElement = hint;
+  longPressState.hintHovered = false;
+
+  // 버튼과 힌트 사이의 브리지 영역 생성 (마우스가 빠져나가지 않도록)
+  const bridge = document.createElement("div");
+  bridge.className = "hint-bridge";
+  bridge.style.position = "fixed";
+  bridge.style.top = buttonRect.top + "px";
+  bridge.style.height = buttonRect.height + "px";
+  bridge.style.zIndex = "999";
+  bridge.style.backgroundColor = "transparent";
+  bridge.style.pointerEvents = "none"; // 먼저 none으로 설정하여 버튼 방해 방지
+
+  if (longPressState.action === "level-down") {
+    // 마이너스: 버튼 왼쪽부터 힌트까지
+    bridge.style.left = buttonRect.left - 36 + "px";
+    bridge.style.width = 36 + buttonRect.width + 4 + "px"; // 힌트(36px) + 버튼 + 간격(4px)
+  } else {
+    // 플러스: 버튼부터 힌트 오른쪽까지
+    bridge.style.left = buttonRect.left + "px";
+    bridge.style.width = buttonRect.width + 4 + 32 + "px"; // 버튼 + 간격(4px) + 힌트(32px)
+  }
+
+  document.body.appendChild(bridge);
+  longPressState.bridgeElement = bridge;
+
+  // 힌트와 브리지에 이벤트 리스너 추가
+  const handleHintEnter = () => {
+    if (longPressState.isPressed) {
+      // console.log("🎯 힌트 진입");
+      longPressState.hintHovered = true;
+      // 시각적 피드백: 크기 증가 및 글씨 키우기
+      hint.style.transform = "scale(1.2)";
+      hint.style.fontSize = "12px";
+      hint.style.fontWeight = "900";
+      hint.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+
+      // 연속 증감은 계속 진행 (사용자가 원하는 동작)
+      // console.log("✅ 힌트 진입했지만 연속 증감 계속 진행");
+    }
+  };
+
+  const handleHintLeave = () => {
+    if (longPressState.isPressed) {
+      // console.log("🚪 힌트 이탈");
+      longPressState.hintHovered = false;
+      // 원래 크기로 복원
+      hint.style.transform = "scale(1)";
+      hint.style.fontSize = "10px";
+      hint.style.fontWeight = "bold";
+      hint.style.boxShadow = "0 1px 3px rgba(0,0,0,0.2)";
+
+      // 연속 증감은 이미 진행 중이므로 재시작 불필요
+      // console.log("✅ 힌트 이탈했지만 연속 증감은 계속 진행");
+    }
+  };
+
+  // 힌트에서의 mouseup/touchend 이벤트 처리
+  const handleHintMouseUp = () => {
+    console.log("🎯 힌트 클릭/터치 종료", {
+      isPressed: longPressState.isPressed,
+      hintHovered: longPressState.hintHovered,
+    });
+
+    if (longPressState.isPressed) {
+      // 힌트에 있었다면 값 적용
+      if (longPressState.hintHovered) {
+        const targetValue = longPressState.action === "level-down" ? 0 : 25;
+        const spirit = pageState.selectedSpirits.get(longPressState.spiritName);
+        if (spirit) {
+          spirit.level = targetValue;
+          saveStateToStorage();
+          renderAll();
+        }
+      }
+      // 항상 stopLongPress 호출
+      stopLongPress();
+    }
+  };
+
+  // 마우스 이벤트
+  hint.addEventListener("mouseenter", handleHintEnter);
+  hint.addEventListener("mouseup", handleHintMouseUp);
+  hint.addEventListener("mouseleave", (e) => {
+    // 힌트에서 브리지로 이동하는 경우는 제외
+    if (!bridge.contains(e.relatedTarget) && e.relatedTarget !== bridge) {
+      handleHintLeave();
+    }
+  });
+
+  // 터치 이벤트 추가 - passive: false로 preventDefault 가능하게
+  hint.addEventListener(
+    "touchstart",
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleHintEnter();
+    },
+    { passive: false }
+  );
+
+  hint.addEventListener(
+    "touchend",
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleHintMouseUp();
+    },
+    { passive: false }
+  );
+
+  // 터치 이동 감지 시작
+  longPressState.touchMoveHandler = handleTouchMove;
+  document.addEventListener("touchmove", longPressState.touchMoveHandler);
+
+  // 브리지 이벤트
+  bridge.addEventListener("mouseleave", (e) => {
+    // 브리지에서 힌트로 이동하는 경우는 제외
+    if (!hint.contains(e.relatedTarget) && e.relatedTarget !== hint) {
+      handleHintLeave();
+    }
+  });
+
+  bridge.addEventListener(
+    "touchstart",
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handleHintEnter(); // 브리지도 hover 상태로 설정
+    },
+    { passive: false }
+  );
+
+  bridge.addEventListener(
+    "touchend",
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // 브리지에서는 값 적용하지 않음 (힌트로만 적용)
+    },
+    { passive: false }
+  );
+
+  // 모든 이벤트 리스너 추가 후 pointerEvents 활성화 (버튼 방해 방지)
+  // setTimeout을 사용하여 다음 이벤트 루프에서 활성화
+  setTimeout(() => {
+    if (hint && longPressState.isPressed) {
+      hint.style.pointerEvents = "auto";
+    }
+    if (bridge && longPressState.isPressed) {
+      bridge.style.pointerEvents = "auto";
+    }
+  }, 0);
+}
+
+function removeHint() {
+  if (longPressState.hintElement) {
+    longPressState.hintElement.remove();
+    longPressState.hintElement = null;
+  }
+  if (longPressState.bridgeElement) {
+    longPressState.bridgeElement.remove();
+    longPressState.bridgeElement = null;
+  }
 }
 
 function handleToggleChange(e) {
@@ -472,6 +1277,12 @@ function handleLevelInputChange(e) {
     const card = e.target.closest(".selected-spirit-card");
     const spirit = pageState.selectedSpirits.get(card.dataset.spiritName);
     if (spirit) {
+      // 고정 레벨 환수는 레벨 변경 불가
+      if (isFixedLevelSpirit(card.dataset.spiritName)) {
+        e.target.value = 25; // 25로 되돌림
+        return;
+      }
+
       let newLevel = parseInt(e.target.value, 10);
       if (isNaN(newLevel) || newLevel < 0) newLevel = 0;
       if (newLevel > 25) newLevel = 25;
@@ -533,8 +1344,6 @@ async function handleFindOptimal() {
     return;
   }
 
-  // console.log("creaturesForCalc = ", creaturesForCalc);
-
   const appContainer = document.getElementById("app-container");
   showLoading(
     appContainer,
@@ -548,8 +1357,6 @@ async function handleFindOptimal() {
       throw new Error("API에서 유효한 응답을 받지 못했습니다.");
     }
 
-    // console.log("result = ", result);
-
     addHistory(result);
     showOptimalResultModal(result, false);
   } catch (error) {
@@ -561,9 +1368,7 @@ async function handleFindOptimal() {
 }
 
 export function init(container) {
-  // --- [수정 9] init 시 cleanup 호출로 리스너 중복 등록 방지 및 동적 요소 제거 ---
-  cleanup(); // 기존 리스너 및 동적 요소 정리
-  // --- [수정 9 끝] ---
+  cleanup();
 
   container.innerHTML = getHTML();
 
@@ -623,14 +1428,13 @@ export function init(container) {
   setupEventListeners();
   initStatFilter();
   renderAll();
-  // console.log("환수 결속 페이지 초기화 완료.");
 }
 
 export function getHelpContentHTML() {
   return `
         <div class="content-block">
             <h2>환수 결속 계산기 사용 안내</h2>
-            <p>환수 결속 시스템은 5마리 환수의 조합을 통해 다양한 능력치 시너지를 얻는 핵심 콘텐츠입니다. '바연화연'의 결속 계산기는 여러분이 보유한 환수들로 달성할 수 있는 최적의 조합을 찾아드립니다.</p>
+            <p>환수 결속 시스템은 6마리 환수의 조합을 통해 다양한 능력치 시너지를 얻는 핵심 콘텐츠입니다. '바연화연'의 결속 계산기는 여러분이 보유한 환수들로 달성할 수 있는 최적의 조합을 찾아드립니다.</p>
             <p>이 계산기는 <strong>피해저항, 피해저항관통, 대인피해%*10, 대인방어%*10</strong>를 합산한 '환산 점수'를 기준으로 최적의 조합을 찾아내며, 유전 알고리즘을 통해 수많은 경우의 수를 빠르게 탐색합니다.</p>
 
             <h3>🔎 페이지 기능 설명</h3>
@@ -639,13 +1443,16 @@ export function getHelpContentHTML() {
                 <li><strong>환수 선택:</strong> 좌측 '전체 환수 목록'에서 결속 조합에 사용할 환수를 클릭하여 선택하세요. 선택된 환수는 우측 '선택된 환수' 목록에 추가됩니다. (레벨은 0으로 자동 설정됩니다.)</li>
                 <li><strong>전체 선택/해제:</strong> '현재 탭 전체 선택' 또는 '현재 탭 전체 해제' 버튼을 사용하여 해당 카테고리의 모든 환수를 한 번에 선택하거나 해제할 수 있습니다.</li>
                 <li><strong>환수 레벨 조절:</strong> 우측 선택된 환수 목록에서 각 환수의 레벨을 0~25 사이로 조절할 수 있습니다. '일괄 레벨 적용' 기능으로 모든 환수의 레벨을 한 번에 변경할 수도 있습니다.</li>
-                <li><strong>최적 조합 찾기:</strong> '최적 조합 찾기' 버튼을 클릭하면 선택된 환수들 중 가장 높은 환산 점수를 내는 5마리 조합을 찾아 모달 창으로 표시합니다.</li>
+                <li><strong>최적 조합 찾기:</strong> '최적 조합 찾기' 버튼을 클릭하면 선택된 환수들 중 가장 높은 환산 점수를 내는 6마리 조합을 찾아 모달 창으로 표시합니다.</li>
                 <li><strong>결과 모달 확인:</strong>
                     <ul>
-                        <li><strong>종합 점수:</strong> 등급 효과, 세력 효과, 장착 효과를 모두 합산한 총 환산 점수를 보여줍니다.</li>
-                        <li><strong>조합 환수:</strong> 선택된 5마리 환수의 목록을 보여주며, 각 환수의 레벨도 표시됩니다.</li>
+                        <li><strong>조합 합산 점수:</strong> 모달 헤더에 '조합 합산: 1234 (123)' 형식으로 총점수(등록포함)와 결속점수를 함께 표시합니다. 등록 효과가 없을 경우 '조합 합산: 1234' 형식으로 표시됩니다.</li>
+                        <li><strong>조합 저장 버튼:</strong> 헤더 우측에 위치한 '조합 저장' 버튼으로 현재 조합을 저장할 수 있습니다.</li>
+                        <li><strong>현재 사용 중인 환수 선택:</strong> 결과 모달의 조합 환수 목록에서 현재 게임에서 사용 중인 환수를 클릭하면 등록 효과가 실시간으로 헤더 점수에 반영됩니다.</li>
+                        <li><strong>레벨 조절 (장기 누르기):</strong> 각 환수의 +/- 버튼을 짧게 누르면 1레벨씩, 길게 누르면 연속으로 레벨이 변경됩니다. 모바일에서도 터치로 동일하게 작동하며, 조합 합산 점수가 실시간으로 업데이트됩니다.</li>
+                        <li><strong>조합 환수:</strong> 선택된 6마리 환수의 목록을 보여주며, 각 환수의 레벨도 표시됩니다.</li>
                         <li><strong>효과별 스탯:</strong> 등급, 세력, 장착 효과로 인해 증가하는 능력치 목록과 합산 점수를 확인할 수 있습니다.</li>
-                        <li><strong>상세 스탯 비교:</strong> 선택된 5마리 환수 각각의 상세 장착 스탯과 총합을 비교하여 볼 수 있습니다.</li>
+                        <li><strong>상세 스탯 비교:</strong> 선택된 6마리 환수 각각의 상세 장착 스탯과 총합을 비교하여 볼 수 있습니다.</li>
                     </ul>
                 </li>
                 <li><strong>기록 탭:</strong> 이전에 계산했던 최적 조합 결과들을 기록 탭에서 다시 확인하고 비교할 수 있습니다. '최신', '최고' 점수를 쉽게 파악할 수 있습니다.</li>
@@ -655,8 +1462,11 @@ export function getHelpContentHTML() {
             <ul>
                 <li><strong>PvE와 PvP 조합:</strong> 보스 사냥을 위한 조합(피해저항관통, 보스몬스터추가피해)과 PvP를 위한 조합(대인방어%, 피해저해)은 스탯 우선순위가 다릅니다. 목표에 맞는 조합을 찾아보세요.</li>
                 <li><strong>등급 시너지 vs 세력 시너지:</strong> 전설/불멸 환수 갯수에 따른 등급 시너지와 같은 세력 환수 갯수에 따른 세력 시너지을 모두 고려하는 것이 중요합니다. 때로는 낮은 등급이라도 세력 시너지를 맞추는 것이 더 유리할 수 있습니다.</li>
-                <li><strong>고레벨 환수의 중요성:</strong> 장착 효과는 환수 레벨에 따라 크게 증가하므로, 주요 환수는 25레벨까지 육성하는 것이 중요합니다.</li>
-                <li><strong>모든 환수 활용:</strong> 단순히 보유 환수 중 강한 환수 5마리를 고르는 것이 아니라, 결속 계산기를 통해 예상치 못한 조합이 더 좋은 결과를 낼 수도 있습니다.</li>
+                <li><strong>실시간 레벨 조정:</strong> 결과 모달에서 각 환수의 레벨을 +/- 버튼으로 조정하면 조합 합산 점수가 실시간으로 변경됩니다. 장기 누르기로 빠르게 레벨을 변경할 수 있으며, 모바일에서도 터치로 동일하게 작동합니다.</li>
+                <li><strong>고레벨 환수의 중요성:</strong> 장착 효과는 환수 레벨에 따라 크게 증가하므로, 주요 환수는 25레벨까지 육성하는 것이 중요합니다. 실시간 레벨 조정 기능으로 레벨별 점수 변화를 즉시 확인할 수 있습니다.</li>
+                <li><strong>모든 환수 활용:</strong> 단순히 보유 환수 중 강한 환수 6마리를 고르는 것이 아니라, 결속 계산기를 통해 예상치 못한 조합이 더 좋은 결과를 낼 수도 있습니다.</li>
+                <li><strong>등록 효과 활용:</strong> 결과 모달에서 현재 사용 중인 환수를 선택하여 등록 효과를 반영하면 실제 게임에서의 총 능력치를 정확히 파악할 수 있습니다. 헤더에 '조합 합산: 총점 (결속점)' 형식으로 표시됩니다.</li>
+                <li><strong>빠른 조합 저장:</strong> 헤더 우측의 '조합 저장' 버튼으로 현재 조합을 기록 탭에 저장하여 나중에 비교할 수 있습니다.</li>
             </ul>
         </div>
     `;
@@ -664,7 +1474,6 @@ export function getHelpContentHTML() {
 
 export function cleanup() {
   if (elements.container) {
-    // --- [수정 11] 모든 등록된 이벤트 리스너 제거 ---
     if (
       elements.bondCategoryTabs &&
       eventListeners.bondCategoryTabsClickHandler
@@ -713,15 +1522,10 @@ export function cleanup() {
         eventListeners.clearAllSelectionClickHandler
       );
     }
-    // 익명 함수는 제거하기 어려우므로, setupEventListeners에서 명명된 함수로 등록하거나
-    // 각 리스너를 eventListeners 객체에 저장하여 제거해야 합니다.
-    // 여기서는 익명 함수 제거를 시도하지 않고, 다음 setupEventListeners에서 덮어쓰도록 합니다.
-    // 더 견고하게 하려면 setupEventListeners에서 모든 리스너를 명명된 함수로 만들어 eventListeners 객체에 저장하고 여기서 제거해야 합니다.
     if (
       elements.applyBatchLevelBtn &&
       eventListeners.applyBatchLevelClickHandler
     ) {
-      // 익명 함수이므로 제거 안될 가능성
       elements.applyBatchLevelBtn.removeEventListener(
         "click",
         eventListeners.applyBatchLevelClickHandler
@@ -787,7 +1591,7 @@ export function cleanup() {
         eventListeners.findOptimalMobileClickHandler
       );
     }
-    // 동적으로 추가된 패널 제거
+
     const dynamicallyAddedPanel = document.getElementById(
       "panelToggleContainer"
     );
@@ -795,5 +1599,4 @@ export function cleanup() {
       dynamicallyAddedPanel.remove();
     }
   }
-  // console.log("환수 결속 페이지 정리 완료.");
 }

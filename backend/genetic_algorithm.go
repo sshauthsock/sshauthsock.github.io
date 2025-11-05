@@ -10,7 +10,7 @@ import (
 // 유전 알고리즘 설정값
 const (
 	populationSize  = 100 // 인구(조합)의 수
-	maxGenerations  = 30  // 최대 세대 수
+	maxGenerations  = 50  // 최대 세대 수
 	eliteSize       = 10  // 다음 세대로 바로 전달될 상위 엘리트 조합의 수
 	mutationRate    = 0.2 // 돌연변이 확률
 	combinationSize = 6   // 최종 조합의 크기 (선택할 환수의 수)

@@ -1,5 +1,6 @@
 import { createElement } from "../utils.js";
 import { STATS_MAPPING, PERCENT_STATS } from "../constants.js";
+import { addSupportMessageToModal } from "../utils/supportMessage.js";
 
 let activeModal = null;
 
@@ -59,6 +60,9 @@ export function showChakResultsModal(
     descriptionPanel,
     statsToFind
   );
+
+  // 지원 메시지를 모달 상단에 추가
+  addSupportMessageToModal(mainContainer);
 
   modal.style.display = "flex";
   document.body.style.overflow = "hidden";

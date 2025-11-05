@@ -2,6 +2,7 @@ import { createElement } from "../utils.js";
 import { showLoading, hideLoading } from "../loadingIndicator.js";
 import * as api from "../api.js";
 import { showChakResultsModal } from "../components/chakResultsModal.js";
+import { showModernChakResultsModal } from "../components/modernChakResultsModal.js";
 
 const pageState = {
   chakData: null,
@@ -587,12 +588,17 @@ function calculateStatValue(maxValue, level, isUnlocked, isFirst) {
   if (!isUnlocked) return 0;
 
   if (isFirst) {
+    // 첫 번째 능력치 (오색구슬로 개방)
+    // level 0: 0, level 1: maxValue/3, level 2: maxValue*2/3, level 3: maxValue
     return Math.floor((maxValue / 3) * level);
   } else {
-    if (level === 0) return 0;
-    else if (level === 1)
-      return Math.floor(maxValue / 15) + Math.floor(maxValue / 3);
-    else return Math.floor(maxValue / 15) + Math.floor(maxValue / 3) * level;
+    // 두 번째 이후 능력치 (황금단추로 개방)
+    // level 0 (개방 직후): maxValue/15 (초기값)
+    // level 1: maxValue/3
+    // level 2: maxValue*2/3
+    // level 3: maxValue
+    if (level === 0) return Math.floor(maxValue / 15);
+    else return Math.floor((maxValue / 3) * level);
   }
 }
 
@@ -734,7 +740,7 @@ function optimizeStats(type) {
   const targetStats = type === "boss" ? BOSS_STATS : PVP_STATS;
   const title = type === "boss" ? "보스용 추천 조합" : "PvP용 추천 조합";
 
-  showChakResultsModal(
+  showModernChakResultsModal(
     pageState.chakData,
     pageState.statState,
     title,
@@ -756,7 +762,7 @@ function searchStats() {
     alert("검색할 능력치를 선택해주세요.");
     return;
   }
-  showChakResultsModal(
+  showModernChakResultsModal(
     pageState.chakData,
     pageState.statState,
     "검색 결과",
