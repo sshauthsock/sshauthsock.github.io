@@ -1,0 +1,108 @@
+/* =================================================================
+   TABLES.CSS - 테이블 스타일
+   ================================================================= */
+
+/* Base Table Styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+th,
+td {
+  padding: 6px var(--space-sm);
+  text-align: left;
+  border-bottom: 1px solid var(--border-light);
+}
+
+th {
+  background-color: #f2f2f2;
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:hover {
+  background-color: var(--color-primary-light);
+}
+
+/* Table Container */
+.tables-container {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.table-half {
+  flex: 1;
+  min-width: 120px;
+}
+
+/* Special Table Rows */
+tr.current-level {
+  background-color: var(--color-primary-light) !important;
+  font-weight: bold;
+}
+
+tr.target-level {
+  background-color: var(--color-secondary-light) !important;
+  font-weight: bold;
+}
+
+tr.max-level {
+  background-color: var(--color-warning-light) !important;
+  font-weight: bold;
+}
+
+/* Spirits Stats Table */
+.spirits-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-xs);
+}
+
+.spirits-stats-table th,
+.spirits-stats-table td {
+  padding: 6px var(--space-sm);
+  border: 1px solid var(--border-medium);
+  text-align: left;
+  font-size: var(--text-sm);
+}
+
+.spirits-stats-table th {
+  background-color: #f2f2f2;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-normal);
+  white-space: nowrap;
+}
+
+.spirits-stats-table thead tr {
+  display: table-row;
+  width: 100%;
+}
+
+.spirits-stats-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.spirits-stats-table tr:hover {
+  background-color: var(--color-primary-light);
+}
+
+.spirits-stats-table th:first-child {
+  position: sticky;
+  left: 0;
+  background-color: #f2f2f2;
+  z-index: 2;
+  width: 17%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.spirits-stats-table td {
+  text-align: center;
+}

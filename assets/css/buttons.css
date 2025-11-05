@@ -1,0 +1,462 @@
+/* =================================================================
+   BUTTONS.CSS - 모든 버튼 스타일
+   ================================================================= */
+
+/* Base Button Styles */
+.btn {
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: var(--text-md);
+  min-height: var(--button-height-default);
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  filter: brightness(1.05);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  filter: brightness(0.95);
+}
+
+.btn:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+/* Button Variants */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-dark-text);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-dark);
+  color: var(--color-light-text);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: var(--color-dark-text);
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-secondary-dark);
+  color: var(--color-light-text);
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: var(--color-dark-text);
+}
+
+.btn-danger:hover {
+  background-color: var(--color-danger-dark);
+  color: var(--color-light-text);
+}
+
+.btn-warning {
+  background-color: var(--color-warning);
+  color: var(--color-light-text);
+}
+
+.btn-warning:hover {
+  background-color: var(--color-warning-dark);
+  color: var(--color-dark-text);
+}
+
+.btn-info {
+  background-color: var(--color-info);
+  color: var(--color-light-text);
+}
+
+.btn-info:hover {
+  background-color: var(--color-info-dark);
+  color: var(--color-dark-text);
+}
+
+/* Button Sizes */
+.btn-sm {
+  padding: var(--radius-sm) 10px;
+  font-size: var(--text-sm);
+  min-height: 30px;
+}
+
+.btn-lg {
+  padding: 12px var(--space-lg);
+  font-size: var(--text-lg);
+  min-height: 44px;
+}
+
+.btn-rounded {
+  border-radius: 50px;
+}
+
+/* Specific Button Components */
+.clear-selection-btn,
+.max-level-btn {
+  padding: var(--radius-sm) var(--space-md);
+  border: none;
+  border-radius: var(--radius-xl);
+  cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition-fast);
+  margin-left: var(--radius-sm);
+}
+
+.clear-selection-btn {
+  background-color: var(--color-danger);
+  color: var(--text-white);
+  box-shadow: 0 2px 5px rgba(244, 67, 54, 0.3);
+}
+
+.clear-selection-btn:hover {
+  background-color: var(--color-danger-dark);
+}
+
+.max-level-btn {
+  background-color: var(--color-secondary);
+  color: var(--text-white);
+  box-shadow: 0 2px 5px rgba(76, 175, 80, 0.3);
+}
+
+.max-level-btn:hover {
+  background-color: var(--color-secondary-dark);
+  transform: scale(1.05);
+}
+
+.apply-level-btn {
+  background-color: var(--color-primary);
+  color: var(--text-white);
+}
+
+#findOptimalBtn,
+#findOptimalMobileBtn {
+  padding: 10px 25px;
+  color: var(--text-white);
+  border: none;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: var(--transition-normal);
+  background-color: var(--color-warning);
+  box-shadow: var(--shadow-btn-warning);
+  width: 100%;
+}
+
+#findOptimalBtn:hover {
+  background-color: var(--color-warning-dark);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(255, 152, 0, 0.4);
+}
+
+/* Tab Buttons */
+.exp-tab {
+  padding: 10px 16px;
+  text-align: center;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: var(--transition-normal);
+  font-size: var(--text-md);
+}
+
+.exp-tab[data-type="legend"] {
+  background-color: #e74c3c;
+  color: var(--text-white);
+  border-color: #e74c3c;
+  box-shadow: 0 3px 8px rgba(231, 76, 60, 0.3);
+}
+
+.exp-tab[data-type="legend"]:hover {
+  background-color: #c0392b;
+}
+
+.exp-tab[data-type="immortal"] {
+  background-color: #f1c40f;
+  color: var(--text-white);
+  border-color: #f1c40f;
+  box-shadow: 0 3px 8px rgba(241, 196, 15, 0.3);
+}
+
+.exp-tab[data-type="immortal"]:hover {
+  background-color: #d4ac0d;
+}
+
+.exp-tab.active {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Selector Buttons */
+.selector-btn {
+  padding: var(--space-sm) 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: var(--radius-md);
+  background-color: var(--bg-white);
+  color: #333;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
+  font-size: var(--text-md);
+  touch-action: manipulation;
+  min-height: 44px;
+}
+
+.selector-btn:hover {
+  background-color: var(--color-primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.selector-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.selector-btn.equip-btn.bg-sky-500 {
+  background-color: var(--color-primary);
+  color: var(--text-white);
+  border-color: var(--color-primary);
+  font-weight: bold;
+  box-shadow: var(--shadow-btn-primary);
+}
+
+.selector-btn.level-btn.bg-emerald-500 {
+  background-color: var(--color-success);
+  color: var(--text-white);
+  border-color: var(--color-success);
+  font-weight: bold;
+  box-shadow: var(--shadow-btn-success);
+}
+
+/* Preset Buttons */
+.preset-btn {
+  border: none;
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) 12px;
+  cursor: pointer;
+  font-size: var(--text-md);
+  font-weight: 600;
+  transition: var(--transition-normal);
+  white-space: nowrap;
+  flex: 1;
+  min-height: 44px;
+}
+
+.boss-btn {
+  background-color: var(--color-success);
+  color: var(--text-white);
+}
+
+.boss-btn:hover {
+  background-color: var(--color-success-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-btn-success);
+}
+
+.pvp-btn {
+  background-color: var(--color-info);
+  color: var(--text-white);
+}
+
+.pvp-btn:hover {
+  background-color: var(--color-info-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-btn-info);
+}
+
+/* Action Buttons */
+.action-btn {
+  padding: 6px 10px;
+  background-color: var(--color-warning);
+  color: #000;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition-fast);
+  font-size: var(--text-sm);
+}
+
+.action-btn:hover {
+  background-color: var(--color-warning-dark);
+  transform: translateY(-1px);
+}
+
+/* Equip Button */
+.equip-btn {
+  padding: 10px;
+  text-align: center;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+}
+
+/* Button States */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.btn:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Remove Spirit Button 최적화 */
+.remove-spirit {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-danger);
+  color: var(--text-white);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  z-index: 2;
+  opacity: 0.9;
+}
+
+.remove-spirit:hover {
+  background: var(--color-danger-dark);
+  transform: scale(1.1);
+  opacity: 1;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.remove-spirit:active {
+  transform: scale(0.95);
+}
+
+.remove-spirit::before {
+  content: "×";
+  line-height: 1;
+}
+
+/* Selected Spirit Card Remove Button은 ::before 사용하지 않음 */
+.selected-spirit-card .remove-spirit::before {
+  content: "";
+}
+
+/* Selected Spirit Card에서의 Remove Button */
+.selected-spirit-card .remove-spirit {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  font-size: 8px;
+  opacity: 0.8;
+  line-height: 1;
+  background: #e74c3c;
+  color: white;
+  border: 1px solid #c0392b;
+  z-index: 10;
+}
+
+.selected-spirit-card .remove-spirit:hover {
+  background: #c0392b;
+  color: white;
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Modal에서의 Remove Button */
+.modal .remove-spirit {
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  font-size: 13px;
+}
+
+/* 호버 상태에서만 표시되는 Remove Button */
+.spirit-card-container {
+  position: relative;
+}
+
+.spirit-card-container:hover .remove-spirit {
+  opacity: 1;
+}
+
+.spirit-card-container .remove-spirit {
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+/* 작은 Remove Button 변형 */
+.remove-spirit.small {
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+  top: 4px;
+  right: 4px;
+}
+
+/* 접근성 개선 */
+.remove-spirit:focus {
+  outline: 2px solid var(--color-danger);
+  outline-offset: 2px;
+}
+
+.remove-spirit[aria-label]::after {
+  content: attr(aria-label);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-dark);
+  color: var(--text-white);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: var(--z-tooltip);
+}
+
+.remove-spirit[aria-label]:hover::after {
+  opacity: 1;
+}

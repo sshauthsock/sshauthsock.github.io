@@ -1,0 +1,352 @@
+/* =================================================================
+   MODALS.CSS - 모든 모달 스타일
+   ================================================================= */
+
+/* Modal Overlay */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: var(--z-modal);
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.3s ease;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Base Modal */
+.modal {
+  background-color: var(--bg-white);
+  max-width: 900px;
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-lg);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: slideUp 0.4s ease;
+  display: block;
+  width: 90%;
+}
+
+.modal-content {
+  background-color: var(--bg-white);
+  margin: 2% auto;
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  width: 90%;
+  max-width: 1200px;
+  box-shadow: var(--shadow-lg);
+  animation: slideDown 0.3s;
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  color: var(--color-light-text);
+}
+
+.modal-content .level-btn,
+.modal-content .min-btn,
+.modal-content .max-btn {
+  background: var(--color-primary-light);
+  color: var(--color-dark-text);
+  border: 1px solid var(--color-primary);
+}
+
+.modal-content .level-btn.min-btn,
+.modal-content .level-btn.max-btn {
+  background: var(--color-primary);
+  color: var(--text-white);
+  border: 1px solid var(--color-primary-dark);
+}
+
+/* Modal Body */
+.modal-body {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: var(--space-sm);
+}
+
+/* Modal Close Button */
+.modal-close,
+.modal-close-btn {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+  transition: var(--transition-fast);
+  z-index: calc(var(--z-modal) + 10);
+  padding: 10px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  touch-action: manipulation;
+  border-radius: var(--radius-round);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.modal-close:hover,
+.modal-close-btn:hover {
+  color: var(--color-danger);
+  transform: scale(1.1);
+}
+
+/* Modal Header */
+.modal-title {
+  color: var(--color-dark-text);
+  font-size: 22px;
+  text-align: center;
+  margin: 0 0 var(--space-lg) 0;
+  padding-bottom: var(--space-md);
+  border-bottom: 2px solid var(--border-light);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-gray);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.modal-header h3 {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+/* Modal Image */
+.modal-img-preview {
+  max-width: 80px;
+  height: auto;
+  margin-right: var(--space-md);
+  border-radius: var(--radius-md);
+}
+
+/* Title Area */
+.title-area {
+  flex-grow: 1;
+}
+
+.title-area h3 {
+  display: flex;
+  align-items: center;
+  margin: 0 0 var(--space-sm) 0;
+  font-size: 1.5rem;
+}
+
+/* Stats Container */
+.stats-container {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-md);
+  gap: var(--space-lg);
+}
+
+.stats-column {
+  flex: 0 0 48%;
+  background-color: var(--bg-lighter);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stats-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+  color: var(--color-light-text);
+  font-weight: 500;
+}
+
+.sum-container {
+  font-size: 0.9em;
+  color: #555;
+}
+
+/* Level Controls */
+.level-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--radius-sm);
+  margin-top: var(--space-sm);
+}
+
+.level-input {
+  width: 50px;
+  text-align: center;
+}
+
+/* Selected Spirits Info */
+.selected-spirits-info {
+  margin-bottom: var(--space-lg);
+  background-color: var(--bg-lighter);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.spirits-info-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.spirit-info-item {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-white);
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  border: 1px solid #eee;
+}
+
+.spirit-info-item img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  margin-right: var(--space-sm);
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.spirit-info-details {
+  flex: 1;
+}
+
+.spirit-info-name {
+  font-weight: 500;
+  margin-bottom: var(--space-xs);
+}
+
+.spirit-info-level {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* History Tabs */
+.history-tabs-container {
+  margin: var(--space-md) 0;
+}
+
+.history-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  overflow-x: auto;
+  padding: var(--space-xs) 0;
+}
+
+.history-tab {
+  position: relative;
+  background: var(--bg-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  min-width: 120px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--color-dark-text);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.history-tab:hover {
+  background: var(--bg-secondary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.history-tab.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--text-white);
+  font-weight: 600;
+}
+
+.history-tab.best {
+  border-color: var(--color-success);
+  background: linear-gradient(135deg, var(--bg-light), #f0f9f0);
+}
+
+.history-tab.best.active {
+  background: var(--color-success);
+  border-color: var(--color-success);
+}
+
+.history-tab.newest {
+  border-color: var(--color-info);
+}
+
+.history-delete-btn {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  background: var(--color-danger);
+  color: var(--text-white);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.history-delete-btn:hover {
+  opacity: 1;
+}
+
+.tab-indicators {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.current-marker,
+.best-marker {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.tab-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tab-score {
+  font-weight: 600;
+  color: inherit;
+}
+
+.tab-timestamp {
+  font-size: 10px;
+  opacity: 0.8;
+}

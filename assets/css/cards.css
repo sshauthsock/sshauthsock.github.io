@@ -1,0 +1,363 @@
+/* =================================================================
+   CARDS.CSS - 카드 및 패널 스타일
+   ================================================================= */
+
+/* Base Card Styles */
+.card {
+  background-color: var(--bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--card-padding);
+  margin-bottom: var(--space-md);
+}
+
+.card-header {
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.card-title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+}
+
+.card-body {
+  margin-bottom: var(--space-md);
+}
+
+.card-footer {
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+/* Panel Styles */
+.level-panel,
+.enhancement-panel {
+  width: 100%;
+}
+
+.summary-panel {
+  flex: 1;
+  align-self: flex-start;
+}
+
+/* Stat Card */
+.stat-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Selected Spirit Card 개선 */
+.selected-spirit-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 2px;
+  padding: 8px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: visible;
+  width: 100%;
+  min-height: 100px;
+  max-height: 130px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.selected-spirits-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg);
+  width: 100%;
+  margin-bottom: var(--space-md);
+  align-items: start;
+  justify-content: start;
+}
+
+.selected-spirit-card .spirit-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  min-height: 0;
+  padding-right: 16px;
+  width: 100%;
+  text-align: center;
+}
+
+.selected-spirit-card .button-group,
+.selected-spirit-card .card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  margin-top: auto;
+  padding-top: 4px;
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.selected-spirit-card button,
+.selected-spirit-card .btn {
+  flex: 0 0 auto;
+  max-width: 100px;
+  font-size: 12px;
+  padding: 6px 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: var(--radius-sm);
+  height: 32px;
+  line-height: 1.2;
+  border: 1px solid var(--border-medium);
+  background: var(--bg-light);
+  transition: all 0.2s ease;
+}
+
+.selected-spirit-card button:hover,
+.selected-spirit-card .btn:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+}
+
+/* Spirit Card Content */
+.selected-spirit-card .spirit-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: #2c3e50 !important;
+  margin-bottom: 1px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.selected-spirit-card .spirit-level {
+  font-size: 11px;
+  color: #7f8c8d !important;
+  margin-bottom: 1px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.selected-spirit-card .spirit-type {
+  font-size: 11px;
+  color: #3498db !important;
+  font-weight: 500;
+  margin-bottom: 1px;
+  line-height: 1.1;
+  text-align: center;
+}
+
+/* 환수 이름과 정보 스타일 강제 적용 */
+.selected-spirit-card h3,
+.selected-spirit-card .card-title,
+.selected-spirit-card .spirit-title,
+.selected-spirit-card .spirit-name,
+.selected-spirit-card .selected-spirit-name {
+  color: #2c3e50 !important;
+  background: transparent !important;
+  margin: 0 0 1px 0 !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  text-shadow: none !important;
+  text-align: center !important;
+}
+
+.selected-spirit-card .spirit-image {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+/* Spirit Card 컨테이너 최적화 */
+.spirit-card-container {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.spirit-card-container:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Spirit Level Control이 카드 안에 있을 때 */
+.selected-spirit-card .spirit-level-control {
+  margin: 2px 0 0 0;
+  align-self: center;
+  width: fit-content;
+  max-width: 120px;
+  padding: 1px;
+  gap: 1px;
+  background: #ecf0f1;
+  border: 1px solid #bdc3c7;
+  border-radius: 3px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.selected-spirit-card .spirit-level-control button {
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+  min-width: 14px;
+  max-width: 14px;
+  padding: 0;
+  border-radius: 2px;
+  background: #3498db;
+  color: white;
+  border: 1px solid #2980b9;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.selected-spirit-card .spirit-level-control button:hover {
+  background: #2980b9;
+  color: white;
+  transform: scale(1.05);
+}
+
+.selected-spirit-card .spirit-level-control input {
+  width: 24px;
+  height: 14px;
+  font-size: 9px;
+  padding: 0;
+  margin: 0;
+  border-radius: 2px;
+  background: #f8f9fa;
+  border: 1px solid #3498db;
+  color: #2c3e50;
+  font-weight: 600;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.selected-spirit-card .spirit-level-control input:focus {
+  background: white;
+  border-color: #2980b9;
+  box-shadow: 0 0 0 1px rgba(52, 152, 219, 0.3);
+}
+
+.selected-spirit-card .spirit-level-control .minus-btn {
+  background: #e74c3c;
+  border-color: #c0392b;
+  width: 14px;
+  height: 14px;
+}
+
+.selected-spirit-card .spirit-level-control .minus-btn:hover {
+  background: #c0392b;
+}
+
+.selected-spirit-card .spirit-level-control .plus-btn {
+  background: #27ae60;
+  border-color: #229954;
+  width: 14px;
+  height: 14px;
+}
+
+.selected-spirit-card .spirit-level-control .plus-btn:hover {
+  background: #229954;
+}
+
+.selected-spirit-card .spirit-level-control .min-btn {
+  background: #f39c12;
+  border-color: #e67e22;
+  width: 14px;
+  height: 14px;
+}
+
+.selected-spirit-card .spirit-level-control .min-btn:hover {
+  background: #e67e22;
+}
+
+.selected-spirit-card .spirit-level-control .max-btn {
+  background: #8e44ad;
+  border-color: #7d3c98;
+  width: 14px;
+  height: 14px;
+}
+
+.selected-spirit-card .spirit-level-control .max-btn:hover {
+  background: #7d3c98;
+}
+
+/* Remove Button과 Level Control 간격 조정 */
+.selected-spirit-card .spirit-info {
+  padding-right: 14px; /* Remove button 공간 확보 */
+  gap: 1px; /* 요소 간 간격 줄임 */
+  max-width: calc(100% - 14px); /* 최대 너비 제한 */
+}
+
+/* Level Input 숫자 스타일링 */
+.spirit-level-control input[type="number"] {
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  appearance: none;
+}
+
+.spirit-level-control input[type="number"]::-webkit-outer-spin-button,
+.spirit-level-control input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.stat-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.stat-card .card-header h3 {
+  margin: 0;
+  padding: 0;
+  border: none;
+  flex-grow: 1;
+  text-align: left;
+}
+
+.stat-card .progress-container {
+  flex-grow: 1;
+}
+
+.stat-card .action-btn {
+  margin-top: auto;
+}
+
+/* Selector Button States */
+.selector-btn.active {
+  font-weight: bold;
+}
+
+.selector-btn.equip-btn.active {
+  background-color: var(--color-primary);
+  color: var(--text-white);
+  border-color: var(--color-primary);
+}
+
+.selector-btn.level-btn.active {
+  background-color: var(--color-success);
+  color: var(--text-white);
+  border-color: var(--color-success);
+}
+
+/* Result Groups */
+.result-group {
+  margin-bottom: var(--space-lg);
+}
