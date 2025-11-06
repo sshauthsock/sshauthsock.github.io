@@ -44,6 +44,32 @@ export function showModernChakResultsModal(
   closeButton.addEventListener("click", removeAllModals);
   content.appendChild(closeButton);
 
+  // Kakao Ads - Desktop
+  const kakaoAdChakModalDesktop = createElement(
+    "div",
+    "kakao-ad-modal-container desktop-modal-ad"
+  );
+  kakaoAdChakModalDesktop.innerHTML = `
+      <ins class="kakao_ad_area"
+          data-ad-unit="DAN-aOM3JPGvOLhHlyoS"
+          data-ad-width="728"
+          data-ad-height="90"></ins>
+  `;
+  content.appendChild(kakaoAdChakModalDesktop);
+
+  // Kakao Ads - Mobile
+  const kakaoAdChakModalMobile = createElement(
+    "div",
+    "kakao-ad-modal-container mobile-modal-ad"
+  );
+  kakaoAdChakModalMobile.innerHTML = `
+      <ins class="kakao_ad_area"
+          data-ad-unit="DAN-epbkjAaeHSxv0MYl"
+          data-ad-width="320"
+          data-ad-height="50"></ins>
+  `;
+  content.appendChild(kakaoAdChakModalMobile);
+
   // Modal header
   const modalHeader = createElement("div", "modal-header");
   const modalTitle = createElement("h3", "", { text: title });
@@ -78,6 +104,23 @@ export function showModernChakResultsModal(
   modal.addEventListener("click", (e) => {
     if (e.target === modal) removeAllModals();
   });
+
+  // Render Kakao Ads
+  setTimeout(() => {
+    try {
+      const desktopAdElement =
+        kakaoAdChakModalDesktop.querySelector(".kakao_ad_area");
+      const mobileAdElement =
+        kakaoAdChakModalMobile.querySelector(".kakao_ad_area");
+
+      if (window.adfit) {
+        if (desktopAdElement) window.adfit.render(desktopAdElement);
+        if (mobileAdElement) window.adfit.render(mobileAdElement);
+      }
+    } catch (error) {
+      console.error("Kakao AdFit: Error rendering ads in Chak modal:", error);
+    }
+  }, 100);
 }
 
 function renderModernChakraResults(
