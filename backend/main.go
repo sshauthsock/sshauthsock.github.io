@@ -297,6 +297,7 @@ func (a *App) loadChakDataFromFirestore(ctx context.Context) error {
 		return fmt.Errorf("chak data was unmarshalled but is empty. Check Firestore document structure")
 	}
 
+	//동일 부위에서 동일 레벨에 중복 스텟이있는경우 1 을 추가 예를들어 피해저항1
 	partsForUI := []string{"투구", "무기", "방패", "의상", "망토", "신발", "목걸이", "반지", "반지", "보조", "보조"}
 	levelsSet := make(map[string]bool)
 	for _, partData := range a.rawChakData {
