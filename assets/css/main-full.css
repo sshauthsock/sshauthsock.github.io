@@ -3008,9 +3008,9 @@ input:checked + .toggle-slider:before {
 .stats-column .section-score {
   background: linear-gradient(135deg, #3498db, #2980b9);
   color: white;
-  padding: 4px 10px;
+  padding: 4px 5px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: bold;
   min-width: 60px;
   text-align: center;
@@ -3715,14 +3715,16 @@ input:checked + .toggle-slider:before {
 .stats-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-lg);
+  /* gap: var(--space-lg); */
+  gap: 12px;
   margin-top: var(--space-lg);
 }
 
 .stats-column {
   background: var(--bg-gray);
   border-radius: var(--radius-md);
-  padding: var(--space-md);
+  /* padding: var(--space-md); */
+  padding: 0px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -10181,7 +10183,7 @@ input:focus {
     height: 20px;
     font-size: 10px;
     min-width: 22px;
-    min-height: 12px;
+    min-height: 20px;
   }
 
   .level-input {
