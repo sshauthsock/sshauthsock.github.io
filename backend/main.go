@@ -589,8 +589,6 @@ func (a *App) calculateChakHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// ======== 헬퍼 함수들 ========
-
 func calculateBondRankings(category string, allCreatureData []CreatureInfo) []BondRankingItem {
 	var allCategoryCreatures []CreatureInfo
 	for _, creature := range allCreatureData {
