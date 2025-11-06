@@ -563,7 +563,12 @@ function updateStatsList(listElement, sumElement, stats, highlightStat) {
       // 효과적인 스탯 클래스
       if (EFFECTIVE_STATS.includes(key)) {
         highlightClass += " stat-effective";
-        totalSum += numericValue;
+        // 합산 계산: 대인피해%와 대인방어%는 10을 곱함
+        if (key === "pvpDamagePercent" || key === "pvpDefensePercent") {
+          totalSum += numericValue * 10;
+        } else {
+          totalSum += numericValue;
+        }
       }
 
       // 특별한 스탯별 클래스 추가
