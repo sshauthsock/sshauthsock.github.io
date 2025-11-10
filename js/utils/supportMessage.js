@@ -81,8 +81,8 @@ export function addSupportMessageToModal(modalContentElement) {
   }
 
   // 모달 콘텐츠 최상단에 지원 메시지 추가
-  const supportBannerHTML = createSupportBannerHTML();
-  modalContentElement.insertAdjacentHTML("afterbegin", supportBannerHTML);
+  // const supportBannerHTML = createSupportBannerHTML();
+  // modalContentElement.insertAdjacentHTML("afterbegin", supportBannerHTML);
 }
 
 // 지원 배너 닫기 함수 (전역으로 등록)
