@@ -16,6 +16,7 @@ import (
 	"unicode"
 
 	"baram-yeon/backend/config"
+	"baram-yeon/backend/logger"
 
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
@@ -163,13 +164,15 @@ type App struct {
 	isDataLoaded    bool
 }
 
+var appLogger = logger.New()
+
 
 func NewApp(ctx context.Context) (*App, error) {
 	var appOpts []option.ClientOption
 
 	err := godotenv.Load("../.env") 
 	if err != nil {
-		log.Printf("Warning: .env file not loaded from ../.env: %v (This is normal in production environments, but unexpected in local build. Check path/encoding/permissions.)", err)
+		appLogger.Warn(".env file not loaded from ../.env: %v (This is normal in production environments, but unexpected in local build. Check path/encoding/permissions.)", err)
 	}
 
 	projectID := os.Getenv("GCP_PROJECT_ID")
@@ -178,12 +181,12 @@ func NewApp(ctx context.Context) (*App, error) {
 		projectID = os.Getenv("GOOGLE_CLOUD_PROJECT")
 		if projectID == "" {
 			projectID = "baram-yeon" 
-			log.Printf("Warning: GCP_PROJECT_ID and GOOGLE_CLOUD_PROJECT environment variables not set. Using default: %s", projectID)
+			appLogger.Warn("GCP_PROJECT_ID and GOOGLE_CLOUD_PROJECT environment variables not set. Using default: %s", projectID)
 		} else {
-			log.Printf("Info: GCP_PROJECT_ID not set, using GOOGLE_CLOUD_PROJECT: %s", projectID)
+			appLogger.Info("GCP_PROJECT_ID not set, using GOOGLE_CLOUD_PROJECT: %s", projectID)
 		}
 	} else {
-		log.Printf("Info: Using GCP_PROJECT_ID: %s", projectID)
+		appLogger.Info("Using GCP_PROJECT_ID: %s", projectID)
 	}
 
 
@@ -194,12 +197,12 @@ func NewApp(ctx context.Context) (*App, error) {
 	serviceAccountPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	if serviceAccountPath != "" {
 		appOpts = append(appOpts, option.WithCredentialsFile(serviceAccountPath))
-		log.Printf("Firebase 앱이 '%s' 경로의 서비스 계정 키를 사용하여 초기화됩니다.", serviceAccountPath)
+		appLogger.Info("Firebase 앱이 '%s' 경로의 서비스 계정 키를 사용하여 초기화됩니다.", serviceAccountPath)
 	} else {
 		// GOOGLE_APPLICATION_CREDENTIALS 환경 변수가 설정되지 않았다면 (Cloud Run 등),
 		// appOpts에 credentials 파일을 추가하지 않아 기본 애플리케이션 자격증명(DAC)을 사용하도록 합니다.
 		// Cloud Run은 --service-account로 지정된 서비스 계정을 자동으로 사용합니다.
-		log.Println("GOOGLE_APPLICATION_CREDENTIALS 환경 변수가 설정되지 않았습니다. 기본 애플리케이션 자격증명(Default Application Credentials)을 사용합니다 (Cloud Run 환경에서 일반적).")
+		appLogger.Info("GOOGLE_APPLICATION_CREDENTIALS 환경 변수가 설정되지 않았습니다. 기본 애플리케이션 자격증명(Default Application Credentials)을 사용합니다 (Cloud Run 환경에서 일반적).")
 	}
 
 	app, err := firebase.NewApp(ctx, conf, appOpts...)
@@ -236,7 +239,7 @@ func (a *App) loadAllCreatureData(ctx context.Context) error {
 	a.dataLoadMutex.Lock()
 	defer a.dataLoadMutex.Unlock()
 
-	log.Println("Loading all creature data from the 'creatures' collection...")
+	appLogger.Info("Loading all creature data from the 'creatures' collection...")
 
 	iter := a.firestoreClient.Collection("creatures").Documents(ctx)
 	defer iter.Stop()
@@ -254,7 +257,7 @@ func (a *App) loadAllCreatureData(ctx context.Context) error {
 
 		var creature CreatureInfo
 		if err := doc.DataTo(&creature); err != nil {
-			log.Printf("Warning: Failed to convert document %s to CreatureInfo from 'creatures' collection. Skipping. %v", doc.Ref.ID, err)
+			appLogger.Warn("Failed to convert document %s to CreatureInfo from 'creatures' collection. Skipping. %v", doc.Ref.ID, err)
 			continue
 		}
 
@@ -266,25 +269,25 @@ func (a *App) loadAllCreatureData(ctx context.Context) error {
 	}
 
 	a.creatureData = finalCreatureList
-	log.Printf("Successfully loaded %d unique creature data entries from 'creatures' collection.", len(a.creatureData))
+	appLogger.Info("Successfully loaded %d unique creature data entries from 'creatures' collection.", len(a.creatureData))
 	return nil
 }
 
 func (a *App) loadSoulExpTableData() {
 	a.dataLoadMutex.Lock()
 	defer a.dataLoadMutex.Unlock()
-	log.Println("Loading soul exp table...")
+	appLogger.Info("Loading soul exp table...")
 	a.soulExpTable = map[string][]int{
 		"legend":   {0, 717, 789, 867, 1302, 1431, 1575, 1732, 1905, 3239, 3563, 3919, 4312, 4742, 9484, 10433, 11476, 17214, 18935, 28403, 31243, 31868, 32505, 33155, 33818, 33818},           // Lv 0-25, total 26 elements
 		"immortal": {0, 2151, 2367, 2601, 3906, 4293, 4725, 5196, 5715, 9717, 10689, 11757, 12936, 14226, 28452, 31299, 34428, 51642, 56805, 85209, 93729, 95604, 97515, 99465, 101454, 101454}, // Lv 0-25, total 26 elements
 	}
-	log.Println("Soul exp table loaded.")
+	appLogger.Info("Soul exp table loaded.")
 }
 
 func (a *App) loadChakDataFromFirestore(ctx context.Context) error {
 	a.dataLoadMutex.Lock()
 	defer a.dataLoadMutex.Unlock()
-	log.Println("Loading chak data from Firestore...")
+	appLogger.Info("Loading chak data from Firestore...")
 	// chakData still in jsonData
 	doc, err := a.firestoreClient.Collection("jsonData").Doc("data-1745204108850").Get(ctx)
 	if err != nil {
@@ -329,14 +332,16 @@ func (a *App) loadChakDataFromFirestore(ctx context.Context) error {
 		Levels: formattedLevels,
 	}
 
-	log.Println("Chak data loaded successfully.")
+	appLogger.Info("Chak data loaded successfully.")
 	return nil
 }
 
 func main() {
+	appLogger.Info("Starting server...")
+	
 	err := godotenv.Load()
 	if err != nil {
-		log.Printf("Warning: .env file not loaded: %v (This is normal in production environments)", err)
+		appLogger.Warn(".env file not loaded: %v (This is normal in production environments)", err)
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -344,6 +349,7 @@ func main() {
 	ctx := context.Background()
 	app, err := NewApp(ctx)
 	if err != nil {
+		appLogger.Error("Failed to initialize application: %v", err)
 		log.Fatalf("FATAL: Failed to initialize application: %v", err)
 	}
 	defer app.Close()
@@ -374,13 +380,13 @@ func main() {
 
 	app.dataLoadMutex.Lock()
 	for loadErr := range errChan {
-		log.Printf("Error during initial data load: %v", loadErr)
+		appLogger.Error("Error during initial data load: %v", loadErr)
 		app.isDataLoaded = false // If ANY error, mark as not fully loaded
 	}
 	if app.isDataLoaded {
-		log.Println("All initial data loaded successfully.")
+		appLogger.Info("All initial data loaded successfully.")
 	} else {
-		log.Println("WARNING: Not all initial data loaded successfully. Some API endpoints may not function.")
+		appLogger.Warn("Not all initial data loaded successfully. Some API endpoints may not function.")
 	}
 	app.dataLoadMutex.Unlock()
 
@@ -402,7 +408,7 @@ func main() {
 	}
 
 	cfg := config.Load()
-	log.Printf("Server is running on port %s", cfg.Port)
+	appLogger.Info("Server is running on port %s", cfg.Port)
 	router.Run(":" + cfg.Port)
 }
 
