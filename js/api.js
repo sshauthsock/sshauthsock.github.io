@@ -1,3 +1,5 @@
+import ErrorHandler from "./utils/errorHandler.js";
+
 // 환경별 API URL 설정
 // 우선순위: import.meta.env.VITE_API_BASE_URL > __API_BASE_URL__ > 기본값
 // 개발 모드: .env의 VITE_API_BASE_URL 사용 (코드 수정 불필요)
@@ -29,12 +31,12 @@ async function handleResponse(response) {
     const errorData = await response
       .json()
       .catch(() => ({ error: "서버 응답을 읽을 수 없습니다." }));
-    console.error(
-      `API Error ${response.status}:`,
-      errorData.error || response.statusText,
-      errorData
+
+    const error = new Error(
+      errorData.error || `서버 오류: ${response.statusText}`
     );
-    throw new Error(errorData.error || `서버 오류: ${response.statusText}`);
+    ErrorHandler.handle(error, `API ${response.status}`);
+    throw error;
   }
   return response.json();
 }
@@ -127,17 +129,22 @@ export async function fetchAllSpirits() {
 }
 
 export async function calculateOptimalCombination(creatures) {
-  const response = await fetch(`${BASE_URL}/api/calculate/bond`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ creatures }),
-  });
-  const result = await handleResponse(response);
+  try {
+    const response = await fetch(`${BASE_URL}/api/calculate/bond`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ creatures }),
+    });
+    const result = await handleResponse(response);
 
-  if (result && Array.isArray(result.spirits)) {
-    result.spirits = _transformSpiritsArrayPaths(result.spirits);
+    if (result && Array.isArray(result.spirits)) {
+      result.spirits = _transformSpiritsArrayPaths(result.spirits);
+    }
+    return result;
+  } catch (error) {
+    ErrorHandler.handle(error, "calculateOptimalCombination");
+    throw error;
   }
-  return result;
 }
 
 export async function fetchRankings(category, type, statKey = "") {
@@ -158,12 +165,17 @@ export async function fetchSoulExpTable() {
 }
 
 export async function calculateSoul(data) {
-  const response = await fetch(`${BASE_URL}/api/calculate/soul`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return handleResponse(response);
+  try {
+    const response = await fetch(`${BASE_URL}/api/calculate/soul`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    ErrorHandler.handle(error, "calculateSoul");
+    throw error;
+  }
 }
 
 export async function fetchChakData() {
@@ -171,10 +183,15 @@ export async function fetchChakData() {
 }
 
 export async function calculateChak(data) {
-  const response = await fetch(`${BASE_URL}/api/calculate/chak`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
-  });
-  return handleResponse(response);
+  try {
+    const response = await fetch(`${BASE_URL}/api/calculate/chak`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    ErrorHandler.handle(error, "calculateChak");
+    throw error;
+  }
 }
