@@ -1,5 +1,21 @@
+# ============================================
+# Dependencies
+# ============================================
+node_modules/
+vendor/
+
+# ============================================
+# Build outputs
+# ============================================
+dist/
+dist-ssr/
+build/
+pkg/
+
+# ============================================
 # Logs
-logs
+# ============================================
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,78 +23,89 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# ============================================
+# Environment variables
+# ============================================
+.env
+.env.local
+.env.*.local
 *.local
 
-# Editor directories and files
+# ============================================
+# IDE and Editor files
+# ============================================
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
+*.swp
+*.swo
+*.swn
 .DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
 
-node_modules/*
-/archived/*
-
-# Compiled Go binaries
+# ============================================
+# Compiled binaries
+# ============================================
 *.exe
 *.dll
 *.so
 *.dylib
 *.wasm
 *.bin
-
-# Test binaries
 *_test
 
-# Build artifacts
-/build/
-/dist/
-/pkg/
-
-# Dependency directories (if using Go Modules vendoring)
-/vendor/
-
-# Log files
-*.log
-
-# IDE-specific files
-.idea/
-.vscode/
-.DS_Store
-*.swp
-
-# Environment variables (if used for local config)
-.env
-
+# ============================================
+# Backend specific
+# ============================================
+backend/myapp*
 backend/serviceAccountKey.json
+config/serviceAccountKey.json
 
+# ============================================
 # Terraform
+# ============================================
+terraform/
 .terraform/
 *.tfplan
 *.tfstate
 *.tfstate.backup
 *.tfvars
 .terraform.lock.hcl
-terraform/*
 
-data_backup/*
-integrated_creatures_data/*
+# ============================================
+# Data and backups
+# ============================================
+data_backup/
+integrated_creatures_data/
+
+# ============================================
+# Admin tools (local only)
+# ============================================
+db-admin-tool/
+
+# ============================================
+# Documentation (temporary/private)
+# ============================================
+PROJECT*.md
+CLOUD*.md
+COST*.md
+docs/
+
+# ============================================
+# Scripts (if they contain sensitive info)
+# ============================================
+# Note: start-backend.sh, start-admin-tool.sh, start-local.sh are kept
+# Uncomment below if these scripts contain sensitive information
+# start-backend.sh
+start-admin-tool.sh
+# start-local.sh
+
+# ============================================
+# Python scripts (if they contain secrets)
+# ============================================
+# Uncomment if these scripts contain sensitive information
 generate_integrated_creatures_json.py
 upload_integrated_creatures_to_firestore.py
-
-# Firebase Service Account Key and local .env files
-db-admin-tool/*
-config/*
-
-# Local run scripts
-start-backend.sh
-start-admin-tool.sh
-
-backend/myapp*
