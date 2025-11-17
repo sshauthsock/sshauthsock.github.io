@@ -15,6 +15,8 @@ import (
 	"time"
 	"unicode"
 
+	"baram-yeon/backend/config"
+
 	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
 	"github.com/gin-contrib/cors"
@@ -383,10 +385,10 @@ func main() {
 	app.dataLoadMutex.Unlock()
 
 	router := gin.Default()
-	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
-	config.AllowMethods = []string{"GET", "POST", "OPTIONS"}
-	router.Use(cors.New(config))
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowMethods = []string{"GET", "POST", "OPTIONS"}
+	router.Use(cors.New(corsConfig))
 
 	api := router.Group("/api")
 	{
@@ -399,8 +401,9 @@ func main() {
 		api.POST("/calculate/chak", app.calculateChakHandler)
 	}
 
-	log.Println("Server is running on port 8080")
-	router.Run(":" + os.Getenv("PORT"))
+	cfg := config.Load()
+	log.Printf("Server is running on port %s", cfg.Port)
+	router.Run(":" + cfg.Port)
 }
 
 // ======== 핸들러 함수들 ========
