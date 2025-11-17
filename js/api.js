@@ -1,9 +1,11 @@
-// const BASE_URL =
-//   "https://wind-app-backend-462093198351.asia-northeast3.run.app";
-
-const BASE_URL = "https://wind-app-backend-y7qnnpfkrq-du.a.run.app";
-
-// const BASE_URL = "http://localhost:8080"; // for the local test
+// 환경별 API URL 설정
+// 우선순위: import.meta.env.VITE_API_BASE_URL > __API_BASE_URL__ > 기본값
+// 개발 모드: .env의 VITE_API_BASE_URL 사용 (코드 수정 불필요)
+// 프로덕션 빌드: 빌드 시점의 환경 변수 또는 기본값 사용
+const BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (typeof __API_BASE_URL__ !== "undefined" ? __API_BASE_URL__ : null) ||
+  "https://wind-app-backend-y7qnnpfkrq-du.a.run.app";
 
 const memoryCache = {};
 
