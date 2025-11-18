@@ -4,6 +4,8 @@ import { showLoading, hideLoading } from "./loadingIndicator.js";
 import ErrorHandler from "./utils/errorHandler.js";
 import Logger from "./utils/logger.js";
 import { initPerformanceMonitoring, trackPageLoadPerformance, trackUserAction } from "./utils/performanceMonitor.js";
+import errorBoundary from "./utils/errorBoundary.js";
+import { showErrorRecoveryUI } from "./components/errorRecovery.js";
 
 const pageModules = {
   spiritInfo: () => import("./pages/spiritInfo.js"),
@@ -148,11 +150,15 @@ async function route() {
       `[Router] Failed to load or initialize page '${pageName}':`,
       error
     );
-    appContainer.innerHTML = `
-      <div class="error-message" style="text-align: center; padding: 2rem;">
-        <h3>현재 서버 점검중 입니다.</h3>
-      </div>
-    `;
+    errorBoundary.handleError(error, { type: "page_routing", pageName });
+    
+    // 에러 복구 UI 표시
+    showErrorRecoveryUI(appContainer, error, {
+      title: "페이지 로드 실패",
+      onRetry: () => {
+        route();
+      },
+    });
   } finally {
     hideLoading();
   }
@@ -182,6 +188,9 @@ mainTabs.addEventListener("click", (e) => {
 });
 
 async function initializeApp() {
+  // 에러 바운더리 초기화
+  errorBoundary.init();
+  
   // 성능 모니터링 초기화
   initPerformanceMonitoring();
   
@@ -212,11 +221,15 @@ async function initializeApp() {
     trackPageLoadPerformance("app_initialization", initDuration);
   } catch (error) {
     Logger.error("애플리케이션 초기화 실패:", error);
-    appContainer.innerHTML = `
-      <div class="error-message" style="text-align: center; padding: 2rem;">
-        <h3>현재 서버 점검중 입니다.</h3>
-      </div>
-    `;
+    errorBoundary.handleError(error, { type: "app_initialization" });
+    
+    // 에러 복구 UI 표시
+    showErrorRecoveryUI(appContainer, error, {
+      title: "애플리케이션 초기화 실패",
+      onRetry: () => {
+        window.location.reload();
+      },
+    });
   } finally {
     hideLoading();
   }

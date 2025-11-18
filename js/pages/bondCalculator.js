@@ -6,6 +6,7 @@ import { addResult as addHistory } from "../historyManager.js";
 import { renderSpiritGrid } from "../components/spritGrid.js";
 import { showLoading, hideLoading, showLoadingWithProgress, updateLoadingProgress } from "../loadingIndicator.js";
 import { trackCalculationPerformance, trackUserAction } from "../utils/performanceMonitor.js";
+import errorBoundary from "../utils/errorBoundary.js";
 import { checkSpiritStats, checkItemForStatEffect } from "../utils.js";
 import { createStatFilter } from "../components/statFilter.js";
 import ErrorHandler from "../utils/errorHandler.js";
