@@ -8,6 +8,7 @@ import { showLoading, hideLoading } from "../loadingIndicator.js";
 import { checkSpiritStats, checkItemForStatEffect } from "../utils.js";
 import { createStatFilter } from "../components/statFilter.js";
 import ErrorHandler from "../utils/errorHandler.js";
+import Logger from "../utils/logger.js";
 import {
   INFLUENCE_ROWS,
   isFixedLevelSpirit,
@@ -240,7 +241,7 @@ function loadStateFromStorage() {
       pageState.groupByInfluence = data.groupByInfluence || false;
       pageState.currentStatFilter = data.currentStatFilter || "";
     } catch (e) {
-      console.error("Error loading state from storage, resetting:", e);
+      Logger.error("Error loading state from storage, resetting:", e);
       pageState.selectedSpirits = new Map();
       pageState.groupByInfluence = false;
       pageState.currentStatFilter = "";
@@ -496,7 +497,7 @@ function handleContainerClick(e) {
     const spiritName = card.dataset.spiritName;
     const spirit = pageState.selectedSpirits.get(spiritName);
     if (!spirit) {
-      console.warn("Selected spirit not found in pageState for:", spiritName);
+      Logger.warn("Selected spirit not found in pageState for:", spiritName);
       return;
     }
 
@@ -570,11 +571,8 @@ function handleContainerMouseDown(e) {
 
   // 300ms 후에 길게 누르기 시작
   longPressState.timeoutId = setTimeout(() => {
-    // console.log("⏱️ timeout 실행 - startLongPress 호출 예정");
     if (longPressState.button === target) {
       startLongPress();
-    } else {
-      // console.log("❌ timeout 실행되었지만 button이 다름");
     }
   }, 300);
 }
@@ -743,8 +741,6 @@ function handleGlobalTouchEnd(e) {
 
   // 길게 누르기가 활성화된 상태라면 반드시 중지
   if (longPressState.isPressed) {
-    // console.log("✅ 길게 누르기 활성 상태 - stopLongPress 호출 예정");
-
     // 터치 위치로 힌트와의 충돌 감지
     if (longPressState.hintElement) {
       const hintRect = longPressState.hintElement.getBoundingClientRect();
@@ -768,7 +764,6 @@ function handleGlobalTouchEnd(e) {
     }
 
     // 반드시 stopLongPress 호출 (힌트 여부와 관계없이)
-    // console.log("🛑 stopLongPress 호출");
     stopLongPress();
 
     // 터치 이동 리스너 제거
@@ -830,8 +825,6 @@ function handleGlobalMouseUp(e) {
 
   // 길게 누르기가 활성화된 상태라면 중지
   if (longPressState.isPressed) {
-    // console.log("🔄 길게 누르기 활성 상태 - stopLongPress 호출 예정");
-
     // 터치 이벤트인 경우 힌트와의 충돌 감지
     if (e.type === "touchend" && longPressState.hintElement) {
       const hintRect = longPressState.hintElement.getBoundingClientRect();
@@ -881,20 +874,15 @@ function handleContainerMouseLeave(e) {
 
 // 레벨 표시만 업데이트하는 함수 (DOM 재렌더링 방지)
 function updateSpiritLevelDisplay(spiritName, newLevel) {
-  // console.log("🔄 updateSpiritLevelDisplay 호출:", spiritName, newLevel);
-
   // 데스크톱 카드 찾기
   const card = elements.selectedSpiritsList.querySelector(
     `[data-spirit-name="${spiritName}"]`
   );
-  // console.log("🔍 데스크톱 카드 찾기:", card);
 
   if (card) {
     const levelInput = card.querySelector(".level-input");
-    // console.log("🔍 레벨 input 찾기:", levelInput);
 
     if (levelInput) {
-      // console.log("📝 레벨 업데이트:", levelInput.value, "→", newLevel);
       // value 속성과 프로퍼티 모두 설정
       levelInput.value = newLevel;
       levelInput.setAttribute("value", newLevel);
@@ -937,7 +925,7 @@ function startLongPress() {
   try {
     createHint();
   } catch (error) {
-    console.error("createHint 에러:", error);
+    Logger.error("createHint 에러:", error);
   } // 연속 증감 함수
   const performLevelChange = () => {
     if (!longPressState.isPressed) {
@@ -965,7 +953,6 @@ function startLongPress() {
     }
 
     if (changed) {
-      // console.log(
       //   "✅ performLevelChange: 레벨 변경",
       //   currentLevel,
       //   "→",
@@ -976,11 +963,6 @@ function startLongPress() {
       // renderAll() 대신 레벨 표시만 업데이트 (DOM 재렌더링 방지)
       updateSpiritLevelDisplay(longPressState.spiritName, spirit.level);
       return true;
-    } else {
-      // console.log("⚠️ performLevelChange: 변경 불가", {
-      //   level: spirit.level,
-      //   action: longPressState.action,
-      // });
     }
     return false;
   };
@@ -1055,7 +1037,6 @@ function restartLongPressInterval() {
 function createHint() {
   if (!longPressState.button) return;
 
-  // console.log("🎨 createHint 시작:", longPressState.action);
 
   const targetValue = longPressState.action === "level-down" ? 0 : 25;
   const hintText = targetValue.toString();
@@ -1130,37 +1111,29 @@ function createHint() {
   // 힌트와 브리지에 이벤트 리스너 추가
   const handleHintEnter = () => {
     if (longPressState.isPressed) {
-      // console.log("🎯 힌트 진입");
       longPressState.hintHovered = true;
       // 시각적 피드백: 크기 증가 및 글씨 키우기
       hint.style.transform = "scale(1.2)";
       hint.style.fontSize = "12px";
       hint.style.fontWeight = "900";
       hint.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
-
-      // 연속 증감은 계속 진행 (사용자가 원하는 동작)
-      // console.log("✅ 힌트 진입했지만 연속 증감 계속 진행");
     }
   };
 
   const handleHintLeave = () => {
     if (longPressState.isPressed) {
-      // console.log("🚪 힌트 이탈");
       longPressState.hintHovered = false;
       // 원래 크기로 복원
       hint.style.transform = "scale(1)";
       hint.style.fontSize = "10px";
       hint.style.fontWeight = "bold";
       hint.style.boxShadow = "0 1px 3px rgba(0,0,0,0.2)";
-
-      // 연속 증감은 이미 진행 중이므로 재시작 불필요
-      // console.log("✅ 힌트 이탈했지만 연속 증감은 계속 진행");
     }
   };
 
   // 힌트에서의 mouseup/touchend 이벤트 처리
   const handleHintMouseUp = () => {
-    console.log("🎯 힌트 클릭/터치 종료", {
+    Logger.log("🎯 힌트 클릭/터치 종료", {
       isPressed: longPressState.isPressed,
       hintHovered: longPressState.hintHovered,
     });

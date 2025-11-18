@@ -123,8 +123,6 @@ export async function init(container) {
     );
     elements.pvpPresetBtn.addEventListener("click", () => optimizeStats("pvp"));
     setupSearchEventListeners();
-
-    // console.log("착 계산 페이지 초기화 완료.");
   } catch (error) {
     ErrorHandler.handle(error, "Chak page init");
     container.innerHTML = `
@@ -176,7 +174,6 @@ export function cleanup() {
     elements.statOptions.style.display = "none";
   });
 
-  // console.log("착 계산 페이지 정리 완료.");
 }
 
 function renderSelectors() {

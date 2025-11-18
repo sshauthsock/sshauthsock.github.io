@@ -8,6 +8,7 @@ import {
   isFixedLevelSpirit,
 } from "./constants.js";
 import { addSupportMessageToModal } from "./utils/supportMessage.js";
+import Logger from "./utils/logger.js";
 
 let activeModal = null;
 
@@ -102,7 +103,7 @@ function handleSpiritInfoGlobalTouchUp(e) {
     type: "touchend",
   };
 
-  // console.log(
+
   //   "📱 환수정보 터치 종료, 터치 위치:",
   //   touch.clientX,
   //   touch.clientY
@@ -113,7 +114,7 @@ function handleSpiritInfoGlobalTouchUp(e) {
 }
 
 function startSpiritInfoLongPress() {
-  // console.log(
+
   //   `⏰ 환수정보 길게 누르기 시작: ${spiritInfoLongPressState.action}`
   // );
 
@@ -157,7 +158,7 @@ function startSpiritInfoLongPress() {
         spiritInfoLongPressState.highlightStat
       );
 
-      // console.log(
+
       //   `🔄 환수정보 연속 변경: ${spiritInfoLongPressState.spiritData.name} → ${newLevel}`
       // );
     }
@@ -247,7 +248,7 @@ function createSpiritInfoHint() {
     "touchstart",
     (e) => {
       e.preventDefault();
-      // console.log("Hint touchstart - modalHandler");
+
       if (isPlus) {
         hint.style.background = "linear-gradient(135deg, #26d0ce, #2eb398)";
         hint.style.boxShadow = "0 3px 6px rgba(68, 160, 141, 0.3)";
@@ -265,7 +266,7 @@ function createSpiritInfoHint() {
     "touchend",
     (e) => {
       e.preventDefault();
-      // console.log("Hint touchend - modalHandler");
+
       if (isPlus) {
         hint.style.background = "linear-gradient(135deg, #4ecdc4, #44a08d)";
         hint.style.boxShadow = "0 2px 4px rgba(68, 160, 141, 0.2)";
@@ -324,7 +325,7 @@ function createSpiritInfoHint() {
     "touchend",
     (e) => {
       e.preventDefault();
-      // console.log(
+
       //   "📱 환수정보 힌트 터치 종료 - modalHandler, hintHovered:",
       //   spiritInfoLongPressState.hintHovered
       // );
@@ -446,7 +447,7 @@ function handleSpiritInfoGlobalMouseUp(event) {
           spiritInfoLongPressState.highlightStat
         );
 
-        // console.log(
+
         //   `🎯 환수정보 힌트 클릭: ${spiritInfoLongPressState.spiritData.name} → ${targetValue}`
         // );
       }
@@ -483,7 +484,7 @@ function handleSpiritInfoGlobalMouseUp(event) {
         spiritInfoLongPressState.highlightStat
       );
 
-      // console.log(
+
       //   `📊 환수정보 짧은 클릭 레벨 변경: ${spiritInfoLongPressState.spiritData.name} ${spiritInfoLongPressState.currentLevel} → ${newLevel}`
       // );
     }
@@ -661,7 +662,7 @@ export function showInfo(
   isRankingMode = false
 ) {
   if (!spiritData) {
-    console.error("모달을 표시할 환수 데이터가 없습니다.");
+    Logger.error("모달을 표시할 환수 데이터가 없습니다.");
     return;
   }
 
@@ -794,16 +795,16 @@ function renderSpiritInfo(
         if (desktopAdIns) window.adfit.render(desktopAdIns);
         if (mobileAdIns) window.adfit.render(mobileAdIns);
 
-        // console.log(
+
         //   "Kakao AdFit: Ads re-rendered (both mobile/desktop) in Spirit Info modal."
         // );
       } else {
-        console.warn(
+        Logger.warn(
           "Kakao AdFit script not yet loaded or available for re-rendering."
         );
       }
     } catch (error) {
-      console.error(
+      Logger.error(
         "Kakao AdFit: Error re-rendering ad after level change:",
         error
       );
@@ -910,7 +911,7 @@ function displayStats(spiritData, level, highlightStat) {
   const bindList = document.getElementById("bindList");
 
   if (!registrationList || !bindList) {
-    console.error("Stat lists not found in DOM.");
+    Logger.error("Stat lists not found in DOM.");
     return;
   }
 

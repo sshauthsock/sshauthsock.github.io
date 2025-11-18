@@ -392,8 +392,6 @@ export async function init(container) {
   } finally {
     hideLoading();
   }
-
-  // console.log("환수혼 계산 페이지 초기화 완료.");
 }
 
 /**
@@ -454,5 +452,4 @@ export function cleanup() {
   if (elements.calculateBtn)
     elements.calculateBtn.removeEventListener("click", handleCalculate);
 
-  // console.log("환수혼 계산 페이지 정리 완료.");
 }

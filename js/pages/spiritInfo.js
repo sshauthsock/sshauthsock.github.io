@@ -141,7 +141,6 @@ export function init(container) {
   initStatFilter();
 
   render();
-  // console.log("환수 정보 페이지 초기화 완료.");
 }
 
 export function getHelpContentHTML() {
@@ -169,5 +168,4 @@ export function cleanup() {
   if (elements.influenceToggle) {
     elements.influenceToggle.removeEventListener("change", handleToggleChange);
   }
-  // console.log("환수 정보 페이지 정리 완료.");
 }

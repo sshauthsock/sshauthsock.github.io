@@ -2,6 +2,8 @@
  * SessionStorage 용량 관리 유틸리티
  * 브라우저의 SessionStorage 용량 제한을 관리하고 초과 시 자동으로 오래된 항목 제거
  */
+import Logger from "./logger.js";
+
 class StorageManager {
   /**
    * SessionStorage 최대 용량 반환 (5MB)
@@ -49,7 +51,7 @@ class StorageManager {
     
     // 용량 초과 시 오래된 항목 제거
     if (!this.canStore(size)) {
-      console.warn(`[Storage] Storage nearly full (${(this.getUsedSize() / 1024 / 1024).toFixed(2)}MB used). Clearing oldest items...`);
+      Logger.warn(`[Storage] Storage nearly full (${(this.getUsedSize() / 1024 / 1024).toFixed(2)}MB used). Clearing oldest items...`);
       // 공간이 확보될 때까지 오래된 항목 제거
       while (!this.canStore(size) && sessionStorage.length > 0) {
         this.clearOldest();
@@ -61,7 +63,7 @@ class StorageManager {
       return true;
     } catch (e) {
       // QUOTA_EXCEEDED_ERR 등 에러 처리
-      console.error(`[Storage] Failed to store ${key}:`, e);
+      Logger.error(`[Storage] Failed to store ${key}:`, e);
       // 추가 시도: 오래된 항목 하나 더 제거 후 재시도
       if (sessionStorage.length > 0) {
         this.clearOldest();
@@ -69,7 +71,7 @@ class StorageManager {
           sessionStorage.setItem(key, value);
           return true;
         } catch (retryError) {
-          console.error(`[Storage] Retry failed for ${key}:`, retryError);
+          Logger.error(`[Storage] Retry failed for ${key}:`, retryError);
           return false;
         }
       }
@@ -90,7 +92,7 @@ class StorageManager {
     const firstKey = sessionStorage.key(0);
     if (firstKey) {
       sessionStorage.removeItem(firstKey);
-      console.log(`[Storage] Removed oldest item: ${firstKey}`);
+      Logger.log(`[Storage] Removed oldest item: ${firstKey}`);
     }
   }
 

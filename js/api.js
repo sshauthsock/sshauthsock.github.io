@@ -5,6 +5,7 @@ import {
   transformSpiritsArrayPaths,
   transformSpiritImagePath,
 } from "./utils/imagePath.js";
+import Logger from "./utils/logger.js";
 
 // 환경별 API URL 설정
 // 우선순위: import.meta.env.VITE_API_BASE_URL > __API_BASE_URL__ > 기본값
@@ -37,10 +38,10 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
   const cachedItem = StorageManager.getItem(key);
   if (cachedItem) {
     try {
-      // console.log(`[Cache] Using sessionStorage cached data for key: ${key}`);
+      Logger.log(`[Cache] Using sessionStorage cached data for key: ${key}`);
       return JSON.parse(cachedItem);
     } catch (e) {
-      console.error(
+      Logger.error(
         `[Cache Error] Failed to parse sessionStorage data for ${key}, fetching fresh.`,
         e
       );
@@ -60,7 +61,7 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
   const jsonString = JSON.stringify(processedData);
   const saved = StorageManager.setItem(key, jsonString);
   if (!saved) {
-    console.warn(
+    Logger.warn(
       `[Cache] Failed to save to sessionStorage for ${key}. Data will not be cached.`
     );
   }
@@ -71,7 +72,7 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
 async function fetchWithMemoryCache(key, url) {
   const cachedData = memoryCache.get(key);
   if (cachedData) {
-    // console.log(`[Cache] Using memory cached data for key: ${key}`);
+    Logger.log(`[Cache] Using memory cached data for key: ${key}`);
     return cachedData;
   }
 

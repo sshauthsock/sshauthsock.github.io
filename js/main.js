@@ -2,6 +2,7 @@ import * as api from "./api.js";
 import { setAllSpirits, state as globalState } from "./state.js";
 import { showLoading, hideLoading } from "./loadingIndicator.js";
 import ErrorHandler from "./utils/errorHandler.js";
+import Logger from "./utils/logger.js";
 
 const pageModules = {
   spiritInfo: () => import("./pages/spiritInfo.js"),
@@ -56,7 +57,7 @@ if (
     }
   });
 } else {
-  console.error(
+  Logger.error(
     "Help button or related tooltip elements not found in DOM for initialization."
   );
 }
@@ -69,9 +70,9 @@ async function route() {
   if (globalState.currentPageModule?.cleanup) {
     try {
       globalState.currentPageModule.cleanup(); // 현재 활성화된 페이지 모듈의 cleanup 호출
-      // console.log(`[Router] Cleaned up previous page.`);
+      Logger.log(`[Router] Cleaned up previous page.`);
     } catch (e) {
-      console.error("[Router] Error during page cleanup:", e);
+      Logger.error("[Router] Error during page cleanup:", e);
     }
   }
 
@@ -96,13 +97,13 @@ async function route() {
         !Array.isArray(globalState.allSpirits) ||
         globalState.allSpirits.length === 0
       ) {
-        console.warn(
+        Logger.warn(
           "Global spirits data is empty or not an array when routing. This might cause errors on pages depending on it."
         );
       }
 
       await pageModule.init(appContainer);
-      // console.log(`[Router] Initialized page: ${pageName}`);
+      Logger.log(`[Router] Initialized page: ${pageName}`);
 
       if (currentHelpTitle && pageSpecificHelpContent) {
         currentHelpTitle.textContent = `${pageTitle} 도움말`;
@@ -113,7 +114,7 @@ async function route() {
           pageSpecificHelpContent.innerHTML = `<div class="content-block"><p class="text-center text-light mt-md">이 페이지에 대한 특정 도움말은 없습니다.</p></div>`;
         }
       } else {
-        console.error(
+        Logger.error(
           "Help tooltip specific content elements not found for update within route()."
         );
       }
@@ -126,16 +127,16 @@ async function route() {
           page_title: pageTitle,
           page_path: pagePath,
         });
-        // console.log(`[GA4] Page view event sent for: ${pagePath}`);
+        Logger.log(`[GA4] Page view event sent for: ${pagePath}`);
       }
     } else {
-      console.warn(
+      Logger.warn(
         `Page module '${pageName}' does not have an init() function.`
       );
       appContainer.innerHTML = `<p class="error-message">페이지를 초기화할 수 없습니다. (init 함수 없음)</p>`;
     }
   } catch (error) {
-    console.error(
+    Logger.error(
       `[Router] Failed to load or initialize page '${pageName}':`,
       error
     );
@@ -160,7 +161,7 @@ if (footerReportBtn && typeof gtag === "function") {
       page_location: window.location.href,
       page_title: document.title,
     });
-    // console.log("GA4: Report button click event sent.");
+    Logger.log("GA4: Report button click event sent.");
   });
 }
 
@@ -190,11 +191,11 @@ async function initializeApp() {
       };
     });
     setAllSpirits(allSpiritsTransformed);
-    // console.log("Global state (allSpirits) updated:", globalState.allSpirits);
+    Logger.log("Global state (allSpirits) updated:", globalState.allSpirits);
 
     await route();
   } catch (error) {
-    console.error("애플리케이션 초기화 실패:", error);
+    Logger.error("애플리케이션 초기화 실패:", error);
     appContainer.innerHTML = `
       <div class="error-message" style="text-align: center; padding: 2rem;">
         <h3>현재 서버 점검중 입니다.</h3>

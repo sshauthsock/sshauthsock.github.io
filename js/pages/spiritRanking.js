@@ -604,7 +604,6 @@ export async function init(container) {
 
   await loadAndRenderRankings();
 
-  // console.log("환수 랭킹 페이지 초기화 완료.");
 }
 
 /**
@@ -666,5 +665,4 @@ export function cleanup() {
       handleRankingAction
     );
   }
-  // console.log("환수 랭킹 페이지 정리 완료.");
 }

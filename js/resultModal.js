@@ -12,6 +12,7 @@ import {
   isFixedLevelSpirit,
 } from "./constants.js";
 import { addSupportMessageToModal } from "./utils/supportMessage.js";
+import Logger from "./utils/logger.js";
 
 let activeModal = null;
 let currentlyUsedSpirit = null;
@@ -86,16 +87,8 @@ function calculateRegistrationBonusAtLevel(spiritName, level) {
 
     if (key === "damageResistance" || key === "damageResistancePenetration") {
       totalScore += numericValue;
-      // console.log(
-      //   `Registration ${key}: ${numericValue} -> totalScore: ${totalScore}`
-      // );
     } else if (key === "pvpDamagePercent" || key === "pvpDefensePercent") {
       totalScore += numericValue * 10;
-      // console.log(
-      //   `Registration ${key}: ${numericValue} * 10 = ${
-      //     numericValue * 10
-      //   } -> totalScore: ${totalScore}`
-      // );
     }
 
     if (numericValue > 0) {
@@ -138,19 +131,11 @@ function recalculateBindScore(spirits) {
             key === "damageResistancePenetration"
           ) {
             totalBindScore += numericValue;
-            // console.log(
-            //   `Bind ${key}: ${numericValue} -> totalBindScore: ${totalBindScore}`
-            // );
           } else if (
             key === "pvpDamagePercent" ||
             key === "pvpDefensePercent"
           ) {
             totalBindScore += numericValue * 10;
-            // console.log(
-            //   `Bind ${key}: ${numericValue} * 10 = ${
-            //     numericValue * 10
-            //   } -> totalBindScore: ${totalBindScore}`
-            // );
           }
         });
       }
@@ -336,9 +321,7 @@ function toggleMoreStats() {
 function updateAllScoresAndDisplay() {
   if (!currentResult) return;
 
-  // console.log(" updateAllScoresAndDisplay 호출:");
   modifiedSpirits.forEach((s, i) => {
-    // console.log(`  [${i}] ${s.name}: Lv.${s.stats[0].level}`);
   });
 
   const recalculatedBind = recalculateBindScore(modifiedSpirits);
@@ -568,8 +551,6 @@ function handleModalGlobalTouchEnd(e) {
     type: "touchend",
   };
 
-  // console.log("📱 모달 터치 종료, 터치 위치:", touch.clientX, touch.clientY);
-  // console.log("📱 터치된 요소:", fakeEvent.target);
 
   handleModalGlobalMouseUp(fakeEvent);
 }
@@ -577,19 +558,14 @@ function handleModalGlobalTouchEnd(e) {
 function startModalLongPress() {
   if (!modalLongPressState.button) return;
 
-  // console.log("🎯 startModalLongPress 시작 (모달):", {
-  //   spiritName: modalLongPressState.spiritName,
-  //   action: modalLongPressState.action,
-  // });
 
   modalLongPressState.isPressed = true;
 
   // 힌트 요소 생성
   try {
     createModalHint();
-    // console.log("createModalHint 성공");
   } catch (error) {
-    console.error("createModalHint 에러:", error);
+    Logger.error("createModalHint 에러:", error);
   }
 
   // 연속 증감 함수
@@ -1067,12 +1043,12 @@ export function showResultModal(result, isFromRanking = false) {
           window.adfit.render(adElement);
         });
       } else {
-        console.warn(
+        Logger.warn(
           "Kakao AdFit script (window.adfit) not yet loaded or not available."
         );
       }
     } catch (error) {
-      console.error("Kakao AdFit: Error rendering ads in modal:", error);
+      Logger.error("Kakao AdFit: Error rendering ads in modal:", error);
     }
   }, 100);
 }
