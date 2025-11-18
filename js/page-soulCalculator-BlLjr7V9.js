@@ -1,4 +1,4 @@
-import{b as m}from"./utils-CHsLvtYz.js";import{a as d,b,h as u,d as f}from"./index-DMxw-PSo.js";const a={expTable:null,currentType:"legend",currentLevel:0,targetLevel:1,souls:{high:0,mid:0,low:0}},l={};function x(){return`
+import{c as b}from"./components-D5VgX-mO.js";import{b as u,e as f,h as v,g as y}from"./main-1svrCHF-.js";import{E as d}from"./utils-CDZab3B1.js";const a={expTable:null,currentType:"legend",currentLevel:0,targetLevel:1,souls:{high:0,mid:0,low:0}},l={};function x(){return`
     <div class="container soul-container">
       <div class="left card">
         <h3>환수 성장 경험치 테이블</h3>
@@ -66,14 +66,14 @@ import{b as m}from"./utils-CHsLvtYz.js";import{a as d,b,h as u,d as f}from"./ind
         </div>
       </div>
     </div>
-  `}function v(){if(!a.expTable||!l.expTableLeft||!l.expTableRight)return;const e=a.expTable[a.currentType];e&&(l.expTableLeft.innerHTML="",l.expTableRight.innerHTML="",e.forEach((s,t)=>{const i=m("tr","",{html:`<td>${t}</td><td>${s.toLocaleString()}</td>`});t<=13?l.expTableLeft.appendChild(i):l.expTableRight.appendChild(i)}),p())}function y(e){if(!e||!e.required||!e.maxLevelInfo){l.resultsPanel.innerHTML='<p class="error-message">잘못된 계산 결과입니다.</p>',l.resultsPanel.classList.remove("hidden");return}const{required:s,maxLevelInfo:t}=e,i={legend:"전설",immortal:"불멸"}[a.currentType]||"알 수 없음",c=L=>(Number(L)||0).toLocaleString(),g=S(s,i,c),h=T(t,i,c);l.resultsPanel.innerHTML=`
-        <div class="result-column">
-            ${g}
-        </div>
+  `}function p(){if(!a.expTable||!l.expTableLeft||!l.expTableRight)return;const e=a.expTable[a.currentType];e&&(l.expTableLeft.innerHTML="",l.expTableRight.innerHTML="",e.forEach((s,t)=>{const i=b("tr","",{html:`<td>${t}</td><td>${s.toLocaleString()}</td>`});t<=13?l.expTableLeft.appendChild(i):l.expTableRight.appendChild(i)}),g())}function S(e){if(!e||!e.required||!e.maxLevelInfo){l.resultsPanel.innerHTML='<p class="error-message">잘못된 계산 결과입니다.</p>',l.resultsPanel.classList.remove("hidden");return}const{required:s,maxLevelInfo:t}=e,i={legend:"전설",immortal:"불멸"}[a.currentType]||"알 수 없음",c=L=>(Number(L)||0).toLocaleString(),h=T(s,i,c),m=w(t,i,c);l.resultsPanel.innerHTML=`
         <div class="result-column">
             ${h}
         </div>
-    `,l.resultsPanel.classList.remove("hidden")}function S(e,s,t){let i="";return!e.isSufficient&&e.needed?i=`
+        <div class="result-column">
+            ${m}
+        </div>
+    `,l.resultsPanel.classList.remove("hidden")}function T(e,s,t){let i="";return!e.isSufficient&&e.needed?i=`
             <div class="sub-title">추가 필요 (최적 조합)</div>
             <div class="data-row"><span><img src="assets/img/high-soul.jpg" class="soul-icon">최상급</span><span class="data-value">${t(e.needed.high)}개</span></div>
             <div class="data-row"><span><img src="assets/img/mid-soul.jpg" class="soul-icon">상급</span><span class="data-value">${t(e.needed.mid)}개</span></div>
@@ -93,7 +93,7 @@ import{b as m}from"./utils-CHsLvtYz.js";import{a as d,b,h as u,d as f}from"./ind
             <div class="data-row"><span><img src="assets/img/low-soul.jpg" class="soul-icon">하급</span><span class="data-value">${t(e.souls.low)}개</span></div>
             ${i}
         </div>
-    `}function T(e,s,t){let i="";e.level<25&&e.nextLevelExp!==void 0&&e.nextLevelExp>0?i=`
+    `}function w(e,s,t){let i="";e.level<25&&e.nextLevelExp!==void 0&&e.nextLevelExp>0?i=`
             <div class="data-row"><span>다음 레벨 진행도</span><span class="data-value">${e.progressPercent||0}%</span></div>
             <div class="data-row"><span>남은 경험치</span><span class="data-value">${t(e.remainingExp)} / ${t(e.nextLevelExp)}</span></div>
         `:e.level===25&&(i='<div class="data-row"><span class="sufficient">최대 레벨 (25) 달성 완료!</span></div>');const c=e.isTargetReachable?`<span class="sufficient">목표 레벨 ${a.targetLevel} 달성 가능!</span>`:`<span class="insufficient">목표 레벨 ${a.targetLevel}까지 ${t(e.expShortage)} 경험치 부족</span>`;return`
@@ -108,7 +108,11 @@ import{b as m}from"./utils-CHsLvtYz.js";import{a as d,b,h as u,d as f}from"./ind
             </div>
             <div class="result-section">${c}</div>
         </div>
-    `}function p(){if(!l.container)return;const e=l.container.querySelectorAll("#expTableLeft tr, #expTableRight tr");e.forEach(i=>i.classList.remove("current-level","target-level"));const s=a.currentLevel,t=a.targetLevel;e[s]&&e[s].classList.add("current-level"),e[t]&&e[t].classList.add("target-level")}function o(e){a.currentType=e,l.expType.value=e,l.container.querySelectorAll(".exp-tab").forEach(s=>{s.classList.toggle("active",s.dataset.type===e)}),v(),l.resultsPanel.classList.add("hidden")}function r(){let e=parseInt(l.currentLevel.value,10),s=parseInt(l.targetLevel.value,10);(isNaN(e)||e<0)&&(e=0),e>24&&(e=24),(isNaN(s)||s<1)&&(s=1),s>25&&(s=25),s<=e&&(s=e+1,s>25&&(s=25)),l.currentLevel.value=e,l.targetLevel.value=s,a.currentLevel=e,a.targetLevel=s,p(),l.resultsPanel.classList.add("hidden")}async function n(){r(),a.souls={high:parseInt(l.highSoul.value,10)||0,mid:parseInt(l.midSoul.value,10)||0,low:parseInt(l.lowSoul.value,10)||0},d(l.resultsPanel,"계산 중...","환수혼 소모량을 계산하고 있습니다.");try{const e=await f({type:a.currentType,currentLevel:a.currentLevel,targetLevel:a.targetLevel,ownedSouls:a.souls});y(e)}catch(e){alert(`계산 오류: ${e.message}`),console.error("Soul calculation failed:",e),l.resultsPanel.classList.add("hidden")}finally{u()}}function w(){l.expType.addEventListener("change",e=>o(e.target.value)),l.container.querySelectorAll(".exp-tab").forEach(e=>{e.addEventListener("click",s=>{o(s.currentTarget.dataset.type)})}),l.currentLevel.addEventListener("change",r),l.targetLevel.addEventListener("change",r),l.highSoul.addEventListener("change",n),l.midSoul.addEventListener("change",n),l.lowSoul.addEventListener("change",n),l.calculateBtn.addEventListener("click",n)}async function H(e){e.innerHTML=x(),l.container=e,l.expTableLeft=e.querySelector("#expTableLeft"),l.expTableRight=e.querySelector("#expTableRight"),l.expType=e.querySelector("#expType"),l.currentLevel=e.querySelector("#currentLevel"),l.targetLevel=e.querySelector("#targetLevel"),l.highSoul=e.querySelector("#highSoul"),l.midSoul=e.querySelector("#midSoul"),l.lowSoul=e.querySelector("#lowSoul"),l.calculateBtn=e.querySelector("#calculateBtn"),l.resultsPanel=e.querySelector("#resultsPanel"),w(),d(e,"경험치 테이블 로딩 중...");try{a.expTable=await b(),v(),r()}catch(s){console.error("Failed to load soul exp table:",s),e.innerHTML='<p class="error-message">서버 점검중입니다</p>'}finally{u()}}function P(){return`
+    `}function g(){if(!l.container)return;const e=l.container.querySelectorAll("#expTableLeft tr, #expTableRight tr");e.forEach(i=>i.classList.remove("current-level","target-level"));const s=a.currentLevel,t=a.targetLevel;e[s]&&e[s].classList.add("current-level"),e[t]&&e[t].classList.add("target-level")}function o(e){a.currentType=e,l.expType.value=e,l.container.querySelectorAll(".exp-tab").forEach(s=>{s.classList.toggle("active",s.dataset.type===e)}),p(),l.resultsPanel.classList.add("hidden")}function r(){let e=parseInt(l.currentLevel.value,10),s=parseInt(l.targetLevel.value,10);(isNaN(e)||e<0)&&(e=0),e>24&&(e=24),(isNaN(s)||s<1)&&(s=1),s>25&&(s=25),s<=e&&(s=e+1,s>25&&(s=25)),l.currentLevel.value=e,l.targetLevel.value=s,a.currentLevel=e,a.targetLevel=s,g(),l.resultsPanel.classList.add("hidden")}async function n(){r(),a.souls={high:parseInt(l.highSoul.value,10)||0,mid:parseInt(l.midSoul.value,10)||0,low:parseInt(l.lowSoul.value,10)||0},u(l.resultsPanel,"계산 중...","환수혼 소모량을 계산하고 있습니다.");try{const e=await y({type:a.currentType,currentLevel:a.currentLevel,targetLevel:a.targetLevel,ownedSouls:a.souls});S(e)}catch(e){alert(`계산 오류: ${e.message}`),console.error("Soul calculation failed:",e),l.resultsPanel.classList.add("hidden")}finally{v()}}function E(){l.expType.addEventListener("change",e=>o(e.target.value)),l.container.querySelectorAll(".exp-tab").forEach(e=>{e.addEventListener("click",s=>{o(s.currentTarget.dataset.type)})}),l.currentLevel.addEventListener("change",r),l.targetLevel.addEventListener("change",r),l.highSoul.addEventListener("change",n),l.midSoul.addEventListener("change",n),l.lowSoul.addEventListener("change",n),l.calculateBtn.addEventListener("click",n)}async function R(e){e.innerHTML=x(),l.container=e,l.expTableLeft=e.querySelector("#expTableLeft"),l.expTableRight=e.querySelector("#expTableRight"),l.expType=e.querySelector("#expType"),l.currentLevel=e.querySelector("#currentLevel"),l.targetLevel=e.querySelector("#targetLevel"),l.highSoul=e.querySelector("#highSoul"),l.midSoul=e.querySelector("#midSoul"),l.lowSoul=e.querySelector("#lowSoul"),l.calculateBtn=e.querySelector("#calculateBtn"),l.resultsPanel=e.querySelector("#resultsPanel"),E(),u(e,"경험치 테이블 로딩 중...");try{a.expTable=await f(),p(),r()}catch(s){d.handle(s,"Soul exp table load"),e.innerHTML=`
+      <div class="error-message" style="text-align: center; padding: 2rem;">
+        <h3>${d.getUserFriendlyMessage(s.message)}</h3>
+      </div>
+    `}finally{v()}}function q(){return`
         <div class="content-block">
             <h2>환수혼 계산기 사용 안내</h2>
             <p>환수혼 계산기는 보유한 환수혼(최상급, 상급, 하급)을 기준으로 특정 환수 레벨까지 도달하는 데 필요한 경험치와 환수혼 개수를 계산해줍니다. 또한, 보유 환수혼으로 얼마나 레벨업 할 수 있는지도 알려드립니다.</p>
@@ -134,4 +138,4 @@ import{b as m}from"./utils-CHsLvtYz.js";import{a as d,b,h as u,d as f}from"./ind
                 <li><strong>최대 레벨 25의 중요성:</strong> 환수의 25레벨 장착 효과는 캐릭터에게 매우 강력한 시너지를 제공하므로, 주요 환수는 25레벨까지 육성하는 것을 권장합니다.</li>
             </ul>
         </div>
-    `}function R(){l.expType&&l.expType.removeEventListener("change",o),l.container&&l.container.querySelectorAll(".exp-tab").forEach(e=>{e.removeEventListener("click",o)}),l.currentLevel&&l.currentLevel.removeEventListener("change",r),l.targetLevel&&l.targetLevel.removeEventListener("change",r),l.highSoul&&l.highSoul.removeEventListener("change",n),l.midSoul&&l.midSoul.removeEventListener("change",n),l.lowSoul&&l.lowSoul.removeEventListener("change",n),l.calculateBtn&&l.calculateBtn.removeEventListener("click",n)}export{R as cleanup,P as getHelpContentHTML,H as init};
+    `}function M(){l.expType&&l.expType.removeEventListener("change",o),l.container&&l.container.querySelectorAll(".exp-tab").forEach(e=>{e.removeEventListener("click",o)}),l.currentLevel&&l.currentLevel.removeEventListener("change",r),l.targetLevel&&l.targetLevel.removeEventListener("change",r),l.highSoul&&l.highSoul.removeEventListener("change",n),l.midSoul&&l.midSoul.removeEventListener("change",n),l.lowSoul&&l.lowSoul.removeEventListener("change",n),l.calculateBtn&&l.calculateBtn.removeEventListener("click",n)}export{M as cleanup,q as getHelpContentHTML,R as init};
