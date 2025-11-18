@@ -1,6 +1,10 @@
 import ErrorHandler from "./utils/errorHandler.js";
 import { memoryCache } from "./utils/cache.js";
 import StorageManager from "./utils/storage.js";
+import {
+  transformSpiritsArrayPaths,
+  transformSpiritImagePath,
+} from "./utils/imagePath.js";
 
 // 환경별 API URL 설정
 // 우선순위: import.meta.env.VITE_API_BASE_URL > __API_BASE_URL__ > 기본값
@@ -11,20 +15,8 @@ const BASE_URL =
   (typeof __API_BASE_URL__ !== "undefined" ? __API_BASE_URL__ : null) ||
   "https://wind-app-backend-y7qnnpfkrq-du.a.run.app";
 
-function _transformSpiritImagePath(spirit) {
-  if (spirit && typeof spirit.image === "string") {
-    const transformedImage = spirit.image.replace(/^images\//, "assets/img/");
-    return { ...spirit, image: transformedImage };
-  }
-  return spirit;
-}
-
-function _transformSpiritsArrayPaths(spiritsArray) {
-  if (!Array.isArray(spiritsArray)) {
-    return spiritsArray;
-  }
-  return spiritsArray.map(_transformSpiritImagePath);
-}
+// 이미지 경로 변환 함수는 utils/imagePath.js로 이동
+// _transformSpiritImagePath, _transformSpiritsArrayPaths는 더 이상 사용하지 않음
 
 async function handleResponse(response) {
   if (!response.ok) {
@@ -61,7 +53,7 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
 
   let processedData = rawData;
   if (shouldTransformSpirits && Array.isArray(rawData)) {
-    processedData = _transformSpiritsArrayPaths(rawData);
+    processedData = transformSpiritsArrayPaths(rawData);
   }
 
   // StorageManager를 통해 안전하게 저장 (용량 체크 및 자동 정리)
@@ -101,7 +93,7 @@ async function fetchWithMemoryCache(key, url) {
           (rankingItem) => {
             let item = rankingItem;
             if (Array.isArray(item.spirits)) {
-              item.spirits = _transformSpiritsArrayPaths(item.spirits);
+              item.spirits = transformSpiritsArrayPaths(item.spirits);
             }
             if (item.bindStat !== undefined && item.bindStats === undefined) {
               item.bindStats = item.bindStat;
@@ -110,7 +102,7 @@ async function fetchWithMemoryCache(key, url) {
           }
         );
       } else if (type === "stat") {
-        transformedData.rankings = _transformSpiritsArrayPaths(
+        transformedData.rankings = transformSpiritsArrayPaths(
           transformedData.rankings
         );
       }
@@ -139,7 +131,7 @@ export async function calculateOptimalCombination(creatures) {
     const result = await handleResponse(response);
 
     if (result && Array.isArray(result.spirits)) {
-      result.spirits = _transformSpiritsArrayPaths(result.spirits);
+      result.spirits = transformSpiritsArrayPaths(result.spirits);
     }
     return result;
   } catch (error) {
