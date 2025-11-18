@@ -391,9 +391,55 @@ func main() {
 	app.dataLoadMutex.Unlock()
 
 	router := gin.Default()
+	
+	// CORS 보안 강화: 특정 도메인만 허용
+	cfg := config.Load()
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowAllOrigins = true
+	
+	// 환경 변수에서 허용된 Origin 목록 가져오기
+	allowedOrigins := cfg.AllowedOrigins
+	if allowedOrigins == "" {
+		// 기본값: 프로덕션 도메인
+		allowedOrigins = "https://sshauthsock.github.io"
+	}
+	
+	// 쉼표로 구분된 Origin 목록을 배열로 변환
+	originsList := strings.Split(allowedOrigins, ",")
+	// 공백 제거
+	for i := range originsList {
+		originsList[i] = strings.TrimSpace(originsList[i])
+	}
+	
+	// 개발 환경일 때 localhost 자동 추가
+	if cfg.Environment != "production" {
+		localhostOrigins := []string{
+			"http://localhost:5173",
+			"http://localhost:3000",
+			"http://127.0.0.1:5173",
+			"http://127.0.0.1:3000",
+			"http://[::1]:5173",
+			"http://[::1]:3000",
+		}
+		// 중복 제거하면서 localhost 추가
+		originMap := make(map[string]bool)
+		for _, origin := range originsList {
+			originMap[origin] = true
+		}
+		for _, origin := range localhostOrigins {
+			if !originMap[origin] {
+				originsList = append(originsList, origin)
+			}
+		}
+		appLogger.Info("Development mode: Added localhost origins to CORS")
+	}
+	
+	corsConfig.AllowOrigins = originsList
+	corsConfig.AllowAllOrigins = false // 모든 Origin 허용 비활성화
 	corsConfig.AllowMethods = []string{"GET", "POST", "OPTIONS"}
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	corsConfig.AllowCredentials = false // Credentials 허용 안 함 (보안)
+	
+	appLogger.Info("CORS configured. Allowed origins: %v", originsList)
 	router.Use(cors.New(corsConfig))
 
 	api := router.Group("/api")
@@ -407,7 +453,6 @@ func main() {
 		api.POST("/calculate/chak", app.calculateChakHandler)
 	}
 
-	cfg := config.Load()
 	appLogger.Info("Server is running on port %s", cfg.Port)
 	router.Run(":" + cfg.Port)
 }

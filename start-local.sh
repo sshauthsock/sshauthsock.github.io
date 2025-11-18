@@ -9,6 +9,7 @@ cd "$SCRIPT_DIR"
 # Backend 환경 변수 설정
 export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/config/serviceAccountKey.json"
 export PORT="8080"
+export ENVIRONMENT="development"  # 개발 환경으로 설정 (CORS에서 localhost 허용)
 
 echo "=========================================="
 echo "로컬 개발 환경 시작"
