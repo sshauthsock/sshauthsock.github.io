@@ -3,6 +3,7 @@ import { setAllSpirits, state as globalState } from "./state.js";
 import { showLoading, hideLoading } from "./loadingIndicator.js";
 import ErrorHandler from "./utils/errorHandler.js";
 import Logger from "./utils/logger.js";
+import { initPerformanceMonitoring, trackPageLoadPerformance, trackUserAction } from "./utils/performanceMonitor.js";
 
 const pageModules = {
   spiritInfo: () => import("./pages/spiritInfo.js"),
@@ -128,6 +129,13 @@ async function route() {
           page_path: pagePath,
         });
         Logger.log(`[GA4] Page view event sent for: ${pagePath}`);
+        
+        // 페이지 로드 성능 추적
+        const pageLoadStart = performance.now();
+        setTimeout(() => {
+          const pageLoadDuration = performance.now() - pageLoadStart;
+          trackPageLoadPerformance(pageName, pageLoadDuration);
+        }, 100);
       }
     } else {
       Logger.warn(
@@ -174,6 +182,10 @@ mainTabs.addEventListener("click", (e) => {
 });
 
 async function initializeApp() {
+  // 성능 모니터링 초기화
+  initPerformanceMonitoring();
+  
+  const initStartTime = performance.now();
   showLoading(
     appContainer,
     "초기 데이터 로딩 중",
@@ -194,6 +206,10 @@ async function initializeApp() {
     Logger.log("Global state (allSpirits) updated:", globalState.allSpirits);
 
     await route();
+    
+    // 초기화 성능 추적
+    const initDuration = performance.now() - initStartTime;
+    trackPageLoadPerformance("app_initialization", initDuration);
   } catch (error) {
     Logger.error("애플리케이션 초기화 실패:", error);
     appContainer.innerHTML = `

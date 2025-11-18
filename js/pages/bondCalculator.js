@@ -5,6 +5,7 @@ import { showResultModal as showOptimalResultModal } from "../resultModal.js";
 import { addResult as addHistory } from "../historyManager.js";
 import { renderSpiritGrid } from "../components/spritGrid.js";
 import { showLoading, hideLoading, showLoadingWithProgress, updateLoadingProgress } from "../loadingIndicator.js";
+import { trackCalculationPerformance, trackUserAction } from "../utils/performanceMonitor.js";
 import { checkSpiritStats, checkItemForStatEffect } from "../utils.js";
 import { createStatFilter } from "../components/statFilter.js";
 import ErrorHandler from "../utils/errorHandler.js";
@@ -1318,7 +1319,14 @@ async function handleFindOptimal() {
     return;
   }
 
+  // 사용자 행동 추적
+  trackUserAction("calculate_optimal", "Bond Calculator", {
+    num_creatures: creaturesForCalc.length,
+    category: pageState.currentCategory,
+  });
+
   const appContainer = document.getElementById("app-container");
+  const calculationStartTime = performance.now();
   
   // 진행률 표시와 함께 로딩 시작
   const numCreatures = creaturesForCalc.length;
@@ -1359,14 +1367,29 @@ async function handleFindOptimal() {
     // 완료 표시를 잠시 보여줌
     await new Promise(resolve => setTimeout(resolve, 300));
     
+    // 계산 성능 추적
+    const calculationDuration = performance.now() - calculationStartTime;
+    trackCalculationPerformance("bond", calculationDuration, {
+      num_creatures: numCreatures,
+      score: result?.scoreWithBind || 0,
+    });
+    
     if (!result || !result.spirits) {
       throw new Error("API에서 유효한 응답을 받지 못했습니다.");
     }
 
     addHistory(result);
     showOptimalResultModal(result, false);
+    
+    // 모달 열기 추적
+    trackUserAction("open_result_modal", "Bond Calculator");
   } catch (error) {
     clearInterval(progressInterval);
+    const calculationDuration = performance.now() - calculationStartTime;
+    trackCalculationPerformance("bond", calculationDuration, {
+      num_creatures: numCreatures,
+      success: false,
+    });
     ErrorHandler.handle(error, "Optimal combination calculation");
     alert(ErrorHandler.getUserFriendlyMessage(error.message));
   } finally {

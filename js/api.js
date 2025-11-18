@@ -6,6 +6,7 @@ import {
   transformSpiritImagePath,
 } from "./utils/imagePath.js";
 import Logger from "./utils/logger.js";
+import { trackApiPerformance } from "./utils/performanceMonitor.js";
 
 // 환경별 API URL 설정
 // 우선순위: import.meta.env.VITE_API_BASE_URL > __API_BASE_URL__ > 기본값
@@ -49,8 +50,13 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
     }
   }
 
+  const startTime = performance.now();
   const response = await fetch(url);
   const rawData = await handleResponse(response);
+  const duration = performance.now() - startTime;
+  
+  // API 성능 추적
+  trackApiPerformance(url, duration, true);
 
   let processedData = rawData;
   if (shouldTransformSpirits && Array.isArray(rawData)) {
@@ -76,8 +82,13 @@ async function fetchWithMemoryCache(key, url) {
     return cachedData;
   }
 
+  const startTime = performance.now();
   const response = await fetch(url);
   const rawData = await handleResponse(response);
+  const duration = performance.now() - startTime;
+  
+  // API 성능 추적
+  trackApiPerformance(url, duration, true);
 
   let transformedData = JSON.parse(JSON.stringify(rawData));
 
@@ -123,6 +134,7 @@ export async function fetchAllSpirits() {
 }
 
 export async function calculateOptimalCombination(creatures) {
+  const startTime = performance.now();
   try {
     const response = await fetch(`${BASE_URL}/api/calculate/bond`, {
       method: "POST",
@@ -130,12 +142,18 @@ export async function calculateOptimalCombination(creatures) {
       body: JSON.stringify({ creatures }),
     });
     const result = await handleResponse(response);
+    const duration = performance.now() - startTime;
+
+    // API 성능 추적
+    trackApiPerformance("/api/calculate/bond", duration, true);
 
     if (result && Array.isArray(result.spirits)) {
       result.spirits = transformSpiritsArrayPaths(result.spirits);
     }
     return result;
   } catch (error) {
+    const duration = performance.now() - startTime;
+    trackApiPerformance("/api/calculate/bond", duration, false);
     ErrorHandler.handle(error, "calculateOptimalCombination");
     throw error;
   }
@@ -159,14 +177,23 @@ export async function fetchSoulExpTable() {
 }
 
 export async function calculateSoul(data) {
+  const startTime = performance.now();
   try {
     const response = await fetch(`${BASE_URL}/api/calculate/soul`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return await handleResponse(response);
+    const result = await handleResponse(response);
+    const duration = performance.now() - startTime;
+    
+    // API 성능 추적
+    trackApiPerformance("/api/calculate/soul", duration, true);
+    
+    return result;
   } catch (error) {
+    const duration = performance.now() - startTime;
+    trackApiPerformance("/api/calculate/soul", duration, false);
     ErrorHandler.handle(error, "calculateSoul");
     throw error;
   }
@@ -177,14 +204,23 @@ export async function fetchChakData() {
 }
 
 export async function calculateChak(data) {
+  const startTime = performance.now();
   try {
     const response = await fetch(`${BASE_URL}/api/calculate/chak`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return await handleResponse(response);
+    const result = await handleResponse(response);
+    const duration = performance.now() - startTime;
+    
+    // API 성능 추적
+    trackApiPerformance("/api/calculate/chak", duration, true);
+    
+    return result;
   } catch (error) {
+    const duration = performance.now() - startTime;
+    trackApiPerformance("/api/calculate/chak", duration, false);
     ErrorHandler.handle(error, "calculateChak");
     throw error;
   }
