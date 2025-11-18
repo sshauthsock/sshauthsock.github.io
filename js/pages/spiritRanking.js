@@ -4,7 +4,7 @@ import { state as globalState } from "../state.js";
 import { createElement } from "../utils.js";
 import * as api from "../api.js";
 import { showInfo as showSpiritInfoModal } from "../modalHandler.js";
-import { showLoading, hideLoading } from "../loadingIndicator.js";
+import { showLoading, hideLoading, createSkeletons } from "../loadingIndicator.js";
 import { STATS_MAPPING, FACTION_ICONS } from "../constants.js";
 import { showResultModal as showOptimalResultModal } from "../resultModal.js";
 import ErrorHandler from "../utils/errorHandler.js";
@@ -243,13 +243,9 @@ function getHTML() {
  * 랭킹 데이터를 로드하고 렌더링합니다. 캐싱 전략을 사용합니다.
  */
 async function loadAndRenderRankings() {
-  showLoading(
-    elements.rankingsContainer,
-    "랭킹 데이터 로딩 중",
-    `${pageState.currentCategory} ${
-      pageState.currentRankingType === "bond" ? "결속" : "능력치"
-    } 랭킹을 불러오고 있습니다.`
-  );
+  // 스켈레톤 UI 표시
+  showSkeletonRankings();
+
   try {
     const data = await api.fetchRankings(
       pageState.currentCategory,
@@ -265,8 +261,31 @@ async function loadAndRenderRankings() {
         <h3>${ErrorHandler.getUserFriendlyMessage(error.message)}</h3>
       </div>
     `;
-  } finally {
-    hideLoading();
+  }
+}
+
+/**
+ * 스켈레톤 랭킹 UI 표시
+ */
+function showSkeletonRankings() {
+  elements.rankingsContainer.innerHTML = "";
+  
+  // 스켈레톤 카드 10개 생성
+  for (let i = 0; i < 10; i++) {
+    const skeletonCard = document.createElement("div");
+    skeletonCard.className = "ranking-item skeleton-card";
+    skeletonCard.style.padding = "16px";
+    skeletonCard.style.marginBottom = "16px";
+    skeletonCard.style.borderRadius = "8px";
+    skeletonCard.style.backgroundColor = "#fff";
+    
+    const skeletons = createSkeletons(3, "text", { width: "100%" });
+    skeletons[0].style.width = "60%";
+    skeletons[1].style.width = "80%";
+    skeletons[2].style.width = "40%";
+    
+    skeletonCard.append(...skeletons);
+    elements.rankingsContainer.appendChild(skeletonCard);
   }
 }
 

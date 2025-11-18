@@ -1,5 +1,6 @@
 const styleId = "loading-indicator-style";
 let loadingOverlay = null;
+let loadingProgressInterval = null;
 
 function initStyles() {
   if (document.getElementById(styleId)) return;
@@ -28,6 +29,47 @@ function initStyles() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .loading-text { margin: 15px 0; color: #333; font-size: 20px; font-weight: bold; }
         .loading-subtext { color: #666; font-size: 14px; margin-bottom: 5px; }
+        .loading-progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+        .loading-progress-container.visible {
+            display: block;
+        }
+        .loading-progress-bar {
+            width: 100%; height: 8px; background-color: #e0e0e0;
+            border-radius: 4px; overflow: hidden; margin-bottom: 8px;
+        }
+        .loading-progress-fill {
+            height: 100%; background: linear-gradient(90deg, #3498db, #2ecc71);
+            border-radius: 4px; transition: width 0.3s ease;
+            width: 0%;
+        }
+        .loading-progress-text {
+            color: #666; font-size: 12px; margin-top: 5px;
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s ease-in-out infinite;
+            border-radius: 4px;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .skeleton-text {
+            height: 16px; margin-bottom: 8px;
+        }
+        .skeleton-title {
+            height: 24px; width: 60%; margin-bottom: 16px;
+        }
+        .skeleton-card {
+            height: 120px; margin-bottom: 16px;
+        }
+        .skeleton-image {
+            width: 100px; height: 100px; border-radius: 8px;
+        }
     `;
   document.head.appendChild(style);
 }
@@ -47,6 +89,11 @@ export function showLoading(
     loadingOverlay = null;
   }
 
+  if (loadingProgressInterval) {
+    clearInterval(loadingProgressInterval);
+    loadingProgressInterval = null;
+  }
+
   initStyles();
 
   loadingOverlay = document.createElement("div");
@@ -56,6 +103,12 @@ export function showLoading(
             <div class="loading-spinner"></div>
             <div class="loading-text">${text}</div>
             <div class="loading-subtext">${subText}</div>
+            <div class="loading-progress-container" id="loading-progress-container">
+                <div class="loading-progress-bar">
+                    <div class="loading-progress-fill" id="loading-progress-fill"></div>
+                </div>
+                <div class="loading-progress-text" id="loading-progress-text"></div>
+            </div>
         </div>
     `;
   container.style.position = "relative";
@@ -66,11 +119,113 @@ export function showLoading(
   });
 }
 
+/**
+ * 진행률 표시와 함께 로딩 표시
+ * @param {HTMLElement} container - 로딩을 표시할 컨테이너
+ * @param {string} text - 메인 텍스트
+ * @param {string} subText - 서브 텍스트
+ * @param {number} progress - 진행률 (0-100)
+ * @param {string} progressText - 진행률 텍스트 (예: "3/10 완료")
+ */
+export function showLoadingWithProgress(
+  container,
+  text = "처리 중...",
+  subText = "잠시만 기다려주세요.",
+  progress = 0,
+  progressText = ""
+) {
+  showLoading(container, text, subText);
+
+  if (loadingOverlay) {
+    const progressContainer = loadingOverlay.querySelector("#loading-progress-container");
+    const progressFill = loadingOverlay.querySelector("#loading-progress-fill");
+    const progressTextEl = loadingOverlay.querySelector("#loading-progress-text");
+
+    if (progressContainer && progressFill && progressTextEl) {
+      progressContainer.classList.add("visible");
+      progressFill.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+      if (progressText) {
+        progressTextEl.textContent = progressText;
+      } else {
+        progressTextEl.textContent = `${Math.round(progress)}%`;
+      }
+    }
+  }
+}
+
+/**
+ * 진행률 업데이트
+ * @param {number} progress - 진행률 (0-100)
+ * @param {string} progressText - 진행률 텍스트 (선택사항)
+ */
+export function updateLoadingProgress(progress, progressText = "") {
+  if (!loadingOverlay) return;
+
+  const progressFill = loadingOverlay.querySelector("#loading-progress-fill");
+  const progressTextEl = loadingOverlay.querySelector("#loading-progress-text");
+
+  if (progressFill) {
+    progressFill.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+  }
+
+  if (progressTextEl) {
+    if (progressText) {
+      progressTextEl.textContent = progressText;
+    } else {
+      progressTextEl.textContent = `${Math.round(progress)}%`;
+    }
+  }
+}
+
 export function hideLoading() {
   if (loadingOverlay) {
     loadingOverlay.classList.remove("visible");
-
-    loadingOverlay.remove();
-    loadingOverlay = null;
+    setTimeout(() => {
+      if (loadingOverlay) {
+        loadingOverlay.remove();
+        loadingOverlay = null;
+      }
+    }, 300); // transition 시간과 맞춤
   }
+
+  if (loadingProgressInterval) {
+    clearInterval(loadingProgressInterval);
+    loadingProgressInterval = null;
+  }
+}
+
+/**
+ * 스켈레톤 UI 생성
+ * @param {string} type - 스켈레톤 타입 ('text', 'title', 'card', 'image')
+ * @param {object} options - 추가 옵션 (width, height 등)
+ * @returns {HTMLElement} 스켈레톤 요소
+ */
+export function createSkeleton(type = "text", options = {}) {
+  initStyles();
+
+  const skeleton = document.createElement("div");
+  skeleton.className = `skeleton skeleton-${type}`;
+
+  if (options.width) {
+    skeleton.style.width = typeof options.width === "number" ? `${options.width}px` : options.width;
+  }
+  if (options.height) {
+    skeleton.style.height = typeof options.height === "number" ? `${options.height}px` : options.height;
+  }
+  if (options.className) {
+    skeleton.className += ` ${options.className}`;
+  }
+
+  return skeleton;
+}
+
+/**
+ * 여러 스켈레톤 요소 생성
+ * @param {number} count - 생성할 개수
+ * @param {string} type - 스켈레톤 타입
+ * @param {object} options - 추가 옵션
+ * @returns {HTMLElement[]} 스켈레톤 요소 배열
+ */
+export function createSkeletons(count, type = "text", options = {}) {
+  return Array.from({ length: count }, () => createSkeleton(type, options));
 }

@@ -4,7 +4,7 @@ import { createElement } from "../utils.js";
 import { showResultModal as showOptimalResultModal } from "../resultModal.js";
 import { addResult as addHistory } from "../historyManager.js";
 import { renderSpiritGrid } from "../components/spritGrid.js";
-import { showLoading, hideLoading } from "../loadingIndicator.js";
+import { showLoading, hideLoading, showLoadingWithProgress, updateLoadingProgress } from "../loadingIndicator.js";
 import { checkSpiritStats, checkItemForStatEffect } from "../utils.js";
 import { createStatFilter } from "../components/statFilter.js";
 import ErrorHandler from "../utils/errorHandler.js";
@@ -1319,14 +1319,46 @@ async function handleFindOptimal() {
   }
 
   const appContainer = document.getElementById("app-container");
-  showLoading(
+  
+  // 진행률 표시와 함께 로딩 시작
+  const numCreatures = creaturesForCalc.length;
+  let progressMessage = "";
+  if (numCreatures > 6) {
+    progressMessage = "최적 조합 탐색 중...";
+  } else {
+    progressMessage = "조합 계산 중...";
+  }
+  
+  showLoadingWithProgress(
     appContainer,
     "최적 조합 계산 중",
-    "유전 알고리즘이 실행 중입니다..."
+    progressMessage,
+    0,
+    "초기화 중..."
   );
+
+  // 시뮬레이션 진행률 업데이트 (실제로는 백엔드에서 진행률을 받아야 하지만, 여기서는 시뮬레이션)
+  let progress = 0;
+  const progressInterval = setInterval(() => {
+    if (progress < 90) {
+      progress += Math.random() * 10;
+      if (numCreatures > 6) {
+        updateLoadingProgress(progress, `조합 탐색 중... ${Math.round(progress)}%`);
+      } else {
+        updateLoadingProgress(progress, `계산 중... ${Math.round(progress)}%`);
+      }
+    }
+  }, 500);
 
   try {
     const result = await api.calculateOptimalCombination(creaturesForCalc);
+    
+    clearInterval(progressInterval);
+    updateLoadingProgress(100, "완료!");
+    
+    // 완료 표시를 잠시 보여줌
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
     if (!result || !result.spirits) {
       throw new Error("API에서 유효한 응답을 받지 못했습니다.");
     }
@@ -1334,6 +1366,7 @@ async function handleFindOptimal() {
     addHistory(result);
     showOptimalResultModal(result, false);
   } catch (error) {
+    clearInterval(progressInterval);
     ErrorHandler.handle(error, "Optimal combination calculation");
     alert(ErrorHandler.getUserFriendlyMessage(error.message));
   } finally {
