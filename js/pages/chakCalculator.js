@@ -3,6 +3,7 @@ import { showLoading, hideLoading } from "../loadingIndicator.js";
 import * as api from "../api.js";
 import { showChakResultsModal } from "../components/chakResultsModal.js";
 import { showModernChakResultsModal } from "../components/modernChakResultsModal.js";
+import ErrorHandler from "../utils/errorHandler.js";
 
 const pageState = {
   chakData: null,
@@ -125,9 +126,12 @@ export async function init(container) {
 
     // console.log("착 계산 페이지 초기화 완료.");
   } catch (error) {
-    console.error("Chak page init error:", error);
-    // container.innerHTML = `<p class="error-message">착 데이터를 불러오는 데 실패했습니다: ${error.message}</p>`;
-    container.innerHTML = `<p class="error-message">서버 점검중입니다</p>`;
+    ErrorHandler.handle(error, "Chak page init");
+    container.innerHTML = `
+      <div class="error-message" style="text-align: center; padding: 2rem;">
+        <h3>${ErrorHandler.getUserFriendlyMessage(error.message)}</h3>
+      </div>
+    `;
   } finally {
     hideLoading();
   }

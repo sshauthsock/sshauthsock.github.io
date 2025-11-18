@@ -1,6 +1,7 @@
 import { createElement } from "../utils.js";
 import { showLoading, hideLoading } from "../loadingIndicator.js";
 import * as api from "../api.js";
+import ErrorHandler from "../utils/errorHandler.js";
 
 const pageState = {
   expTable: null,
@@ -382,9 +383,12 @@ export async function init(container) {
     renderExpTable();
     validateInputs();
   } catch (error) {
-    console.error("Failed to load soul exp table:", error);
-    // container.innerHTML = `<p class="error-message">경험치 데이터를 불러오는 데 실패했습니다: ${error.message}</p>`;
-    container.innerHTML = `<p class="error-message">서버 점검중입니다</p>`;
+    ErrorHandler.handle(error, "Soul exp table load");
+    container.innerHTML = `
+      <div class="error-message" style="text-align: center; padding: 2rem;">
+        <h3>${ErrorHandler.getUserFriendlyMessage(error.message)}</h3>
+      </div>
+    `;
   } finally {
     hideLoading();
   }

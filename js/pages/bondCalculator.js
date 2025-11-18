@@ -7,6 +7,7 @@ import { renderSpiritGrid } from "../components/spritGrid.js";
 import { showLoading, hideLoading } from "../loadingIndicator.js";
 import { checkSpiritStats, checkItemForStatEffect } from "../utils.js";
 import { createStatFilter } from "../components/statFilter.js";
+import ErrorHandler from "../utils/errorHandler.js";
 import {
   INFLUENCE_ROWS,
   isFixedLevelSpirit,
@@ -1360,8 +1361,8 @@ async function handleFindOptimal() {
     addHistory(result);
     showOptimalResultModal(result, false);
   } catch (error) {
-    alert(`서버 점검중입니다`);
-    console.error("Optimal combination calculation failed:", error);
+    ErrorHandler.handle(error, "Optimal combination calculation");
+    alert(ErrorHandler.getUserFriendlyMessage(error.message));
   } finally {
     hideLoading();
   }

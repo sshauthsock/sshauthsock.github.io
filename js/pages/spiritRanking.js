@@ -7,6 +7,7 @@ import { showInfo as showSpiritInfoModal } from "../modalHandler.js";
 import { showLoading, hideLoading } from "../loadingIndicator.js";
 import { STATS_MAPPING, FACTION_ICONS } from "../constants.js";
 import { showResultModal as showOptimalResultModal } from "../resultModal.js";
+import ErrorHandler from "../utils/errorHandler.js";
 
 const pageState = {
   currentCategory: "수호",
@@ -258,9 +259,12 @@ async function loadAndRenderRankings() {
     pageState.currentLoadedRankings = data.rankings || []; // <--- 랭킹 데이터를 pageState에 저장
     renderRankings(pageState.currentLoadedRankings); // <--- 저장된 데이터로 렌더링
   } catch (error) {
-    console.error("랭킹 데이터 로드 실패:", error);
-    // elements.rankingsContainer.innerHTML = `<p class="error-message">랭킹 데이터를 불러오는 데 실패했습니다: ${error.message}</p>`;
-    elements.rankingsContainer.innerHTML = `<p class="error-message">서버 점검중입니다.</p>`;
+    ErrorHandler.handle(error, "랭킹 데이터 로드");
+    elements.rankingsContainer.innerHTML = `
+      <div class="error-message" style="text-align: center; padding: 2rem;">
+        <h3>${ErrorHandler.getUserFriendlyMessage(error.message)}</h3>
+      </div>
+    `;
   } finally {
     hideLoading();
   }
