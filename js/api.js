@@ -1,4 +1,5 @@
 import ErrorHandler from "./utils/errorHandler.js";
+import { memoryCache } from "./utils/cache.js";
 
 // 환경별 API URL 설정
 // 우선순위: import.meta.env.VITE_API_BASE_URL > __API_BASE_URL__ > 기본값
@@ -8,8 +9,6 @@ const BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (typeof __API_BASE_URL__ !== "undefined" ? __API_BASE_URL__ : null) ||
   "https://wind-app-backend-y7qnnpfkrq-du.a.run.app";
-
-const memoryCache = {};
 
 function _transformSpiritImagePath(spirit) {
   if (spirit && typeof spirit.image === "string") {
@@ -77,9 +76,10 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
 }
 
 async function fetchWithMemoryCache(key, url) {
-  if (memoryCache[key]) {
+  const cachedData = memoryCache.get(key);
+  if (cachedData) {
     // console.log(`[Cache] Using memory cached data for key: ${key}`);
-    return memoryCache[key];
+    return cachedData;
   }
 
   const response = await fetch(url);
@@ -116,7 +116,7 @@ async function fetchWithMemoryCache(key, url) {
     }
   }
 
-  memoryCache[key] = transformedData;
+  memoryCache.set(key, transformedData);
   return transformedData;
 }
 
