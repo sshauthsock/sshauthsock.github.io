@@ -454,7 +454,13 @@ func main() {
 	appLogger.Info("CORS configured. Allowed origins: %v", originsList)
 	router.Use(cors.New(corsConfig))
 
+	// Rate Limiting 미들웨어 적용 (API 엔드포인트에만)
+	// 요청 본문 크기 제한: 1MB (POST 요청에만 적용)
+	router.Use(MaxBodySizeMiddleware(1 << 20)) // 1MB
+
 	api := router.Group("/api")
+	// API 그룹에 Rate Limiting 적용
+	api.Use(RateLimitMiddleware())
 	{
 		api.GET("/alldata", app.getAllData)
 		api.POST("/calculate/bond", app.calculateBond)
@@ -498,15 +504,19 @@ func (a *App) calculateBond(c *gin.Context) {
 	}
 	var req BondCalculationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		appLogger.Warn("Invalid JSON in calculateBond request: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
 		return
 	}
 
-	numCreatures := len(req.Creatures)
-	if numCreatures == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No creatures provided for calculation"})
+	// 입력 검증
+	if err := validateBondRequest(&req); err != nil {
+		appLogger.Warn("Validation failed in calculateBond: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	numCreatures := len(req.Creatures)
 
 	a.dataLoadMutex.RLock()
 	defer a.dataLoadMutex.RUnlock()
@@ -620,8 +630,15 @@ func (a *App) calculateSoulHandler(c *gin.Context) {
 	}
 	var req SoulCalculationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		log.Printf("ERROR: SoulCalculationRequest JSON binding failed: %v", err)
+		appLogger.Warn("Invalid JSON in calculateSoulHandler request: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: " + err.Error()})
+		return
+	}
+
+	// 입력 검증
+	if err := validateSoulRequest(&req); err != nil {
+		appLogger.Warn("Validation failed in calculateSoulHandler: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -669,7 +686,15 @@ func (a *App) calculateChakHandler(c *gin.Context) {
 	}
 	var req ChakCalculationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		appLogger.Warn("Invalid JSON in calculateChakHandler request: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: " + err.Error()})
+		return
+	}
+
+	// 입력 검증
+	if err := validateChakRequest(&req); err != nil {
+		appLogger.Warn("Validation failed in calculateChakHandler: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
