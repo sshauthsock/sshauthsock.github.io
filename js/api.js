@@ -1,5 +1,6 @@
 import ErrorHandler from "./utils/errorHandler.js";
 import { memoryCache } from "./utils/cache.js";
+import StorageManager from "./utils/storage.js";
 
 // 환경별 API URL 설정
 // 우선순위: import.meta.env.VITE_API_BASE_URL > __API_BASE_URL__ > 기본값
@@ -41,7 +42,7 @@ async function handleResponse(response) {
 }
 
 async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
-  const cachedItem = sessionStorage.getItem(key);
+  const cachedItem = StorageManager.getItem(key);
   if (cachedItem) {
     try {
       // console.log(`[Cache] Using sessionStorage cached data for key: ${key}`);
@@ -51,7 +52,7 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
         `[Cache Error] Failed to parse sessionStorage data for ${key}, fetching fresh.`,
         e
       );
-      sessionStorage.removeItem(key);
+      StorageManager.removeItem(key);
     }
   }
 
@@ -63,12 +64,12 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
     processedData = _transformSpiritsArrayPaths(rawData);
   }
 
-  try {
-    sessionStorage.setItem(key, JSON.stringify(processedData));
-  } catch (e) {
-    console.error(
-      `[Cache Error] Failed to save to sessionStorage for ${key}:`,
-      e
+  // StorageManager를 통해 안전하게 저장 (용량 체크 및 자동 정리)
+  const jsonString = JSON.stringify(processedData);
+  const saved = StorageManager.setItem(key, jsonString);
+  if (!saved) {
+    console.warn(
+      `[Cache] Failed to save to sessionStorage for ${key}. Data will not be cached.`
     );
   }
 
