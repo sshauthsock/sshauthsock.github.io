@@ -444,7 +444,9 @@ func calculateFactionEffects(factionCounts map[string]int, category string) map[
 	return effects
 }
 
-// calculateScore: 환수결속 점수 계산 공식 (피해저항관통 + 피해저항 + (대인피해% * 10) + (대인방어% * 10))
+// calculateScore: 환수결속 점수 계산 공식
+// 피해저항관통 + 피해저항 + (대인피해% × 10) + (대인방어% × 10)
+// 이 공식을 등급 효과, 세력 효과, 결속 효과 각각에 적용하여 합산
 func calculateScore(stats map[string]float64) float64 {
 	return stats["damageResistancePenetration"] +
 		stats["damageResistance"] +

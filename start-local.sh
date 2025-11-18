@@ -43,6 +43,18 @@ cleanup() {
 # SIGINT (Ctrl+C) 및 SIGTERM 신호 처리
 trap cleanup SIGINT SIGTERM
 
+# Backend 빌드 (코드 변경사항 반영)
+echo "Backend 빌드 중..."
+cd backend
+go build -o myapp.exe . 2>&1
+if [ $? -ne 0 ]; then
+    echo "XXX Backend 빌드 실패!"
+    exit 1
+fi
+cd ..
+echo "VVV Backend 빌드 완료"
+echo ""
+
 # Backend를 백그라운드로 실행
 echo "Backend 시작 중..."
 backend/myapp.exe &

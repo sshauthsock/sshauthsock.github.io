@@ -466,20 +466,45 @@ func (a *App) calculateBond(c *gin.Context) {
 		return
 	}
 
+	// 필터링 비활성화: 최적 조합을 놓치지 않도록 모든 환수 사용
+	// 필터링이 최적 조합에 필요한 환수를 제외할 수 있음
+	filteredCreatures := req.Creatures
+	
+	// 디버깅: 선택된 환수 목록 로그
+	if numCreatures > 6 {
+		appLogger.Info("Using all %d selected creatures for calculation (no filtering applied)", numCreatures)
+		
+		// 필터링 후에도 여전히 많으면 상위 우선순위 환수만 선택
+		// 하지만 exhaustive search를 위해 최대한 많은 환수를 사용
+		maxForExhaustive := 25 // 25C6 = 177,100 조합 (충분히 계산 가능)
+		if numCreatures > maxForExhaustive {
+			filteredCreatures = selectTopPriorityCreatures(req.Creatures, a.creatureData, maxForExhaustive)
+			appLogger.Info("Selected top %d priority creatures from %d total for exhaustive search.", maxForExhaustive, numCreatures)
+		}
+	}
+
 	var result CalculationResult
 	startTime := time.Now()
 
-	if numCreatures <= 6 {
-		log.Printf("Calculating simple sum for %d creatures of type '%s'.", numCreatures, creatureType)
-		result = calculateCombinationStats(req.Creatures, creatureType, a.creatureData) // Pass a.creatureData
+	if len(filteredCreatures) <= 6 {
+		appLogger.Info("Calculating simple sum for %d creatures of type '%s'.", len(filteredCreatures), creatureType)
+		result = calculateCombinationStats(filteredCreatures, creatureType, a.creatureData) // Pass a.creatureData
 	} else {
-		log.Printf("Finding optimal combination FROM %d SELECTED creatures of type '%s'.", numCreatures, creatureType)
-		candidateCreatures := req.Creatures
-		result = findOptimalCombinationWithGA(candidateCreatures, creatureType, a.creatureData) // Pass a.creatureData
+		// 결정적이고 정확한 결과를 위해 exhaustive search 사용
+		// 30개 이하: exhaustive search (30C6 = 593,775 조합, 병렬 처리로 충분히 가능)
+		// 30개 초과: GA 사용 (너무 많은 조합으로 exhaustive search가 너무 오래 걸림)
+		maxExhaustiveSearch := 30
+		if len(filteredCreatures) <= maxExhaustiveSearch {
+			appLogger.Info("Using exhaustive search to find optimal combination from %d filtered creatures of type '%s' (deterministic result).", len(filteredCreatures), creatureType)
+			result = findOptimalCombinationExhaustive(filteredCreatures, creatureType, a.creatureData)
+		} else {
+			appLogger.Info("Using genetic algorithm to find optimal combination from %d filtered creatures of type '%s' (too many for exhaustive search).", len(filteredCreatures), creatureType)
+			result = findOptimalCombinationWithGA(filteredCreatures, creatureType, a.creatureData)
+		}
 	}
 
 	elapsedTime := time.Since(startTime)
-	log.Printf("Calculation took %s", elapsedTime)
+	appLogger.Info("Calculation took %s", elapsedTime)
 
 	c.JSON(http.StatusOK, result)
 }
@@ -753,6 +778,7 @@ func calculateStatRankings(category string, statKey string, allCreatureData []Cr
 
 	return results
 }
+
 
 // generateCombinations is a recursive helper for combination generation.
 func generateCombinations(items []CreatureInfo, k, start int, current []CreatureInfo, result *[][]CreatureInfo) {
