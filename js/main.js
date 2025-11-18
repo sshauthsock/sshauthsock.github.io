@@ -1,6 +1,7 @@
 import * as api from "./api.js";
 import { setAllSpirits, state as globalState } from "./state.js";
 import { showLoading, hideLoading } from "./loadingIndicator.js";
+import ErrorHandler from "./utils/errorHandler.js";
 
 const pageModules = {
   spiritInfo: () => import("./pages/spiritInfo.js"),
@@ -138,7 +139,11 @@ async function route() {
       `[Router] Failed to load or initialize page '${pageName}':`,
       error
     );
-    appContainer.innerHTML = `<p class="error-message">페이지를 불러오는 중 오류가 발생했습니다: ${error.message}</p>`;
+    appContainer.innerHTML = `
+      <div class="error-message" style="text-align: center; padding: 2rem;">
+        <h3>현재 서버 점검중 입니다.</h3>
+      </div>
+    `;
   } finally {
     hideLoading();
   }
@@ -190,7 +195,11 @@ async function initializeApp() {
     await route();
   } catch (error) {
     console.error("애플리케이션 초기화 실패:", error);
-    appContainer.innerHTML = `<p class="error-message">애플리케이션 초기화 실패: 데이터를 불러오는 데 실패했습니다. (${error.message})</p>`;
+    appContainer.innerHTML = `
+      <div class="error-message" style="text-align: center; padding: 2rem;">
+        <h3>현재 서버 점검중 입니다.</h3>
+      </div>
+    `;
   } finally {
     hideLoading();
   }
