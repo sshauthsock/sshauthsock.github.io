@@ -162,6 +162,10 @@ type App struct {
 	chakCosts       map[string]int
 	dataLoadMutex   sync.RWMutex
 	isDataLoaded    bool
+	// 캐시 메타데이터
+	creatureDataLastUpdated time.Time
+	chakDataLastUpdated     time.Time
+	cacheTTL                time.Duration // 캐시 TTL (기본값: 1시간)
 }
 
 var appLogger = logger.New()
@@ -223,8 +227,11 @@ func NewApp(ctx context.Context) (*App, error) {
 			"upgradeOther1": 500,
 			"upgradeOther2": 500,
 		},
-		dataLoadMutex: sync.RWMutex{},
-		isDataLoaded:  true,
+		dataLoadMutex:          sync.RWMutex{},
+		isDataLoaded:           true,
+		cacheTTL:               1 * time.Hour, // 기본 TTL: 1시간
+		creatureDataLastUpdated: time.Time{},
+		chakDataLastUpdated:     time.Time{},
 	}, nil
 }
 
@@ -269,7 +276,8 @@ func (a *App) loadAllCreatureData(ctx context.Context) error {
 	}
 
 	a.creatureData = finalCreatureList
-	appLogger.Info("Successfully loaded %d unique creature data entries from 'creatures' collection.", len(a.creatureData))
+	a.creatureDataLastUpdated = time.Now()
+	appLogger.Info("Successfully loaded %d unique creature data entries from 'creatures' collection. Cache updated at %s", len(a.creatureData), a.creatureDataLastUpdated.Format(time.RFC3339))
 	return nil
 }
 
@@ -332,7 +340,8 @@ func (a *App) loadChakDataFromFirestore(ctx context.Context) error {
 		Levels: formattedLevels,
 	}
 
-	appLogger.Info("Chak data loaded successfully.")
+	a.chakDataLastUpdated = time.Now()
+	appLogger.Info("Chak data loaded successfully. Cache updated at %s", a.chakDataLastUpdated.Format(time.RFC3339))
 	return nil
 }
 
@@ -389,6 +398,9 @@ func main() {
 		appLogger.Warn("Not all initial data loaded successfully. Some API endpoints may not function.")
 	}
 	app.dataLoadMutex.Unlock()
+
+	// 백그라운드 캐시 자동 갱신 시작
+	go app.startCacheRefreshLoop(ctx)
 
 	router := gin.Default()
 	
@@ -451,6 +463,9 @@ func main() {
 		api.POST("/calculate/soul", app.calculateSoulHandler)
 		api.GET("/chak/data", app.getChakData)
 		api.POST("/calculate/chak", app.calculateChakHandler)
+		// 캐시 관리 엔드포인트
+		api.GET("/cache/status", app.getCacheStatus)
+		api.POST("/cache/refresh", app.refreshCache)
 	}
 
 	appLogger.Info("Server is running on port %s", cfg.Port)
@@ -998,4 +1013,109 @@ func calculateChakStats(req ChakCalculationRequest, rawChakData map[string]map[s
 	result.Resources.ColorBall.Remaining = req.UserResources.ColorBall - consumedBalls
 
 	return result, nil
+}
+
+// ======== 캐시 관리 함수들 ========
+
+// startCacheRefreshLoop: 백그라운드에서 주기적으로 캐시를 갱신하는 루프
+func (a *App) startCacheRefreshLoop(ctx context.Context) {
+	ticker := time.NewTicker(a.cacheTTL)
+	defer ticker.Stop()
+
+	appLogger.Info("Cache refresh loop started. TTL: %v", a.cacheTTL)
+
+	for {
+		select {
+		case <-ticker.C:
+			appLogger.Info("Starting scheduled cache refresh...")
+			
+			// Creature 데이터 갱신
+			if err := a.loadAllCreatureData(ctx); err != nil {
+				appLogger.Error("Failed to refresh creature data cache: %v", err)
+			} else {
+				appLogger.Info("Creature data cache refreshed successfully")
+			}
+
+			// Chak 데이터 갱신
+			if err := a.loadChakDataFromFirestore(ctx); err != nil {
+				appLogger.Error("Failed to refresh chak data cache: %v", err)
+			} else {
+				appLogger.Info("Chak data cache refreshed successfully")
+			}
+		case <-ctx.Done():
+			appLogger.Info("Cache refresh loop stopped")
+			return
+		}
+	}
+}
+
+// getCacheStatus: 캐시 상태를 반환하는 엔드포인트
+func (a *App) getCacheStatus(c *gin.Context) {
+	a.dataLoadMutex.RLock()
+	defer a.dataLoadMutex.RUnlock()
+
+	creatureAge := time.Since(a.creatureDataLastUpdated)
+	chakAge := time.Since(a.chakDataLastUpdated)
+
+	status := gin.H{
+		"isDataLoaded": a.isDataLoaded,
+		"cacheTTL":     a.cacheTTL.String(),
+		"creatureData": gin.H{
+			"count":        len(a.creatureData),
+			"lastUpdated":  a.creatureDataLastUpdated.Format(time.RFC3339),
+			"age":          creatureAge.String(),
+			"needsRefresh": creatureAge > a.cacheTTL,
+		},
+		"chakData": gin.H{
+			"lastUpdated":  a.chakDataLastUpdated.Format(time.RFC3339),
+			"age":          chakAge.String(),
+			"needsRefresh": chakAge > a.cacheTTL,
+		},
+	}
+
+	c.JSON(http.StatusOK, status)
+}
+
+// refreshCache: 수동으로 캐시를 갱신하는 엔드포인트
+func (a *App) refreshCache(c *gin.Context) {
+	ctx := context.Background()
+	
+	var refreshType string
+	if refreshType = c.Query("type"); refreshType == "" {
+		refreshType = "all"
+	}
+
+	results := make(map[string]string)
+
+	switch refreshType {
+	case "creature", "all":
+		if err := a.loadAllCreatureData(ctx); err != nil {
+			results["creature"] = fmt.Sprintf("Failed: %v", err)
+			appLogger.Error("Manual cache refresh failed for creature data: %v", err)
+		} else {
+			results["creature"] = "Success"
+			appLogger.Info("Manual cache refresh succeeded for creature data")
+		}
+
+		if refreshType == "creature" {
+			break
+		}
+		fallthrough
+	case "chak":
+		if err := a.loadChakDataFromFirestore(ctx); err != nil {
+			results["chak"] = fmt.Sprintf("Failed: %v", err)
+			appLogger.Error("Manual cache refresh failed for chak data: %v", err)
+		} else {
+			results["chak"] = "Success"
+			appLogger.Info("Manual cache refresh succeeded for chak data")
+		}
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid refresh type. Use 'creature', 'chak', or 'all'"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Cache refresh completed",
+		"results": results,
+	})
 }
