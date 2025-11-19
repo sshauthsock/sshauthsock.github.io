@@ -1,4 +1,4 @@
-import { createElement } from "./utils.js";
+import { createElement, ensureNumber } from "./utils.js";
 import { state as globalState } from "./state.js";
 import {
   FACTION_ICONS,
@@ -29,11 +29,7 @@ let spiritInfoLongPressState = {
   mouseDownTime: null,
 };
 
-function ensureNumber(value) {
-  if (value === undefined || value === null) return 0;
-  const num = parseFloat(String(value).replace(/,/g, ""));
-  return isNaN(num) ? 0 : num;
-}
+// ensureNumber는 utils.js에서 import
 
 // 길게 누르기 기능 함수들
 function handleSpiritInfoContainerMouseDown(event) {

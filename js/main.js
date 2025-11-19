@@ -204,13 +204,9 @@ async function initializeApp() {
   try {
     const allSpiritsRaw = await api.fetchAllSpirits();
 
-    const allSpiritsTransformed = allSpiritsRaw.map((spirit) => {
-      const transformedImage = spirit.image.replace(/^images\//, "assets/img/");
-      return {
-        ...spirit,
-        image: transformedImage,
-      };
-    });
+    // 이미지 경로 변환 유틸리티 함수 사용
+    const { transformSpiritsArrayPaths } = await import("./utils/imagePath.js");
+    const allSpiritsTransformed = transformSpiritsArrayPaths(allSpiritsRaw);
     setAllSpirits(allSpiritsTransformed);
     Logger.log("Global state (allSpirits) updated:", globalState.allSpirits);
 

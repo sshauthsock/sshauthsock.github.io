@@ -1,4 +1,4 @@
-import { createElement } from "./utils.js";
+import { createElement, ensureNumber } from "./utils.js";
 import {
   getHistoryForCategory,
   addResult as addHistory,
@@ -46,12 +46,6 @@ const SCORE_CONTRIBUTING_STATS = [
   "pvpDamagePercent",
   "pvpDefensePercent",
 ];
-
-function ensureNumber(value) {
-  if (value === undefined || value === null) return 0;
-  const num = parseFloat(String(value).replace(/,/g, ""));
-  return isNaN(num) ? 0 : num;
-}
 
 function calculateRegistrationBonus(spiritName) {
   return calculateRegistrationBonusAtLevel(spiritName, 25);

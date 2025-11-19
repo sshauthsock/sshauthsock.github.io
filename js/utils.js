@@ -83,3 +83,15 @@ export function getNextMonthLastThursday() {
 
   return lastThursday;
 }
+
+/**
+ * 숫자로 변환하는 유틸리티 함수
+ * undefined, null, NaN을 0으로 변환하고 쉼표를 제거한 후 파싱
+ * @param {any} value - 변환할 값
+ * @returns {number} 변환된 숫자 (변환 실패 시 0)
+ */
+export function ensureNumber(value) {
+  if (value === undefined || value === null) return 0;
+  const num = parseFloat(String(value).replace(/,/g, ""));
+  return isNaN(num) ? 0 : num;
+}

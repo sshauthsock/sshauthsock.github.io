@@ -1,14 +1,8 @@
-import { createElement } from "../utils.js";
+import { createElement, ensureNumber } from "../utils.js";
 import { STATS_MAPPING, PERCENT_STATS } from "../constants.js";
 import { addSupportMessageToModal } from "../utils/supportMessage.js";
 
 let activeModal = null;
-
-function ensureNumber(value) {
-  if (value === undefined || value === null) return 0;
-  const num = parseFloat(String(value).replace(/,/g, ""));
-  return isNaN(num) ? 0 : num;
-}
 
 function getDisplayName(statName) {
   return statName.replace(/\d+$/, "");
