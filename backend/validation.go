@@ -169,7 +169,8 @@ func isValidCreatureName(name string) bool {
 		return false
 	}
 
-	// 위험한 문자 체크
+	// 위험한 문자 체크 (XSS 방지)
+	// ":"는 환수 이름에 사용될 수 있으므로 제외
 	dangerousChars := []string{"<", ">", "&", "\"", "'", "/", "\\", "{", "}", "[", "]", "(", ")", "`", "$", "%"}
 	for _, char := range dangerousChars {
 		if strings.Contains(name, char) {
@@ -177,13 +178,24 @@ func isValidCreatureName(name string) bool {
 		}
 	}
 
-	// 한글, 영문, 숫자, 공백만 허용
+	// 한글, 영문, 숫자, 공백, 하이픈, 언더스코어, 콜론, 점만 허용
 	for _, r := range name {
-		if !unicode.IsLetter(r) && !unicode.IsNumber(r) && !unicode.IsSpace(r) && r != '-' && r != '_' {
-			// 한글 범위 체크 (가-힣)
-			if r < 0xAC00 || r > 0xD7A3 {
-				return false
-			}
+		// 한글 범위 (가-힣, ㄱ-ㅎ, ㅏ-ㅣ)
+		isHangul := (r >= 0xAC00 && r <= 0xD7A3) || // 완성형 한글 (가-힣)
+			(r >= 0x3131 && r <= 0x318E) || // 자모 (ㄱ-ㅎ, ㅏ-ㅣ)
+			(r >= 0x1100 && r <= 0x11FF)    // 초성/중성/종성
+		// 영문자 (A-Z, a-z)
+		isLetter := (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z')
+		// 숫자 (0-9)
+		isNumber := r >= '0' && r <= '9'
+		// 공백
+		isSpace := unicode.IsSpace(r)
+		// 허용된 특수문자 (하이픈, 언더스코어, 점, 콜론)
+		isAllowedSpecial := r == '-' || r == '_' || r == '.' || r == ':'
+
+		// 허용된 문자가 아니면 false
+		if !isHangul && !isLetter && !isNumber && !isSpace && !isAllowedSpecial {
+			return false
 		}
 	}
 
