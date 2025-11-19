@@ -454,9 +454,15 @@ func main() {
 	appLogger.Info("CORS configured. Allowed origins: %v", originsList)
 	router.Use(cors.New(corsConfig))
 
+	// 모니터링 미들웨어 적용 (모든 요청에 대해 메트릭 수집)
+	router.Use(MonitoringMiddleware())
+
 	// Rate Limiting 미들웨어 적용 (API 엔드포인트에만)
 	// 요청 본문 크기 제한: 1MB (POST 요청에만 적용)
 	router.Use(MaxBodySizeMiddleware(1 << 20)) // 1MB
+
+	// Health check 엔드포인트 (모니터링 미들웨어 적용, Rate Limiting 제외)
+	router.GET("/health", app.healthCheckHandler)
 
 	api := router.Group("/api")
 	// API 그룹에 Rate Limiting 적용
@@ -472,6 +478,8 @@ func main() {
 		// 캐시 관리 엔드포인트
 		api.GET("/cache/status", app.getCacheStatus)
 		api.POST("/cache/refresh", app.refreshCache)
+		// 모니터링 엔드포인트
+		api.GET("/metrics", app.getMetricsHandler)
 	}
 
 	appLogger.Info("Server is running on port %s", cfg.Port)
