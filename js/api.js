@@ -17,7 +17,7 @@ import * as IndexedDB from "./utils/indexedDB.js";
 const BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   (typeof __API_BASE_URL__ !== "undefined" ? __API_BASE_URL__ : null) ||
-  "https://wind-app-backend-y7qnnpfkrq-du.a.run.app";
+  "https://bayeon-hwayeon-backend.onrender.com";
 
 // 이미지 경로 변환 함수는 utils/imagePath.js로 이동
 // _transformSpiritImagePath, _transformSpiritsArrayPaths는 더 이상 사용하지 않음

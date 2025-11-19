@@ -77,7 +77,7 @@ export default defineConfig(({ mode }) => {
     define: {
       __API_BASE_URL__: JSON.stringify(
         env.VITE_API_BASE_URL ||
-          "https://wind-app-backend-y7qnnpfkrq-du.a.run.app"
+          "https://bayeon-hwayeon-backend.onrender.com"
       ),
     },
     server: {
