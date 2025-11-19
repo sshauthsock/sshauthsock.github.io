@@ -198,15 +198,25 @@ func NewApp(ctx context.Context) (*App, error) {
 		ProjectID: projectID,
 	}
 
-	serviceAccountPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
-	if serviceAccountPath != "" {
-		appOpts = append(appOpts, option.WithCredentialsFile(serviceAccountPath))
-		appLogger.Info("Firebase 앱이 '%s' 경로의 서비스 계정 키를 사용하여 초기화됩니다.", serviceAccountPath)
+	// Render/Railway 환경 변수에서 JSON 문자열 확인
+	credsJSON := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+	if credsJSON != "" {
+		// JSON 문자열을 사용하여 인증 (Render/Railway 환경)
+		creds := []byte(credsJSON)
+		appOpts = append(appOpts, option.WithCredentialsJSON(creds))
+		appLogger.Info("Firebase 앱이 GOOGLE_APPLICATION_CREDENTIALS_JSON 환경 변수를 사용하여 초기화됩니다 (Render/Railway 환경).")
 	} else {
-		// GOOGLE_APPLICATION_CREDENTIALS 환경 변수가 설정되지 않았다면 (Cloud Run 등),
-		// appOpts에 credentials 파일을 추가하지 않아 기본 애플리케이션 자격증명(DAC)을 사용하도록 합니다.
-		// Cloud Run은 --service-account로 지정된 서비스 계정을 자동으로 사용합니다.
-		appLogger.Info("GOOGLE_APPLICATION_CREDENTIALS 환경 변수가 설정되지 않았습니다. 기본 애플리케이션 자격증명(Default Application Credentials)을 사용합니다 (Cloud Run 환경에서 일반적).")
+		// 로컬 개발 환경: 파일 경로 사용
+		serviceAccountPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
+		if serviceAccountPath != "" {
+			appOpts = append(appOpts, option.WithCredentialsFile(serviceAccountPath))
+			appLogger.Info("Firebase 앱이 '%s' 경로의 서비스 계정 키를 사용하여 초기화됩니다 (로컬 개발 환경).", serviceAccountPath)
+		} else {
+			// GOOGLE_APPLICATION_CREDENTIALS 환경 변수가 설정되지 않았다면 (Cloud Run 등),
+			// appOpts에 credentials 파일을 추가하지 않아 기본 애플리케이션 자격증명(DAC)을 사용하도록 합니다.
+			// Cloud Run은 --service-account로 지정된 서비스 계정을 자동으로 사용합니다.
+			appLogger.Info("GOOGLE_APPLICATION_CREDENTIALS 환경 변수가 설정되지 않았습니다. 기본 애플리케이션 자격증명(Default Application Credentials)을 사용합니다 (Cloud Run 환경에서 일반적).")
+		}
 	}
 
 	app, err := firebase.NewApp(ctx, conf, appOpts...)
