@@ -2,10 +2,11 @@ services:
   - type: web
     name: bayeon-hwayeon-backend
     env: docker
-    dockerfilePath: ./Dockerfile
+    dockerfilePath: Dockerfile
     dockerContext: .
     plan: free
     region: singapore
+    healthCheckPath: /health
     envVars:
       - key: PORT
         value: 8080
