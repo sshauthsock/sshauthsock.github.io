@@ -111,7 +111,8 @@ export async function init(container) {
     populateStatOptions();
     renderSelectors();
     renderStatCards();
-    renderSummary();
+    // 초기 로드 시에는 계산을 건너뛰고 기본 메시지만 표시
+    renderSummary(true);
 
     elements.equipmentSelector.addEventListener("click", handleSelectorClick);
     elements.levelSelector.addEventListener("click", handleSelectorClick);
@@ -435,7 +436,14 @@ function updateLevelProgressBar(btn, totalStats) {
     unlockedCount > 0 ? `${unlockedCount}/${totalStats} (${percent}%)` : "";
 }
 
-async function renderSummary() {
+async function renderSummary(skipCalculation = false) {
+  // 초기 로드 시 또는 statState가 비어있을 때는 계산을 건너뛰고 기본 메시지만 표시
+  if (skipCalculation || Object.keys(pageState.statState).length === 0) {
+    elements.summaryDisplay.innerHTML = "<p>능력치가 개방되면 여기에 합계가 표시됩니다.</p>";
+    elements.resourceSummary.innerHTML = "";
+    return;
+  }
+
   showLoading(elements.summaryDisplay, "합계 계산 중...");
 
   try {

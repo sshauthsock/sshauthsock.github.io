@@ -7,6 +7,7 @@ import {
 } from "./utils/imagePath.js";
 import Logger from "./utils/logger.js";
 import { trackApiPerformance } from "./utils/performanceMonitor.js";
+import { getVersionedKey, clearOldVersions } from "./utils/dataVersion.js";
 
 // 환경별 API URL 설정
 // 우선순위: import.meta.env.VITE_API_BASE_URL > __API_BASE_URL__ > 기본값
@@ -35,21 +36,53 @@ async function handleResponse(response) {
   return response.json();
 }
 
+/**
+ * 영구 캐싱을 사용한 데이터 페치 (localStorage 기반, 폴백: sessionStorage)
+ * 데이터 버전 관리 포함
+ */
 async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
-  const cachedItem = StorageManager.getItem(key);
+  // 버전이 포함된 캐시 키 사용
+  const versionedKey = getVersionedKey(key);
+  
+  // localStorage 상태 확인
+  const storage = StorageManager.getStorage();
+  const isLocalStorage = storage === localStorage;
+  console.log(`[Cache Debug] Storage type: ${isLocalStorage ? 'localStorage' : 'sessionStorage'}, Key: ${versionedKey}, Base key: ${key}`);
+  
+  // 이전 버전 캐시 자동 삭제
+  const clearedCount = clearOldVersions(key, storage);
+  if (clearedCount > 0) {
+    console.log(`[Cache] Cleared ${clearedCount} old version(s) of ${key}`);
+    Logger.log(`[Cache] Cleared ${clearedCount} old version(s) of ${key}`);
+  }
+  
+  // 캐시 확인
+  const cachedItem = StorageManager.getItem(versionedKey);
+  console.log(`[Cache Debug] Checking cache for key: ${versionedKey}, Found: ${cachedItem ? 'YES' : 'NO'}, Length: ${cachedItem ? cachedItem.length : 0}`);
+  
   if (cachedItem) {
     try {
-      Logger.log(`[Cache] Using sessionStorage cached data for key: ${key}`);
-      return JSON.parse(cachedItem);
+      // 캐시 히트 로그는 항상 출력 (디버깅용)
+      console.log(`[Cache HIT] Using cached data for key: ${versionedKey} (URL: ${url})`);
+      Logger.log(`[Cache HIT] Using cached data for key: ${versionedKey} (URL: ${url})`);
+      const cachedData = JSON.parse(cachedItem);
+      
+      // 캐시된 데이터는 이미 변환되어 있으므로 그대로 반환
+      // (저장 시점에 이미 변환된 데이터를 저장하므로)
+      return cachedData;
     } catch (e) {
+      console.error(`[Cache Error] Failed to parse cached data for ${versionedKey}:`, e);
       Logger.error(
-        `[Cache Error] Failed to parse sessionStorage data for ${key}, fetching fresh.`,
+        `[Cache Error] Failed to parse cached data for ${versionedKey}, fetching fresh.`,
         e
       );
-      StorageManager.removeItem(key);
+      StorageManager.removeItem(versionedKey);
     }
   }
 
+  // 캐시 미스 로그는 항상 출력 (디버깅용)
+  console.log(`[Cache MISS] No cached data for key: ${versionedKey} (URL: ${url}), fetching from API...`);
+  Logger.log(`[Cache MISS] No cached data for key: ${versionedKey} (URL: ${url}), fetching from API...`);
   const startTime = performance.now();
   const response = await fetch(url);
   const rawData = await handleResponse(response);
@@ -59,20 +92,75 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
   trackApiPerformance(url, duration, true);
 
   let processedData = rawData;
-  if (shouldTransformSpirits && Array.isArray(rawData)) {
+  
+  // 랭킹 데이터인 경우 이미지 경로 변환
+  if (key.startsWith("rankings_")) {
+    processedData = transformRankingsData(rawData, key);
+  } else if (shouldTransformSpirits && Array.isArray(rawData)) {
+    // 일반 배열 데이터인 경우
     processedData = transformSpiritsArrayPaths(rawData);
   }
 
   // StorageManager를 통해 안전하게 저장 (용량 체크 및 자동 정리)
+  // 버전이 포함된 키로 저장
   const jsonString = JSON.stringify(processedData);
-  const saved = StorageManager.setItem(key, jsonString);
-  if (!saved) {
+  const dataSize = new Blob([jsonString]).size;
+  console.log(`[Cache Debug] Attempting to save cache for key: ${versionedKey}, Data size: ${(dataSize / 1024).toFixed(2)}KB`);
+  
+  const saved = StorageManager.setItem(versionedKey, jsonString);
+  
+  // 저장 후 확인
+  const verifyItem = StorageManager.getItem(versionedKey);
+  console.log(`[Cache Debug] Save result: ${saved ? 'SUCCESS' : 'FAILED'}, Verify: ${verifyItem ? 'FOUND' : 'NOT FOUND'}, Verify length: ${verifyItem ? verifyItem.length : 0}`);
+  
+  if (saved) {
+    // 캐시 저장 성공 로그는 항상 출력 (디버깅용)
+    console.log(`[Cache SAVED] Successfully cached data for key: ${versionedKey} (URL: ${url}), Size: ${(dataSize / 1024).toFixed(2)}KB`);
+    Logger.log(`[Cache SAVED] Successfully cached data for key: ${versionedKey} (URL: ${url})`);
+  } else {
+    // 캐시 저장 실패 로그는 항상 출력 (중요한 문제)
+    console.error(
+      `[Cache FAILED] Failed to save cached data for ${versionedKey} (URL: ${url}). Data will not be cached. Size: ${(dataSize / 1024).toFixed(2)}KB`
+    );
     Logger.warn(
-      `[Cache] Failed to save to sessionStorage for ${key}. Data will not be cached.`
+      `[Cache FAILED] Failed to save cached data for ${versionedKey} (URL: ${url}). Data will not be cached.`
     );
   }
 
   return processedData;
+}
+
+/**
+ * 랭킹 데이터의 이미지 경로 변환
+ * @param {object} data - 랭킹 데이터
+ * @param {string} key - 캐시 키 (랭킹 타입 확인용)
+ * @returns {object} 변환된 데이터
+ */
+function transformRankingsData(data, key) {
+  if (!data || !data.rankings) {
+    return data;
+  }
+  
+  const type = key.includes("_bond") ? "bond" : key.includes("_stat") ? "stat" : null;
+  
+  if (type === "bond") {
+    // 결속 랭킹: rankings 배열의 각 항목의 spirits 배열 변환
+    data.rankings = data.rankings.map((rankingItem) => {
+      let item = { ...rankingItem };
+      if (Array.isArray(item.spirits)) {
+        item.spirits = transformSpiritsArrayPaths(item.spirits);
+      }
+      if (item.bindStat !== undefined && item.bindStats === undefined) {
+        item.bindStats = item.bindStat;
+      }
+      return item;
+    });
+  } else if (type === "stat") {
+    // 능력치 랭킹: rankings 배열 자체가 환수 배열
+    data.rankings = transformSpiritsArrayPaths(data.rankings);
+  }
+  
+  return data;
 }
 
 async function fetchWithMemoryCache(key, url) {
@@ -166,6 +254,11 @@ export async function fetchRankings(category, type, statKey = "") {
   if (type === "stat" && statKey) {
     url += `&statKey=${encodeURIComponent(statKey)}`;
   }
+  
+  // 랭킹 데이터는 크기가 너무 커서 (7-8MB) localStorage 용량 제한을 초과함
+  // 따라서 memoryCache만 사용 (페이지 새로고침 시에만 API 호출)
+  // 버전이 포함된 캐시 키 생성
+  const cacheKey = `rankings_${category}_${type}${statKey ? `_${statKey}` : ''}`;
   return fetchWithMemoryCache(url, url);
 }
 
