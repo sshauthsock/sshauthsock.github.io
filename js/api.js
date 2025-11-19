@@ -44,26 +44,24 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
   // 버전이 포함된 캐시 키 사용
   const versionedKey = getVersionedKey(key);
   
-  // localStorage 상태 확인
+  // localStorage 상태 확인 (개발 모드에서만)
   const storage = StorageManager.getStorage();
   const isLocalStorage = storage === localStorage;
-  console.log(`[Cache Debug] Storage type: ${isLocalStorage ? 'localStorage' : 'sessionStorage'}, Key: ${versionedKey}, Base key: ${key}`);
+  Logger.debug(`[Cache Debug] Storage type: ${isLocalStorage ? 'localStorage' : 'sessionStorage'}, Key: ${versionedKey}, Base key: ${key}`);
   
   // 이전 버전 캐시 자동 삭제
   const clearedCount = clearOldVersions(key, storage);
   if (clearedCount > 0) {
-    console.log(`[Cache] Cleared ${clearedCount} old version(s) of ${key}`);
     Logger.log(`[Cache] Cleared ${clearedCount} old version(s) of ${key}`);
   }
   
-  // 캐시 확인
+  // 캐시 확인 (개발 모드에서만)
   const cachedItem = StorageManager.getItem(versionedKey);
-  console.log(`[Cache Debug] Checking cache for key: ${versionedKey}, Found: ${cachedItem ? 'YES' : 'NO'}, Length: ${cachedItem ? cachedItem.length : 0}`);
+  Logger.debug(`[Cache Debug] Checking cache for key: ${versionedKey}, Found: ${cachedItem ? 'YES' : 'NO'}, Length: ${cachedItem ? cachedItem.length : 0}`);
   
   if (cachedItem) {
     try {
-      // 캐시 히트 로그는 항상 출력 (디버깅용)
-      console.log(`[Cache HIT] Using cached data for key: ${versionedKey} (URL: ${url})`);
+      // 캐시 히트 로그 (개발 모드에서만)
       Logger.log(`[Cache HIT] Using cached data for key: ${versionedKey} (URL: ${url})`);
       const cachedData = JSON.parse(cachedItem);
       
@@ -71,7 +69,6 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
       // (저장 시점에 이미 변환된 데이터를 저장하므로)
       return cachedData;
     } catch (e) {
-      console.error(`[Cache Error] Failed to parse cached data for ${versionedKey}:`, e);
       Logger.error(
         `[Cache Error] Failed to parse cached data for ${versionedKey}, fetching fresh.`,
         e
@@ -80,8 +77,7 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
     }
   }
 
-  // 캐시 미스 로그는 항상 출력 (디버깅용)
-  console.log(`[Cache MISS] No cached data for key: ${versionedKey} (URL: ${url}), fetching from API...`);
+  // 캐시 미스 로그 (개발 모드에서만)
   Logger.log(`[Cache MISS] No cached data for key: ${versionedKey} (URL: ${url}), fetching from API...`);
   const startTime = performance.now();
   const response = await fetch(url);
@@ -105,25 +101,21 @@ async function fetchWithSessionCache(key, url, shouldTransformSpirits = false) {
   // 버전이 포함된 키로 저장
   const jsonString = JSON.stringify(processedData);
   const dataSize = new Blob([jsonString]).size;
-  console.log(`[Cache Debug] Attempting to save cache for key: ${versionedKey}, Data size: ${(dataSize / 1024).toFixed(2)}KB`);
+  Logger.debug(`[Cache Debug] Attempting to save cache for key: ${versionedKey}, Data size: ${(dataSize / 1024).toFixed(2)}KB`);
   
   const saved = StorageManager.setItem(versionedKey, jsonString);
   
-  // 저장 후 확인
+  // 저장 후 확인 (개발 모드에서만)
   const verifyItem = StorageManager.getItem(versionedKey);
-  console.log(`[Cache Debug] Save result: ${saved ? 'SUCCESS' : 'FAILED'}, Verify: ${verifyItem ? 'FOUND' : 'NOT FOUND'}, Verify length: ${verifyItem ? verifyItem.length : 0}`);
+  Logger.debug(`[Cache Debug] Save result: ${saved ? 'SUCCESS' : 'FAILED'}, Verify: ${verifyItem ? 'FOUND' : 'NOT FOUND'}, Verify length: ${verifyItem ? verifyItem.length : 0}`);
   
   if (saved) {
-    // 캐시 저장 성공 로그는 항상 출력 (디버깅용)
-    console.log(`[Cache SAVED] Successfully cached data for key: ${versionedKey} (URL: ${url}), Size: ${(dataSize / 1024).toFixed(2)}KB`);
-    Logger.log(`[Cache SAVED] Successfully cached data for key: ${versionedKey} (URL: ${url})`);
+    // 캐시 저장 성공 로그 (개발 모드에서만)
+    Logger.log(`[Cache SAVED] Successfully cached data for key: ${versionedKey} (URL: ${url}), Size: ${(dataSize / 1024).toFixed(2)}KB`);
   } else {
-    // 캐시 저장 실패 로그는 항상 출력 (중요한 문제)
-    console.error(
+    // 캐시 저장 실패 로그 (에러는 항상 출력)
+    Logger.error(
       `[Cache FAILED] Failed to save cached data for ${versionedKey} (URL: ${url}). Data will not be cached. Size: ${(dataSize / 1024).toFixed(2)}KB`
-    );
-    Logger.warn(
-      `[Cache FAILED] Failed to save cached data for ${versionedKey} (URL: ${url}). Data will not be cached.`
     );
   }
 
