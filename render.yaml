@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: bayeon-hwayeon-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: ENVIRONMENT
+        value: production
+      - key: ALLOWED_ORIGINS
+        value: https://sshauthsock.github.io
+      - key: GCP_PROJECT_ID
+        value: baram-yeon
+      # GOOGLE_APPLICATION_CREDENTIALS_JSON은 Render 대시보드에서 직접 설정해야 함
+      # (보안상 render.yaml에 포함하지 않음)
+
