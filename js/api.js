@@ -8,6 +8,7 @@ import {
 import Logger from "./utils/logger.js";
 import { trackApiPerformance } from "./utils/performanceMonitor.js";
 import { getVersionedKey, clearOldVersions } from "./utils/dataVersion.js";
+import * as IndexedDB from "./utils/indexedDB.js";
 
 // 환경별 API URL 설정
 // 우선순위: import.meta.env.VITE_API_BASE_URL > __API_BASE_URL__ > 기본값
@@ -155,6 +156,57 @@ function transformRankingsData(data, key) {
   return data;
 }
 
+/**
+ * IndexedDB를 사용한 데이터 페치 (큰 데이터용)
+ * 랭킹 데이터 등 큰 데이터를 IndexedDB에 영구 저장
+ */
+async function fetchWithIndexedDBCache(key, url) {
+  // IndexedDB 사용 가능 여부 확인
+  if (!IndexedDB.isAvailable()) {
+    Logger.warn(`[IndexedDB] IndexedDB not available, falling back to memory cache for key: ${key}`);
+    return fetchWithMemoryCache(url, url);
+  }
+  
+  // 이전 버전 캐시 자동 삭제
+  const clearedCount = await IndexedDB.clearOldVersions(key);
+  if (clearedCount > 0) {
+    Logger.log(`[IndexedDB] Cleared ${clearedCount} old version(s) of ${key}`);
+  }
+  
+  // 캐시 확인
+  const cachedData = await IndexedDB.getItem(key);
+  if (cachedData) {
+    Logger.log(`[IndexedDB Cache HIT] Using cached data for key: ${key} (URL: ${url})`);
+    // 메모리 캐시에도 저장 (빠른 접근용)
+    memoryCache.set(url, cachedData);
+    return cachedData;
+  }
+
+  Logger.log(`[IndexedDB Cache MISS] No cached data for key: ${key} (URL: ${url}), fetching from API...`);
+  const startTime = performance.now();
+  const response = await fetch(url);
+  const rawData = await handleResponse(response);
+  const duration = performance.now() - startTime;
+  
+  // API 성능 추적
+  trackApiPerformance(url, duration, true);
+
+  // 랭킹 데이터 이미지 경로 변환
+  let transformedData = transformRankingsData(rawData, key);
+
+  // IndexedDB에 저장
+  const saved = await IndexedDB.setItem(key, transformedData);
+  if (saved) {
+    Logger.log(`[IndexedDB Cache SAVED] Successfully cached data for key: ${key} (URL: ${url})`);
+    // 메모리 캐시에도 저장 (빠른 접근용)
+    memoryCache.set(url, transformedData);
+  } else {
+    Logger.error(`[IndexedDB Cache FAILED] Failed to save cached data for ${key} (URL: ${url})`);
+  }
+
+  return transformedData;
+}
+
 async function fetchWithMemoryCache(key, url) {
   const cachedData = memoryCache.get(key);
   if (cachedData) {
@@ -248,10 +300,9 @@ export async function fetchRankings(category, type, statKey = "") {
   }
   
   // 랭킹 데이터는 크기가 너무 커서 (7-8MB) localStorage 용량 제한을 초과함
-  // 따라서 memoryCache만 사용 (페이지 새로고침 시에만 API 호출)
-  // 버전이 포함된 캐시 키 생성
+  // IndexedDB를 사용하여 영구 캐싱
   const cacheKey = `rankings_${category}_${type}${statKey ? `_${statKey}` : ''}`;
-  return fetchWithMemoryCache(url, url);
+  return fetchWithIndexedDBCache(cacheKey, url);
 }
 
 export async function fetchSoulExpTable() {
