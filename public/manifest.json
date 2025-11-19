@@ -1,0 +1,28 @@
+{
+  "name": "바연화연 - 바람의나라: 연 계산기",
+  "short_name": "바연화연",
+  "description": "바람의나라: 연 환수 결속 계산기, 환수 정보, 착 계산기, 환수혼 계산기",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3498db",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/img/BHY.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/img/BHY.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "utilities"],
+  "lang": "ko-KR",
+  "dir": "ltr"
+}
+

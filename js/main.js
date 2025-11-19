@@ -6,6 +6,7 @@ import Logger from "./utils/logger.js";
 import { initPerformanceMonitoring, trackPageLoadPerformance, trackUserAction } from "./utils/performanceMonitor.js";
 import errorBoundary from "./utils/errorBoundary.js";
 import { showErrorRecoveryUI } from "./components/errorRecovery.js";
+import { initServiceWorker } from "./utils/serviceWorker.js";
 
 const pageModules = {
   spiritInfo: () => import("./pages/spiritInfo.js"),
@@ -193,6 +194,9 @@ async function initializeApp() {
   
   // 성능 모니터링 초기화
   initPerformanceMonitoring();
+  
+  // Service Worker 초기화 (오프라인 지원)
+  initServiceWorker();
   
   const initStartTime = performance.now();
   showLoading(
