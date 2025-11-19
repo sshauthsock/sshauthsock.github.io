@@ -165,7 +165,7 @@ type App struct {
 	// 캐시 메타데이터
 	creatureDataLastUpdated time.Time
 	chakDataLastUpdated     time.Time
-	cacheTTL                time.Duration // 캐시 TTL (기본값: 1시간)
+	cacheTTL                time.Duration // 캐시 TTL (기본값: 30일)
 }
 
 var appLogger = logger.New()
@@ -229,7 +229,7 @@ func NewApp(ctx context.Context) (*App, error) {
 		},
 		dataLoadMutex:          sync.RWMutex{},
 		isDataLoaded:           true,
-		cacheTTL:               1 * time.Hour, // 기본 TTL: 1시간
+		cacheTTL:               30 * 24 * time.Hour, // 기본 TTL: 30일 (당분간 업데이트 없음)
 		creatureDataLastUpdated: time.Time{},
 		chakDataLastUpdated:     time.Time{},
 	}, nil
