@@ -768,7 +768,9 @@ function renderSpiritInfo(
   header.appendChild(img);
 
   const titleSection = createElement("div", "spirit-modal-title-section");
-  const title = createElement("h3", "", { text: spiritData.name });
+  const title = createElement("h3", "");
+  const titleText = createElement("span", "", { text: spiritData.name });
+  title.appendChild(titleText);
   titleSection.appendChild(title);
 
   if (spiritData.influence && FACTION_ICONS[spiritData.influence]) {

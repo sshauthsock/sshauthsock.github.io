@@ -4384,13 +4384,15 @@ tr.max-level {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  justify-content: space-between;
   background-color: var(--bg-lighter);
   border-radius: var(--radius-md);
-  padding: var(--radius-sm);
+  padding: 6px 6px 2px 6px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   transition: var(--transition-fast);
   height: 115px;
+  box-sizing: border-box;
 }
 
 .selected-spirit-card:hover {
@@ -4404,7 +4406,11 @@ tr.max-level {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 2px;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .selected-spirit-header img {
@@ -4415,23 +4421,41 @@ tr.max-level {
   background-color: var(--bg-white);
   padding: 2px;
   border: 1px solid var(--border-light);
+  flex-shrink: 0;
+  margin: 0;
+  display: block;
 }
 
-.spirit-info {
+.selected-spirit-card .spirit-info {
   width: 100%;
   text-align: center;
-  margin-top: 3px;
+  margin: 0;
+  padding: 0;
+  padding-right: 14px;
+  flex: 0 0 auto;
+  min-height: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
-.spirit-name {
-  font-size: var(--text-sm);
+.selected-spirit-card .spirit-name {
+  font-size: 10px !important;
   font-weight: 600;
-  margin: 2px 0;
-  line-height: 1.2;
-  max-height: 26px;
+  margin: 0;
+  padding: 4px 2px;
+  line-height: 1.5;
+  min-height: 18px;
+  max-height: 40px;
   overflow: hidden;
-  padding: 0 2px;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   color: #333;
+  word-break: break-word;
+  box-sizing: border-box;
 }
 
 .remove-spirit {
@@ -4455,14 +4479,16 @@ tr.max-level {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.spirit-level-control {
+.selected-spirit-card .spirit-level-control {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin-top: auto;
-  margin-bottom: 4px;
+  margin: 4px 0 0 0;
+  padding: 0;
   height: 24px;
+  flex-shrink: 0;
+  flex-grow: 0;
 }
 
 .spirit-level-control button {
@@ -6619,7 +6645,7 @@ tr.max-level {
   text-align: center;
   margin: 4px 0;
   font-size: var(--text-xs);
-  height: 24px;
+  /* height: 24px; */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7744,7 +7770,7 @@ input:focus {
   }
 
   .selected-spirit-header .spirit-info .spirit-name {
-    font-size: var(--text-xs);
+    font-size: 10px !important;
   }
 
   .spirit-level-control {
