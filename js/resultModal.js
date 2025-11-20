@@ -175,9 +175,35 @@ function renderEffects(elementId, title, effects, score, counts = {}) {
 
   const validEffects = Array.isArray(effects) ? effects : [];
 
+  // 환산합산에 계산되는 스탯들 (맨 위에 표시)
+  const scoreContributingStats = [
+    "damageResistance",
+    "damageResistancePenetration",
+    "pvpDamagePercent",
+    "pvpDefensePercent",
+  ];
+
+  // 스탯을 정렬: 환산합산 스탯 먼저, 나머지는 알파벳 순
+  const sortedEffects = [...validEffects].sort((a, b) => {
+    const aIsPriority = scoreContributingStats.includes(a.key);
+    const bIsPriority = scoreContributingStats.includes(b.key);
+
+    if (aIsPriority && !bIsPriority) return -1;
+    if (!aIsPriority && bIsPriority) return 1;
+    if (aIsPriority && bIsPriority) {
+      // 둘 다 우선순위 스탯이면 정의된 순서대로
+      return (
+        scoreContributingStats.indexOf(a.key) -
+        scoreContributingStats.indexOf(b.key)
+      );
+    }
+    // 둘 다 일반 스탯이면 알파벳 순
+    return (a.name || a.key).localeCompare(b.name || b.key);
+  });
+
   let effectsListHtml = '<p class="no-effects">효과 없음</p>';
-  if (validEffects.length > 0) {
-    effectsListHtml = `<ul class="effects-list">${validEffects
+  if (sortedEffects.length > 0) {
+    effectsListHtml = `<ul class="effects-list">${sortedEffects
       .map((stat) => {
         const isPercent = PERCENT_STATS.includes(stat.key);
         const displayValue = isPercent
@@ -374,7 +400,11 @@ function updateAllScoresAndDisplay() {
     recalculatedBind.bindScore
   );
   renderRegistrationEffectInResults();
-  renderSpiritDetailsTable(modifiedSpirits);
+  renderSpiritDetailsTable(
+    modifiedSpirits,
+    currentResult.gradeEffects || [],
+    currentResult.factionEffects || []
+  );
 
   window.toggleMoreStats = toggleMoreStats;
 }
@@ -1301,7 +1331,7 @@ function updateResultView(result, isFromRanking) {
   renderEffects("optimalBindEffects", "결속 효과", bindStats, bindScore);
   renderRegistrationEffectInResults();
 
-  renderSpiritDetailsTable(modifiedSpirits);
+  renderSpiritDetailsTable(modifiedSpirits, gradeEffects || [], factionEffects || []);
 
   window.toggleMoreStats = toggleMoreStats;
 }
@@ -1411,7 +1441,7 @@ function renderHistoryTabs(category) {
   });
 }
 
-function renderSpiritDetailsTable(spirits) {
+function renderSpiritDetailsTable(spirits, gradeEffects = [], factionEffects = []) {
   // console.log("📊 renderSpiritDetailsTable 호출:");
   spirits.forEach((s, i) => {
     // console.log(`  [${i}] ${s.name}: Lv.${s.stats[0].level}`);
@@ -1459,13 +1489,42 @@ function renderSpiritDetailsTable(spirits) {
       Object.keys(levelStats.bindStat).forEach((key) => allStatKeys.add(key));
   });
 
+  // 등급효과와 세력효과의 스탯 키도 추가
+  gradeEffects.forEach((effect) => {
+    if (effect.key) allStatKeys.add(effect.key);
+  });
+  factionEffects.forEach((effect) => {
+    if (effect.key) allStatKeys.add(effect.key);
+  });
+
   if (allStatKeys.size === 0) {
     container.innerHTML =
       "<h4>상세 스탯 비교</h4><p>선택된 환수의 장착 효과 스탯 정보가 없습니다.</p>";
     return;
   }
 
-  const sortedStatKeys = [...allStatKeys].sort();
+  // 환산합산에 계산되는 스탯들 (맨 위에 표시)
+  const scoreContributingStats = [
+    "damageResistance",
+    "damageResistancePenetration",
+    "pvpDamagePercent",
+    "pvpDefensePercent",
+  ];
+
+  // 스탯 키를 정렬: 환산합산 스탯 먼저, 나머지는 알파벳 순
+  const allStatKeysArray = [...allStatKeys];
+  const priorityStats = allStatKeysArray.filter((key) =>
+    scoreContributingStats.includes(key)
+  );
+  const otherStats = allStatKeysArray
+    .filter((key) => !scoreContributingStats.includes(key))
+    .sort();
+
+  // 환산합산 스탯도 순서대로 정렬
+  const sortedPriorityStats = scoreContributingStats.filter((key) =>
+    priorityStats.includes(key)
+  );
+  const sortedStatKeys = [...sortedPriorityStats, ...otherStats];
 
   let tableHtml = `
         <h4>상세 스탯 비교</h4>
@@ -1480,7 +1539,8 @@ function renderSpiritDetailsTable(spirits) {
                               `<th><img src="${s.image}" class="spirit-thumbnail" alt="${s.name}" title="${s.name}"><br><span class="spirit-table-name">${s.name}</span></th>`
                           )
                           .join("")}
-                        <th class="stat-total-header">합산</th>
+                        <th class="stat-total-header">결속 합산</th>
+                        <th class="stat-total-header">총 합산</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1488,11 +1548,14 @@ function renderSpiritDetailsTable(spirits) {
 
   sortedStatKeys.forEach((statKey) => {
     const highlightClass = SPECIAL_STAT_CLASSES[statKey] || "";
-    let totalValue = 0;
+    let bindTotalValue = 0; // 결속 효과 합산
+    let gradeTotalValue = 0; // 등급 효과 합산
+    let factionTotalValue = 0; // 세력 효과 합산
 
     let cellsHtml = "";
     const spiritValues = [];
 
+    // 결속 효과 (bindStat) 합산
     spirits.forEach((spirit) => {
       const fullSpiritData = globalState.allSpirits.find(
         (s) => s.name === spirit.name && s.type === spirit.type
@@ -1502,8 +1565,8 @@ function renderSpiritDetailsTable(spirits) {
         (s) => s.level === actualLevel
       );
 
-      const value = ensureNumber(levelStats?.bindStat?.[statKey]);
-      totalValue += value;
+      const value = ensureNumber(levelStats?.bindStat?.[statKey] || 0);
+      bindTotalValue += value;
       spiritValues.push({ name: spirit.name, level: actualLevel, value });
 
       const displayValue = PERCENT_STATS.includes(statKey)
@@ -1513,13 +1576,45 @@ function renderSpiritDetailsTable(spirits) {
       cellsHtml += `<td>${value > 0 ? displayValue : "-"}</td>`;
     });
 
+    // 등급 효과 합산
+    const gradeEffect = gradeEffects.find((e) => e.key === statKey);
+    if (gradeEffect) {
+      gradeTotalValue = ensureNumber(gradeEffect.value || 0);
+    }
+
+    // 세력 효과 합산
+    const factionEffect = factionEffects.find((e) => e.key === statKey);
+    if (factionEffect) {
+      factionTotalValue = ensureNumber(factionEffect.value || 0);
+    }
+
+    // 전체 합산: 결속 + 등급 + 세력
+    const totalValue = bindTotalValue + gradeTotalValue + factionTotalValue;
+
     // console.log(
     //   `📊 ${statKey} 스탯 계산:`,
-    //   spiritValues,
-    //   `총합: ${totalValue}`
+    //   {
+    //     bind: bindTotalValue,
+    //     grade: gradeTotalValue,
+    //     faction: factionTotalValue,
+    //     total: totalValue,
+    //   }
     // );
 
-    // 대인피해%와 대인방어%는 합산에서 10배로 표시
+    // 결속 합산 표시 값 계산
+    let bindDisplayValue;
+    if (statKey === "pvpDamagePercent" || statKey === "pvpDefensePercent") {
+      bindDisplayValue =
+        bindTotalValue > 0
+          ? `${(bindTotalValue * 10).toLocaleString()}`
+          : "-";
+    } else if (PERCENT_STATS.includes(statKey)) {
+      bindDisplayValue = `${bindTotalValue.toFixed(2)}%`;
+    } else {
+      bindDisplayValue = bindTotalValue.toLocaleString();
+    }
+
+    // 총 합산 표시 값 계산
     let totalDisplayValue;
     if (statKey === "pvpDamagePercent" || statKey === "pvpDefensePercent") {
       totalDisplayValue =
@@ -1534,7 +1629,10 @@ function renderSpiritDetailsTable(spirits) {
         <tr class="${highlightClass}">
             <th>${STATS_MAPPING[statKey] || statKey}</th>
             ${cellsHtml}
-            <td class="stat-total">${
+            <td class="stat-total stat-bind-total">${
+              bindTotalValue > 0 ? bindDisplayValue : "-"
+            }</td>
+            <td class="stat-total stat-total-sum">${
               totalValue > 0 ? totalDisplayValue : "-"
             }</td>
         </tr>`;

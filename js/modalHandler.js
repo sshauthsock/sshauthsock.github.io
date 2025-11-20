@@ -533,11 +533,35 @@ function updateStatsList(listElement, sumElement, stats, highlightStat) {
   let totalSum = 0;
   let effectsListHtml = "";
 
+  // 환산합산에 계산되는 스탯들 (맨 위에 표시)
+  const scoreContributingStats = [
+    "damageResistance",
+    "damageResistancePenetration",
+    "pvpDamagePercent",
+    "pvpDefensePercent",
+  ];
+
   // 기존 displayStatDetails와 동일한 정렬 및 스타일 적용
+  // 환산합산 스탯을 맨 위로, 나머지는 알파벳 순
   statEntries
     .sort((a, b) => {
-      const nameA = STATS_MAPPING[a[0]] || a[0];
-      const nameB = STATS_MAPPING[b[0]] || b[0];
+      const keyA = a[0];
+      const keyB = b[0];
+      const aIsPriority = scoreContributingStats.includes(keyA);
+      const bIsPriority = scoreContributingStats.includes(keyB);
+
+      if (aIsPriority && !bIsPriority) return -1;
+      if (!aIsPriority && bIsPriority) return 1;
+      if (aIsPriority && bIsPriority) {
+        // 둘 다 우선순위 스탯이면 정의된 순서대로
+        return (
+          scoreContributingStats.indexOf(keyA) -
+          scoreContributingStats.indexOf(keyB)
+        );
+      }
+      // 둘 다 일반 스탯이면 알파벳 순
+      const nameA = STATS_MAPPING[keyA] || keyA;
+      const nameB = STATS_MAPPING[keyB] || keyB;
       return nameA.localeCompare(nameB);
     })
     .forEach(([key, value]) => {
@@ -936,12 +960,35 @@ function displayStatDetails(listElement, stats, highlightStat) {
     return;
   }
 
+  // 환산합산에 계산되는 스탯들 (맨 위에 표시)
+  const scoreContributingStats = [
+    "damageResistance",
+    "damageResistancePenetration",
+    "pvpDamagePercent",
+    "pvpDefensePercent",
+  ];
+
   let effectsListHtml = "";
 
   statEntries
     .sort((a, b) => {
-      const nameA = STATS_MAPPING[a[0]] || a[0];
-      const nameB = STATS_MAPPING[b[0]] || b[0];
+      const keyA = a[0];
+      const keyB = b[0];
+      const aIsPriority = scoreContributingStats.includes(keyA);
+      const bIsPriority = scoreContributingStats.includes(keyB);
+
+      if (aIsPriority && !bIsPriority) return -1;
+      if (!aIsPriority && bIsPriority) return 1;
+      if (aIsPriority && bIsPriority) {
+        // 둘 다 우선순위 스탯이면 정의된 순서대로
+        return (
+          scoreContributingStats.indexOf(keyA) -
+          scoreContributingStats.indexOf(keyB)
+        );
+      }
+      // 둘 다 일반 스탯이면 알파벳 순
+      const nameA = STATS_MAPPING[keyA] || keyA;
+      const nameB = STATS_MAPPING[keyB] || keyB;
       return nameA.localeCompare(nameB);
     })
     .forEach(([key, value]) => {
