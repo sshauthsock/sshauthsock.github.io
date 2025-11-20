@@ -1159,8 +1159,7 @@ function renderResultContent(result, container, isFromRanking) {
 }
 
 function updateResultView(result, isFromRanking) {
-  const { gradeScore, factionScore, gradeEffects, factionEffects, spirits } =
-    result;
+  const { gradeScore, factionScore, gradeEffects, factionEffects } = result;
 
   // 결속 효과를 다시 계산 (대인방어% 등의 10배 계산 적용)
   const recalculatedBind = recalculateBindScore(modifiedSpirits);
@@ -1279,19 +1278,20 @@ function updateResultView(result, isFromRanking) {
     saveBtn.onclick = saveCombination;
   }
 
-  renderEffects("optimalGradeEffects", "등급 효과", gradeEffects, gradeScore, {
-    gradeCounts: spirits.reduce((acc, s) => {
-      acc[s.grade] = (acc[s.grade] || 0) + 1;
+  // modifiedSpirits를 사용하여 gradeCounts와 factionCounts 계산 (history에서 복원 시 정확한 데이터 사용)
+  renderEffects("optimalGradeEffects", "등급 효과", gradeEffects || [], gradeScore, {
+    gradeCounts: modifiedSpirits.reduce((acc, s) => {
+      if (s.grade) acc[s.grade] = (acc[s.grade] || 0) + 1;
       return acc;
     }, {}),
   });
   renderEffects(
     "optimalFactionEffects",
     "세력 효과",
-    factionEffects,
+    factionEffects || [],
     factionScore,
     {
-      factionCounts: spirits.reduce((acc, s) => {
+      factionCounts: modifiedSpirits.reduce((acc, s) => {
         if (s.influence) acc[s.influence] = (acc[s.influence] || 0) + 1;
         return acc;
       }, {}),
