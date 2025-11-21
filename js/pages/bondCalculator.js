@@ -210,11 +210,57 @@ function renderSelectedList() {
         `;
     container.appendChild(card);
 
+    // 제거 버튼에 직접 이벤트 리스너 추가
+    const removeBtn = card.querySelector('.remove-spirit');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (pageState.selectedSpirits.has(spirit.name)) {
+          pageState.selectedSpirits.delete(spirit.name);
+          saveStateToStorage();
+          renderAll();
+        }
+      });
+      removeBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (pageState.selectedSpirits.has(spirit.name)) {
+          pageState.selectedSpirits.delete(spirit.name);
+          saveStateToStorage();
+          renderAll();
+        }
+      });
+    }
+
     if (mobileSelectedSpiritsContainer) {
       const mobileCard = createElement("div", "selected-spirit-card");
       mobileCard.dataset.spiritName = spirit.name;
       mobileCard.innerHTML = card.innerHTML;
       mobileSelectedSpiritsContainer.appendChild(mobileCard);
+
+      // 모바일 카드의 제거 버튼에도 이벤트 리스너 추가
+      const mobileRemoveBtn = mobileCard.querySelector('.remove-spirit');
+      if (mobileRemoveBtn) {
+        mobileRemoveBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (pageState.selectedSpirits.has(spirit.name)) {
+            pageState.selectedSpirits.delete(spirit.name);
+            saveStateToStorage();
+            renderAll();
+          }
+        });
+        mobileRemoveBtn.addEventListener('touchend', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (pageState.selectedSpirits.has(spirit.name)) {
+            pageState.selectedSpirits.delete(spirit.name);
+            saveStateToStorage();
+            renderAll();
+          }
+        });
+      }
     }
   });
 }
@@ -483,6 +529,24 @@ function handleSpiritSelect(spirit) {
 function handleContainerClick(e) {
   const target = e.target;
 
+  // 제거 버튼 클릭 처리 (버튼 내부 텍스트 클릭도 처리) - 최우선 처리
+  const removeButton = target.closest('.remove-spirit');
+  if (removeButton) {
+    e.preventDefault();
+    e.stopPropagation();
+    const card = removeButton.closest(".selected-spirit-card");
+    if (card) {
+      const spiritName = card.dataset.spiritName;
+      if (spiritName && pageState.selectedSpirits.has(spiritName)) {
+        pageState.selectedSpirits.delete(spiritName);
+        saveStateToStorage();
+        renderAll();
+      }
+    }
+    longPressState.mouseDownTime = null;
+    return;
+  }
+
   // 길게 누르기 상태에서는 클릭 이벤트 무시
   if (longPressState.isPressed) {
     return;
@@ -503,7 +567,9 @@ function handleContainerClick(e) {
       return;
     }
 
-    const action = target.dataset.action;
+    // data-action 속성을 가진 가장 가까운 요소 찾기 (버튼 내부 텍스트 클릭 대응)
+    const actionElement = target.closest('[data-action]');
+    const action = actionElement ? actionElement.dataset.action : null;
     let shouldRender = false;
 
     switch (action) {
@@ -545,6 +611,12 @@ function handleContainerMouseDown(e) {
 
   if (!card) return;
 
+  // 제거 버튼은 클릭 이벤트로 처리되도록 여기서 early return
+  const removeButton = target.closest('.remove-spirit');
+  if (removeButton) {
+    return;
+  }
+
   const action = target.dataset.action;
   if (action !== "level-down" && action !== "level-up") return;
 
@@ -585,6 +657,13 @@ function handleContainerTouchStart(e) {
   const card = target.closest(".selected-spirit-card");
 
   if (!card) {
+    return;
+  }
+
+  // 제거 버튼인지 확인 (버튼 내부 텍스트 클릭도 처리)
+  const removeButton = target.closest('.remove-spirit');
+  if (removeButton) {
+    // 제거 버튼은 클릭 이벤트로 처리되도록 preventDefault 하지 않음
     return;
   }
 

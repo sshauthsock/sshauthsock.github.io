@@ -180,11 +180,14 @@
   }
 
   .selected-spirit-card .remove-spirit {
-    width: 10px;
-    height: 10px;
-    font-size: 7px;
-    top: 1px;
-    right: 1px;
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+    top: 2px;
+    right: 2px;
+    z-index: 100;
+    pointer-events: auto;
+    touch-action: manipulation;
   }
 
   .selected-spirit-card .spirit-level-control {
