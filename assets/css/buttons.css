@@ -391,7 +391,9 @@
   background: #e74c3c;
   color: white;
   border: 1px solid #c0392b;
-  z-index: 10;
+  z-index: 100;
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 
 .selected-spirit-card .remove-spirit:hover {
