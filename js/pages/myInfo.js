@@ -355,6 +355,209 @@ function getHTML() {
         background: rgba(128, 128, 128, 0.1);
       }
 
+      /* 주요 스탯 스타일 (환수정보/결속과 동일) */
+      .my-info-stat-item.stat-damage-resistance {
+        border-left: 3px solid #c0392b;
+        background: linear-gradient(90deg, #f8d7da, #ffffff);
+        padding-left: 10px;
+      }
+
+      .my-info-stat-item.stat-damage-resistance .my-info-stat-name {
+        color: #c0392b;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(192, 57, 43, 0.15);
+      }
+
+      .my-info-stat-item.stat-damage-resistance .my-info-stat-total {
+        color: #c0392b;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(192, 57, 43, 0.2);
+      }
+
+      .my-info-stat-item.stat-damage-resistance:hover {
+        background: linear-gradient(90deg, #f1aeb5, #f8f9fa);
+        border-left-width: 5px;
+        transform: translateX(2px);
+      }
+
+      .my-info-stat-item.stat-damage-resistance-penetration {
+        border-left: 3px solid #d68910;
+        background: linear-gradient(90deg, #fff3cd, #ffffff);
+        padding-left: 10px;
+      }
+
+      .my-info-stat-item.stat-damage-resistance-penetration .my-info-stat-name {
+        color: #d68910;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(214, 137, 16, 0.15);
+      }
+
+      .my-info-stat-item.stat-damage-resistance-penetration .my-info-stat-total {
+        color: #d68910;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(214, 137, 16, 0.2);
+      }
+
+      .my-info-stat-item.stat-damage-resistance-penetration:hover {
+        background: linear-gradient(90deg, #ffeaa7, #f8f9fa);
+        border-left-width: 5px;
+        transform: translateX(2px);
+      }
+
+      .my-info-stat-item.stat-pvp-damage-percent {
+        border-left: 3px solid #7d3c98;
+        background: linear-gradient(90deg, #e8daef, #ffffff);
+        padding-left: 10px;
+      }
+
+      .my-info-stat-item.stat-pvp-damage-percent .my-info-stat-name {
+        color: #7d3c98;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(125, 60, 152, 0.15);
+      }
+
+      .my-info-stat-item.stat-pvp-damage-percent .my-info-stat-total {
+        color: #7d3c98;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(125, 60, 152, 0.2);
+      }
+
+      .my-info-stat-item.stat-pvp-damage-percent:hover {
+        background: linear-gradient(90deg, #d7bde2, #f8f9fa);
+        border-left-width: 5px;
+        transform: translateX(2px);
+      }
+
+      .my-info-stat-item.stat-pvp-defense-percent {
+        border-left: 3px solid #2980b9;
+        background: linear-gradient(90deg, #d1ecf1, #ffffff);
+        padding-left: 10px;
+      }
+
+      .my-info-stat-item.stat-pvp-defense-percent .my-info-stat-name {
+        color: #2980b9;
+        font-weight: 600;
+        text-shadow: 0 1px 2px rgba(41, 128, 185, 0.15);
+      }
+
+      .my-info-stat-item.stat-pvp-defense-percent .my-info-stat-total {
+        color: #2980b9;
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(41, 128, 185, 0.2);
+      }
+
+      .my-info-stat-item.stat-pvp-defense-percent:hover {
+        background: linear-gradient(90deg, #a9cce3, #f8f9fa);
+        border-left-width: 5px;
+        transform: translateX(2px);
+      }
+
+      /* 보조 스탯 스타일 (주요 스탯보다 더 연하게) */
+      .my-info-stat-item.stat-pvp-damage {
+        border-left: 2px solid rgba(125, 60, 152, 0.4);
+        background: linear-gradient(90deg, rgba(232, 218, 239, 0.3), #ffffff);
+        padding-left: 8px;
+      }
+
+      .my-info-stat-item.stat-pvp-damage .my-info-stat-name {
+        color: rgba(125, 60, 152, 0.7);
+        font-weight: 500;
+      }
+
+      .my-info-stat-item.stat-pvp-damage .my-info-stat-total {
+        color: rgba(125, 60, 152, 0.8);
+        font-weight: 600;
+      }
+
+      .my-info-stat-item.stat-pvp-damage:hover {
+        background: linear-gradient(90deg, rgba(232, 218, 239, 0.5), #f8f9fa);
+        border-left-width: 3px;
+      }
+
+      .my-info-stat-item.stat-pvp-defense {
+        border-left: 2px solid rgba(41, 128, 185, 0.4);
+        background: linear-gradient(90deg, rgba(209, 236, 241, 0.3), #ffffff);
+        padding-left: 8px;
+      }
+
+      .my-info-stat-item.stat-pvp-defense .my-info-stat-name {
+        color: rgba(41, 128, 185, 0.7);
+        font-weight: 500;
+      }
+
+      .my-info-stat-item.stat-pvp-defense .my-info-stat-total {
+        color: rgba(41, 128, 185, 0.8);
+        font-weight: 600;
+      }
+
+      .my-info-stat-item.stat-pvp-defense:hover {
+        background: linear-gradient(90deg, rgba(209, 236, 241, 0.5), #f8f9fa);
+        border-left-width: 3px;
+      }
+
+      .my-info-stat-item.stat-status-effect-accuracy {
+        border-left: 2px solid rgba(155, 89, 182, 0.4);
+        background: linear-gradient(90deg, rgba(235, 222, 240, 0.3), #ffffff);
+        padding-left: 8px;
+      }
+
+      .my-info-stat-item.stat-status-effect-accuracy .my-info-stat-name {
+        color: rgba(155, 89, 182, 0.7);
+        font-weight: 500;
+      }
+
+      .my-info-stat-item.stat-status-effect-accuracy .my-info-stat-total {
+        color: rgba(155, 89, 182, 0.8);
+        font-weight: 600;
+      }
+
+      .my-info-stat-item.stat-status-effect-accuracy:hover {
+        background: linear-gradient(90deg, rgba(235, 222, 240, 0.5), #f8f9fa);
+        border-left-width: 3px;
+      }
+
+      .my-info-stat-item.stat-status-effect-resistance {
+        border-left: 2px solid rgba(52, 152, 219, 0.4);
+        background: linear-gradient(90deg, rgba(212, 237, 255, 0.3), #ffffff);
+        padding-left: 8px;
+      }
+
+      .my-info-stat-item.stat-status-effect-resistance .my-info-stat-name {
+        color: rgba(52, 152, 219, 0.7);
+        font-weight: 500;
+      }
+
+      .my-info-stat-item.stat-status-effect-resistance .my-info-stat-total {
+        color: rgba(52, 152, 219, 0.8);
+        font-weight: 600;
+      }
+
+      .my-info-stat-item.stat-status-effect-resistance:hover {
+        background: linear-gradient(90deg, rgba(212, 237, 255, 0.5), #f8f9fa);
+        border-left-width: 3px;
+      }
+
+      .my-info-stat-item.stat-damage-absorption {
+        border-left: 2px solid rgba(192, 57, 43, 0.4);
+        background: linear-gradient(90deg, rgba(248, 215, 218, 0.3), #ffffff);
+        padding-left: 8px;
+      }
+
+      .my-info-stat-item.stat-damage-absorption .my-info-stat-name {
+        color: rgba(192, 57, 43, 0.7);
+        font-weight: 500;
+      }
+
+      .my-info-stat-item.stat-damage-absorption .my-info-stat-total {
+        color: rgba(192, 57, 43, 0.8);
+        font-weight: 600;
+      }
+
+      .my-info-stat-item.stat-damage-absorption:hover {
+        background: linear-gradient(90deg, rgba(248, 215, 218, 0.5), #f8f9fa);
+        border-left-width: 3px;
+      }
+
       .my-info-stat-item input.my-info-stat-input {
         width: 80px;
         padding: 4px 8px;
@@ -1319,9 +1522,38 @@ function renderStats() {
   });
 }
 
+// 주요 스탯 클래스 정의 (resultModal.js와 동일)
+const SPECIAL_STAT_CLASSES = {
+  damageResistance: "stat-damage-resistance",
+  damageResistancePenetration: "stat-damage-resistance-penetration",
+  pvpDefensePercent: "stat-pvp-defense-percent",
+  pvpDamagePercent: "stat-pvp-damage-percent",
+};
+
+// 보조 스탯 클래스 정의 (주요 스탯보다 더 연하게 표시)
+const SECONDARY_STAT_CLASSES = {
+  pvpDamage: "stat-pvp-damage",
+  pvpDefense: "stat-pvp-defense",
+  statusEffectAccuracy: "stat-status-effect-accuracy",
+  statusEffectResistance: "stat-status-effect-resistance",
+  damageAbsorption: "stat-damage-absorption",
+};
+
 function createStatItem(stat) {
   const item = createElement("div", "my-info-stat-item");
   item.dataset.stat = stat.key;
+
+  // 주요 스탯에 특별한 클래스 추가
+  const specialClass = SPECIAL_STAT_CLASSES[stat.key];
+  if (specialClass) {
+    item.classList.add(specialClass);
+  }
+
+  // 보조 스탯에 클래스 추가 (주요 스탯보다 더 연하게)
+  const secondaryClass = SECONDARY_STAT_CLASSES[stat.key];
+  if (secondaryClass) {
+    item.classList.add(secondaryClass);
+  }
 
   const name = createElement("span", "my-info-stat-name");
   name.textContent = stat.name;
