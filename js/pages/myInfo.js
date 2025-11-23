@@ -1783,7 +1783,7 @@ function handleStatEdit(item, statKey, valueSpan) {
 
     // userStats에 기본값 저장
     pageState.userStats[statKey] = Math.max(0, newBaseValue); // 음수 방지
-    saveUserStats();
+    // saveUserStats() 제거: 저장 버튼을 눌러야 저장됨
 
     // baseValue 업데이트 (기본값으로 저장)
     valueSpan.textContent = Math.max(0, newBaseValue).toString();
@@ -2203,7 +2203,7 @@ function handleSpiritSelect(spirit) {
     // 이미 있으면 제거
     bondSpirits.splice(existingIndex, 1);
     pageState.bondSpirits[category] = bondSpirits;
-    saveData();
+    // saveData() 제거: 저장 버튼을 눌러야 저장됨
     renderBondSlots(category);
     renderSpiritList();
 
@@ -2222,7 +2222,7 @@ function handleSpiritSelect(spirit) {
         level: 25, // 기본값 25
       });
       pageState.bondSpirits[category] = bondSpirits;
-      saveData();
+      // saveData() 제거: 저장 버튼을 눌러야 저장됨
 
       // 새로 추가된 슬롯 인덱스
       const newIndex = bondSpirits.length - 1;
@@ -2449,14 +2449,14 @@ function showSpiritLevelPopup(category, index, slot, event) {
     setupLongPress(minusBtn, "level-down");
     setupLongPress(plusBtn, "level-up");
 
-    // 레벨 입력 변경 시 자동 저장
+    // 레벨 입력 변경 시 (저장 버튼을 눌러야 저장됨)
     levelInput.addEventListener("change", () => {
       let level = parseInt(levelInput.value, 10) || 25;
       if (level < 0) level = 0;
       if (level > 25) level = 25;
       levelInput.value = level;
       spirit.level = level;
-      saveData();
+      // saveData() 제거: 저장 버튼을 눌러야 저장됨
       renderBondSlots(category);
       updatePopupActiveState(popup, category, spirit);
 
@@ -2517,7 +2517,7 @@ function showSpiritLevelPopup(category, index, slot, event) {
             if (levelInput) {
               levelInput.value = level;
             }
-            saveData();
+            // saveData() 제거: 저장 버튼을 눌러야 저장됨
             renderBondSlots(popupLongPressState.category);
             updatePopupActiveState(
               popup,
@@ -2581,7 +2581,7 @@ function showSpiritLevelPopup(category, index, slot, event) {
           if (levelInput) {
             levelInput.value = targetValue;
           }
-          saveData();
+          // saveData() 제거: 저장 버튼을 눌러야 저장됨
           renderBondSlots(popupLongPressState.category);
           updatePopupActiveState(
             popup,
@@ -2675,7 +2675,7 @@ function showSpiritLevelPopup(category, index, slot, event) {
       };
       spirit.level = level;
     }
-    saveData();
+    // saveData() 제거: 저장 버튼을 눌러야 저장됨
     renderBondSlots(category);
     updatePopupActiveState(popup, category, spirit);
 
@@ -3093,7 +3093,7 @@ function showEngravingModal(category, spiritName, spirit) {
         pageState.engravingData[category] = {};
       }
       pageState.engravingData[category][spiritName] = engravingData;
-      saveData();
+      // saveData() 제거: 저장 버튼을 눌러야 저장됨
 
       // 스탯 업데이트
       updateTotalStats();
@@ -3186,7 +3186,7 @@ function startPopupLongPress() {
     }
 
     if (changed) {
-      saveData();
+      // saveData() 제거: 저장 버튼을 눌러야 저장됨
       const levelInput = currentPopup?.querySelector(".level-input");
       if (levelInput) {
         levelInput.value = currentSpirit.level;
@@ -3352,7 +3352,7 @@ function createPopupHint() {
           if (levelInput) {
             levelInput.value = targetValue;
           }
-          saveData();
+          // saveData() 제거: 저장 버튼을 눌러야 저장됨
           renderBondSlots(popupLongPressState.category);
           updatePopupActiveState(
             currentPopup,
@@ -3762,9 +3762,9 @@ function updateKeyStats(
         new: recalculatedBaseline,
       });
       baselineTachaeTotal = recalculatedBaseline;
-      // 재계산된 값을 저장
+      // 재계산된 값을 저장 (저장 버튼을 눌러야 실제로 저장됨)
       pageState.baselineKeyStats.tachaeTotal = recalculatedBaseline;
-      saveData();
+      // saveData() 제거: 저장 버튼을 눌러야 저장됨
     }
   }
 
@@ -3867,7 +3867,7 @@ function removeBondSpirit(category, index) {
 
   bondSpirits.splice(index, 1);
   pageState.bondSpirits[category] = bondSpirits;
-  saveData();
+  // saveData() 제거: 저장 버튼을 눌러야 저장됨
   renderBondSlots(category);
   renderActiveSpiritSelect(category);
   renderSpiritList();
@@ -4945,6 +4945,9 @@ function setupEventListeners() {
           pageState.savedSoulExp = totalExp;
         }
 
+        // userStats도 함께 저장
+        saveUserStats();
+
         saveData();
 
         // 저장 후에는 화면에 표시된 총합값을 유지하면서 증감만 0으로 업데이트
@@ -5107,7 +5110,7 @@ export function init(container) {
             (calc.allTotalStats.statusEffectAccuracy || 0)
         );
 
-        saveData(); // 초기 baselineStats 저장
+        // saveData() 제거: 저장 버튼을 눌러야 저장됨 (초기화는 메모리에만 저장)
       }
 
       // 저장된 값 표시 및 증감 0으로 설정
