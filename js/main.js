@@ -14,6 +14,7 @@ const pageModules = {
   spiritRanking: () => import("./pages/spiritRanking.js"),
   soulCalculator: () => import("./pages/soulCalculator.js"),
   chakCalculator: () => import("./pages/chakCalculator.js"),
+  myInfo: () => import("./pages/myInfo.js"),
 };
 
 const appContainer = document.getElementById("app-container");

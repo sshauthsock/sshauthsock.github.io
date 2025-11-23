@@ -1,6 +1,6 @@
 // Service Worker for 오프라인 지원 및 PWA 기능
 // 버전: 업데이트 시 이 값을 변경하여 캐시 무효화
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v1.0.1';
 const CACHE_NAME = `bayeon-hwayeon-${CACHE_VERSION}`;
 
 // 캐시할 정적 리소스 목록
@@ -147,10 +147,29 @@ async function handleApiRequest(request) {
 
 /**
  * 정적 리소스 처리
- * Cache First 전략 사용 (오프라인 지원)
+ * Network First 전략 사용 (항상 최신 HTML 사용)
  */
 async function handleStaticRequest(request) {
-  // 캐시에서 먼저 확인
+  // HTML 문서는 항상 네트워크 우선 (최신 버전 보장)
+  if (request.destination === 'document' || request.mode === 'navigate') {
+    try {
+      const networkResponse = await fetch(request);
+      if (networkResponse && networkResponse.ok) {
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(request, networkResponse.clone());
+      }
+      return networkResponse;
+    } catch (error) {
+      // 네트워크 실패 시에만 캐시 사용
+      const cachedResponse = await caches.match(request);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      throw error;
+    }
+  }
+  
+  // HTML이 아닌 리소스는 Cache First
   const cachedResponse = await caches.match(request);
   if (cachedResponse) {
     return cachedResponse;
