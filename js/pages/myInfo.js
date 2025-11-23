@@ -2471,7 +2471,23 @@ function updateStatItemsWithValues(
 
 function updateKeyStats(allStats, allBondStats, allActiveStats) {
   // 환산타채 합 계산: 피해저항관통 + 피해저항 + (대인피해% × 10) + (대인방어% × 10)
+  // 화면에 표시된 값을 우선 사용, 없으면 계산된 값 사용
   const getTotalValue = (key) => {
+    // 화면에 표시된 총합값을 읽어옴
+    const statItem = elements.container?.querySelector(`[data-stat="${key}"]`);
+    if (statItem) {
+      const totalValueSpan = statItem.querySelector(".my-info-stat-total");
+      if (totalValueSpan) {
+        const displayedValue = totalValueSpan.textContent
+          .replace(/,/g, "")
+          .trim();
+        const parsedValue = parseFloat(displayedValue);
+        if (!isNaN(parsedValue)) {
+          return parsedValue;
+        }
+      }
+    }
+    // 화면에 표시된 값이 없으면 계산된 값 사용
     const baseValue = pageState.userStats[key] || 0;
     const bondValue = allBondStats[key] || 0;
     const activeValue = allActiveStats[key] || 0;
@@ -3052,13 +3068,39 @@ function setupEventListeners() {
           }
         }
 
-        // 스탯 기준값 저장
+        // 스탯 기준값 저장 - 화면에 표시된 총합값을 기준으로 저장
         allStats.forEach((stat) => {
-          const baseValue = pageState.userStats[stat.key] || 0;
-          const bondValue = allBondStats[stat.key] || 0;
-          const activeValue = allActiveStats[stat.key] || 0;
-          pageState.baselineStats[stat.key] =
-            baseValue + bondValue + activeValue;
+          // 화면에 표시된 총합값을 읽어옴
+          const statItem = elements.container?.querySelector(
+            `[data-stat="${stat.key}"]`
+          );
+          if (statItem) {
+            const totalValueSpan = statItem.querySelector(
+              ".my-info-stat-total"
+            );
+            if (totalValueSpan) {
+              // 화면에 표시된 값을 읽어서 숫자로 변환
+              const displayedValue = totalValueSpan.textContent
+                .replace(/,/g, "")
+                .trim();
+              const totalValue = parseFloat(displayedValue) || 0;
+              pageState.baselineStats[stat.key] = totalValue;
+            } else {
+              // totalValueSpan이 없으면 계산된 값 사용
+              const baseValue = pageState.userStats[stat.key] || 0;
+              const bondValue = allBondStats[stat.key] || 0;
+              const activeValue = allActiveStats[stat.key] || 0;
+              pageState.baselineStats[stat.key] =
+                baseValue + bondValue + activeValue;
+            }
+          } else {
+            // statItem이 없으면 계산된 값 사용
+            const baseValue = pageState.userStats[stat.key] || 0;
+            const bondValue = allBondStats[stat.key] || 0;
+            const activeValue = allActiveStats[stat.key] || 0;
+            pageState.baselineStats[stat.key] =
+              baseValue + bondValue + activeValue;
+          }
         });
 
         // 환수혼 경험치 기준값도 함께 저장
@@ -3089,31 +3131,43 @@ function setupEventListeners() {
 
         saveData();
 
-        // 모든 수동 편집 플래그 제거
-        const allStatItems =
-          elements.container?.querySelectorAll("[data-stat]");
-        if (allStatItems) {
-          allStatItems.forEach((item) => {
-            const totalValueSpan = item.querySelector(".my-info-stat-total");
-            if (totalValueSpan) {
-              delete totalValueSpan.dataset.isManuallyEdited;
-              delete totalValueSpan.dataset.lastEditedValue;
-              delete totalValueSpan.dataset.lastEditedTime;
+        // 저장 후에는 화면에 표시된 총합값을 유지하면서 증감만 0으로 업데이트
+        // 각 스탯의 총합값은 그대로 유지하고, 증감만 업데이트
+        allStats.forEach((stat) => {
+          const statItem = elements.container?.querySelector(
+            `[data-stat="${stat.key}"]`
+          );
+          if (statItem) {
+            const totalValueSpan = statItem.querySelector(
+              ".my-info-stat-total"
+            );
+            const changeValueSpan = statItem.querySelector(
+              ".my-info-stat-change"
+            );
+
+            if (totalValueSpan && changeValueSpan) {
+              // 현재 화면에 표시된 총합값 유지 (이미 저장된 baselineStats와 동일)
+              // 증감만 0으로 업데이트
+              changeValueSpan.textContent = "(0)";
+              changeValueSpan.className = "my-info-stat-change neutral";
+              changeValueSpan.style.display = "inline";
+              changeValueSpan.style.visibility = "visible";
+
+              // 수동 편집 플래그는 유지 (사용자가 입력한 값이므로)
             }
-          });
-        }
+          }
+        });
 
         // recentlyEditedStats 초기화
         if (pageState.recentlyEditedStats) {
           pageState.recentlyEditedStats.clear();
         }
 
-        // 캐시 무효화 및 업데이트
+        // 캐시 무효화
         pageState.lastTotalStatsHash = null;
         pageState.lastTotalStatsCalculation = null;
 
-        // 증감을 0으로 표시하기 위해 forceZeroChange=true로 업데이트
-        updateStatItemsWithValues(allStats, allBondStats, allActiveStats, true);
+        // 주요 스탯 변화 업데이트 (증감은 0으로)
         updateKeyStats(allStats, allBondStats, allActiveStats);
 
         // 저장 피드백
