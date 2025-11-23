@@ -21,6 +21,11 @@ const pageState = {
   },
   userStats: {}, // 사용자 기본 스탯
   baselineStats: {}, // 저장된 기준 스탯 (합산 결과)
+  baselineKeyStats: {
+    tachaeTotal: 0, // 환산타채 합 기준값
+    statusEffectResistance: 0, // 상태이상저항 기준값
+    statusEffectAccuracy: 0, // 상태이상적중 기준값
+  },
   expTable: null, // 경험치 테이블 (캐시)
   lastSoulExpCalculation: null, // 마지막 경험치 계산 결과 (캐시)
   lastSoulExpHash: null, // 마지막 계산 시 사용된 데이터 해시
@@ -30,6 +35,13 @@ const pageState = {
   savedSoulExp: 0, // 저장된 기준 총 환수혼 경험치
   recentlyEditedStats: new Set(), // 방금 편집한 스탯 목록 (updateTotalStats에서 업데이트하지 않도록)
   isSavingBaseline: false, // 기준값 저장 중 플래그
+  isInitialLoad: true, // 초기 로딩 플래그 (저장된 값 표시용)
+  engravingData: {
+    // 각인 데이터: { 카테고리: { 환수이름: { 스탯키: 각인점수 } } }
+    수호: {},
+    탑승: {},
+    변신: {},
+  },
 };
 
 const elements = {};
@@ -430,9 +442,55 @@ function getHTML() {
       }
 
       .my-info-bond-slot.filled.used-spirit {
-        border: 2px solid var(--color-secondary, #4CAF50);
-        box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+        border: 2px solid #FF6B35;
+        box-shadow: 0 0 8px rgba(255, 107, 53, 0.6);
         position: relative;
+        background: linear-gradient(135deg, rgba(255, 107, 53, 0.2) 0%, rgba(255, 107, 53, 0.05) 100%);
+        animation: usedSpiritShake 4s ease-in-out infinite;
+      }
+
+      @keyframes usedSpiritShake {
+        0%, 100% { 
+          transform: translate(0, 0) rotate(0deg);
+          box-shadow: 0 0 8px rgba(255, 107, 53, 0.6);
+        }
+        25% { 
+          transform: translate(-0.5px, -0.5px) rotate(-0.3deg);
+        }
+        50% { 
+          transform: translate(0.5px, 0.5px) rotate(0.3deg);
+          box-shadow: 0 0 10px rgba(255, 107, 53, 0.7);
+        }
+        75% { 
+          transform: translate(-0.5px, 0.5px) rotate(-0.3deg);
+        }
+      }
+
+      .my-info-bond-slot.filled.used-spirit::before {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        border: 2px solid transparent;
+        border-radius: 3px;
+        background: linear-gradient(45deg, #FF6B35, #FF8C42, #FF6B35) border-box;
+        -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        animation: usedSpiritRotate 3s linear infinite;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      @keyframes usedSpiritRotate {
+        0% { 
+          background: linear-gradient(0deg, #FF6B35, #FF8C42, #FF6B35);
+        }
+        100% { 
+          background: linear-gradient(360deg, #FF6B35, #FF8C42, #FF6B35);
+        }
       }
 
       .my-info-bond-slot.filled.used-spirit::after {
@@ -440,13 +498,40 @@ function getHTML() {
         position: absolute;
         top: 2px;
         left: 2px;
-        background: var(--color-secondary, #4CAF50);
+        background: linear-gradient(135deg, #FF6B35 0%, #FF8C42 100%);
         color: white;
         font-size: 8px;
-        font-weight: 600;
-        padding: 1px 3px;
+        font-weight: 700;
+        padding: 2px 4px;
         border-radius: 2px;
-        z-index: 5;
+        z-index: 10;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        animation: usedSpiritBadgeShine 2s ease-in-out infinite;
+      }
+
+      @keyframes usedSpiritBadgeShine {
+        0%, 100% { 
+          opacity: 1;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        50% { 
+          opacity: 0.9;
+          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.6), 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+      }
+
+      .my-info-bond-slot.filled.used-spirit img {
+        animation: usedSpiritImageGlow 2s ease-in-out infinite;
+      }
+
+      @keyframes usedSpiritImageGlow {
+        0%, 100% { 
+          filter: brightness(1) drop-shadow(0 0 0 rgba(255, 107, 53, 0));
+        }
+        50% { 
+          filter: brightness(1.1) drop-shadow(0 0 8px rgba(255, 107, 53, 0.6));
+        }
       }
 
       .my-info-bond-slot img {
@@ -491,11 +576,26 @@ function getHTML() {
       }
 
       #myInfoSpiritGrid .img-name {
-        font-size: 8px !important;
-        min-height: 12px !important;
-        padding: 0 1px !important;
+        font-size: 11px !important;
+        min-height: 16px !important;
+        padding: 2px 4px !important;
         margin: 0 !important;
-        line-height: 1 !important;
+        line-height: 1.2 !important;
+        font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+      }
+
+      #myInfoSpiritGrid .img-wrapper:hover .img-name {
+        font-size: 12px !important;
+        color: var(--color-primary) !important;
+        font-weight: 700 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+        transform: translateY(-1px) !important;
+      }
+
+      #myInfoSpiritGrid .img-wrapper:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
       }
 
 
@@ -543,9 +643,42 @@ function getHTML() {
         border: 2px solid var(--color-primary);
         border-radius: var(--radius-md);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        padding: 0;
+        min-width: 320px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .my-info-spirit-popup-content {
         padding: var(--space-md);
-        min-width: 200px;
-        max-width: 300px;
+        position: relative;
+      }
+
+      .kakao-ad-popup-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: var(--space-sm) 0;
+        background: var(--bg-gray);
+        border-bottom: 1px solid var(--border-light);
+      }
+
+      .kakao-ad-popup-container.desktop-popup-ad {
+        min-height: 90px;
+      }
+
+      .kakao-ad-popup-container.mobile-popup-ad {
+        min-height: 50px;
+      }
+
+      .kakao-ad-popup-container .kakao_ad_area {
+        display: block;
+        margin: 0 auto;
       }
 
       .my-info-spirit-popup::before {
@@ -585,6 +718,73 @@ function getHTML() {
         flex: 1;
       }
 
+      .spirit-level-control {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin: var(--space-md) 0;
+        padding: var(--space-sm);
+        background: var(--bg-gray);
+        border-radius: var(--radius-md);
+      }
+
+      .level-btn {
+        width: 36px;
+        height: 36px;
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-size: 18px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition-normal);
+      }
+
+      .level-btn:hover {
+        background: var(--color-primary-dark, #1976D2);
+        transform: scale(1.05);
+      }
+
+      .level-btn:active {
+        transform: scale(0.95);
+      }
+
+      .level-input {
+        width: 60px;
+        height: 36px;
+        padding: 0;
+        border: 2px solid var(--color-primary);
+        border-radius: 4px;
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+        background: white;
+      }
+
+      .level-input:focus {
+        outline: none;
+        border-color: var(--color-primary-dark, #1976D2);
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+      }
+
+      .fixed-level-control {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-sm);
+      }
+
+      .fixed-level-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+
       .my-info-spirit-popup-level {
         margin-top: var(--space-sm);
         margin-bottom: var(--space-sm);
@@ -619,6 +819,12 @@ function getHTML() {
         border-color: var(--color-danger, #e74c3c);
       }
 
+      .my-info-spirit-popup-action-btn.engraving {
+        background: var(--color-primary);
+        color: white;
+        border-color: var(--color-primary);
+      }
+
       .my-info-spirit-popup-action-btn:hover {
         opacity: 0.9;
         transform: translateY(-1px);
@@ -626,20 +832,237 @@ function getHTML() {
 
       .my-info-spirit-popup-close {
         position: absolute;
-        top: 4px;
-        right: 4px;
-        width: 20px;
-        height: 20px;
+        top: 8px;
+        right: 8px;
+        width: 24px;
+        height: 24px;
         background: var(--color-danger);
         color: white;
         border: none;
         border-radius: 50%;
         cursor: pointer;
-        font-size: 12px;
+        font-size: 16px;
         display: flex;
         align-items: center;
         justify-content: center;
         line-height: 1;
+        z-index: 1001;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transition: var(--transition-normal);
+      }
+
+      .my-info-spirit-popup-close:hover {
+        background: #c0392b;
+        transform: scale(1.1);
+      }
+
+      .my-info-engraving-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--bg-white);
+        border: 2px solid var(--color-primary);
+        border-radius: var(--radius-md);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        padding: 0;
+        z-index: 2000;
+        width: 600px;
+        max-width: 90vw;
+        height: auto;
+        max-height: 95vh;
+        overflow: visible;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .kakao-ad-engraving-container {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: var(--space-sm) 0;
+        background: var(--bg-gray);
+        border-bottom: 1px solid var(--border-light);
+        min-height: 90px;
+      }
+
+      .kakao-ad-engraving-container .kakao_ad_area {
+        display: block;
+        margin: 0 auto;
+      }
+
+      .my-info-engraving-modal-content {
+        padding: var(--space-lg);
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .my-info-engraving-tab-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: visible;
+        min-height: 0;
+      }
+
+      #registrationItemsContainer,
+      #bindItemsContainer {
+        min-height: 300px;
+        overflow: visible;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: none;
+        flex-wrap: wrap;
+      }
+
+      .my-info-engraving-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-md);
+        padding-bottom: var(--space-sm);
+        border-bottom: 1px solid var(--border-light);
+      }
+
+      .my-info-engraving-modal-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .my-info-engraving-modal-close {
+        width: 24px;
+        height: 24px;
+        background: var(--color-danger);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+      }
+
+      .my-info-engraving-tabs {
+        display: flex;
+        gap: var(--space-xs);
+        margin-bottom: var(--space-md);
+        border-bottom: 2px solid var(--border-light);
+      }
+
+      .my-info-engraving-tab {
+        padding: var(--space-sm) var(--space-md);
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        transition: all 0.2s;
+        margin-bottom: -2px;
+      }
+
+      .my-info-engraving-tab:hover {
+        color: var(--color-primary);
+      }
+
+      .my-info-engraving-tab.active {
+        color: var(--color-primary);
+        border-bottom-color: var(--color-primary);
+      }
+
+      .my-info-engraving-tab-content {
+        display: none;
+        flex: 1;
+        flex-direction: column;
+        overflow-y: auto;
+        min-height: 0;
+      }
+
+      .my-info-engraving-tab-content.active {
+        display: flex;
+      }
+
+      .my-info-engraving-item {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-sm);
+        padding: var(--space-sm);
+        background: var(--bg-gray);
+        border-radius: var(--radius-md);
+      }
+
+      .my-info-engraving-stat-select {
+        flex: 1;
+        padding: 6px;
+        border: 1px solid var(--border-medium);
+        border-radius: 4px;
+        font-size: 12px;
+      }
+
+      .my-info-engraving-value-input {
+        width: 70px;
+        padding: 6px;
+        border: 1px solid var(--border-medium);
+        border-radius: 4px;
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .my-info-engraving-value-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        white-space: nowrap;
+      }
+
+      .my-info-engraving-remove-btn {
+        padding: 4px 8px;
+        background: var(--color-danger);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+      }
+
+      .my-info-engraving-add-btn {
+        width: 100%;
+        padding: 8px;
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: var(--space-sm);
+      }
+
+      .my-info-engraving-add-btn:disabled {
+        background: var(--bg-gray);
+        color: var(--text-secondary);
+        cursor: not-allowed;
+      }
+
+      .my-info-engraving-save-btn {
+        width: 100%;
+        padding: 10px;
+        background: var(--color-secondary, #4CAF50);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        margin-top: var(--space-md);
       }
 
       .my-info-soul-exp-info {
@@ -847,6 +1270,7 @@ function getHTML() {
                   <div class="my-info-key-stat-value" id="keyStatResistance">-</div>
                   <div class="my-info-key-stat-change" id="keyStatResistanceChange">-</div>
                 </div>
+
               </div>
               <div class="my-info-key-stat-item">
                 <div class="my-info-key-stat-label">상태이상적중</div>
@@ -945,20 +1369,26 @@ function createStatItem(stat) {
 }
 
 function handleStatEdit(item, statKey, valueSpan) {
-  // 현재 총합값 계산 (기본값 + 결속값 + 활성값)
-  const currentBaseValue = pageState.userStats[statKey] || 0;
-  let currentBondValue = 0;
-  let currentActiveValue = 0;
+  // 화면에 표시된 총합값을 읽어옴 (저장된 값 또는 계산된 값)
+  const totalValueSpan = item.querySelector(".my-info-stat-total");
+  let currentTotalValue = 0;
 
-  if (pageState.lastTotalStatsCalculation) {
-    currentBondValue =
-      pageState.lastTotalStatsCalculation.allBondStats[statKey] || 0;
-    currentActiveValue =
-      pageState.lastTotalStatsCalculation.allActiveStats[statKey] || 0;
+  if (totalValueSpan && totalValueSpan.textContent) {
+    // 화면에 표시된 값을 파싱 (콤마 제거)
+    const displayedText = totalValueSpan.textContent.replace(/,/g, "");
+    currentTotalValue = parseFloat(displayedText) || 0;
+  } else {
+    // 화면에 값이 없으면 계산된 값 사용
+    const currentBaseValue = pageState.userStats[statKey] || 0;
+    let currentTotalStatsValue = 0;
+
+    if (pageState.lastTotalStatsCalculation) {
+      currentTotalStatsValue =
+        pageState.lastTotalStatsCalculation.allTotalStats?.[statKey] || 0;
+    }
+
+    currentTotalValue = currentBaseValue + currentTotalStatsValue;
   }
-
-  const currentTotalValue =
-    currentBaseValue + currentBondValue + currentActiveValue;
 
   item.classList.add("editing");
   const input = createElement("input", "my-info-stat-input");
@@ -969,7 +1399,6 @@ function handleStatEdit(item, statKey, valueSpan) {
 
   // totalValue와 changeValue는 숨기지 않고 input과 함께 표시
   const valueContainer = item.querySelector(".my-info-stat-value");
-  const totalValueSpan = item.querySelector(".my-info-stat-total");
   const changeValueSpan = item.querySelector(".my-info-stat-change");
 
   // input을 totalValueSpan 앞에 삽입 (값이 실시간으로 보이도록)
@@ -1107,45 +1536,18 @@ function handleStatEdit(item, statKey, valueSpan) {
       input.remove();
     }
 
-    // 현재 캐시된 결속/활성 스탯 가져오기
-    let bondValue = 0;
-    let activeValue = 0;
+    // 현재 캐시된 전체 스탯 가져오기 (allTotalStats 사용)
+    let totalStatsValue = 0;
 
     if (pageState.lastTotalStatsCalculation) {
-      bondValue =
-        pageState.lastTotalStatsCalculation.allBondStats[statKey] || 0;
-      activeValue =
-        pageState.lastTotalStatsCalculation.allActiveStats[statKey] || 0;
-    } else {
-      // 캐시가 없으면 간단히 활성 스탯만 계산
-      const categories = ["수호", "탑승", "변신"];
-      for (const category of categories) {
-        const active = pageState.activeSpirits[category];
-        if (active) {
-          const spirit = getSpiritsForCategory(category).find(
-            (s) => s.name === active.name
-          );
-          if (spirit) {
-            const levelStat = spirit.stats?.find(
-              (s) => s.level === active.level
-            );
-            if (
-              levelStat?.registrationStat &&
-              levelStat.registrationStat[statKey]
-            ) {
-              const numValue =
-                typeof levelStat.registrationStat[statKey] === "number"
-                  ? levelStat.registrationStat[statKey]
-                  : parseFloat(levelStat.registrationStat[statKey]) || 0;
-              activeValue += numValue;
-            }
-          }
-        }
-      }
+      totalStatsValue =
+        pageState.lastTotalStatsCalculation.allTotalStats?.[statKey] || 0;
     }
 
     // 사용자가 입력한 값이 총합값이므로, 기본값을 역산
-    const newBaseValue = inputTotalValue - bondValue - activeValue;
+    // totalValue = baseValue + allTotalStats
+    // 따라서 baseValue = totalValue - allTotalStats
+    const newBaseValue = inputTotalValue - totalStatsValue;
 
     // userStats에 기본값 저장
     pageState.userStats[statKey] = Math.max(0, newBaseValue); // 음수 방지
@@ -1185,13 +1587,15 @@ function handleStatEdit(item, statKey, valueSpan) {
       console.log(`[${statKey}] finishEdit - 값 업데이트:`, {
         입력한_총합값: inputTotalValue,
         계산된_기본값: newBaseValue,
-        bondValue,
-        activeValue,
+        totalStatsValue,
         totalValue,
         formattedValue,
         실제_DOM_값: totalValueSpan.textContent,
       });
     }
+
+    // 스탯 업데이트 (합산합 재계산)
+    debouncedUpdateTotalStats();
 
     // changeValueSpan 업데이트
     if (changeValueSpan) {
@@ -1229,7 +1633,7 @@ function handleStatEdit(item, statKey, valueSpan) {
     // 주요 스탯만 업데이트 (전체 스탯 리스트는 업데이트하지 않음)
     if (pageState.lastTotalStatsCalculation) {
       const calc = pageState.lastTotalStatsCalculation;
-      updateKeyStats(STATS_CONFIG, calc.allBondStats, calc.allActiveStats);
+      updateKeyStats(STATS_CONFIG, calc.allTotalStats || calc.allBondStats, {});
     } else {
       // 캐시가 없으면 최소한의 계산만 수행
       const categories = ["수호", "탑승", "변신"];
@@ -1260,8 +1664,8 @@ function handleStatEdit(item, statKey, valueSpan) {
         }
       }
 
-      // 주요 스탯만 업데이트
-      updateKeyStats(STATS_CONFIG, allBondStats, allActiveStats);
+      // 주요 스탯만 업데이트 (빈 객체 전달, 실제 계산은 updateTotalStats에서 수행)
+      updateKeyStats(STATS_CONFIG, {}, {});
     }
   };
 
@@ -1344,6 +1748,27 @@ function loadSavedData() {
       Logger.error("Error loading saved soul exp:", e);
     }
   }
+
+  // 각인 데이터 로드
+  const savedEngraving = localStorage.getItem("myInfo_engravingData");
+  if (savedEngraving) {
+    try {
+      pageState.engravingData = JSON.parse(savedEngraving);
+    } catch (e) {
+      Logger.error("Error loading engraving data:", e);
+      pageState.engravingData = { 수호: {}, 탑승: {}, 변신: {} };
+    }
+  }
+
+  // 기준 주요 스탯 로드 (환산타채 합 등)
+  const savedBaselineKeyStats = localStorage.getItem("myInfo_baselineKeyStats");
+  if (savedBaselineKeyStats) {
+    try {
+      pageState.baselineKeyStats = JSON.parse(savedBaselineKeyStats);
+    } catch (e) {
+      Logger.error("Error loading baseline key stats:", e);
+    }
+  }
 }
 
 function saveData() {
@@ -1360,8 +1785,16 @@ function saveData() {
     JSON.stringify(pageState.baselineStats)
   );
   localStorage.setItem(
+    "myInfo_baselineKeyStats",
+    JSON.stringify(pageState.baselineKeyStats)
+  );
+  localStorage.setItem(
     "myInfo_savedSoulExp",
     pageState.savedSoulExp.toString()
+  );
+  localStorage.setItem(
+    "myInfo_engravingData",
+    JSON.stringify(pageState.engravingData)
   );
 }
 
@@ -1398,7 +1831,7 @@ function renderBondSlots(category) {
       levelBadge.className = "level-badge";
       levelBadge.style.position = "absolute";
       levelBadge.style.bottom = "1px";
-      levelBadge.style.left = "1px";
+      levelBadge.style.right = "1px";
       levelBadge.style.background = "rgba(0,0,0,0.7)";
       levelBadge.style.color = "white";
       levelBadge.style.padding = "1px 3px";
@@ -1408,6 +1841,34 @@ function renderBondSlots(category) {
       levelBadge.textContent = `Lv.${spirit.level || 25}`;
       levelBadge.style.pointerEvents = "none";
       slot.appendChild(levelBadge);
+
+      // 각인 표시 (각인이 있는 경우)
+      const engraving = pageState.engravingData[category]?.[spirit.name];
+      if (engraving) {
+        const hasRegistration =
+          Array.isArray(engraving.registration) &&
+          engraving.registration.length > 0;
+        const hasBind =
+          engraving.bind && Object.keys(engraving.bind).length > 0;
+
+        if (hasRegistration || hasBind) {
+          const engravingBadge = createElement("div");
+          engravingBadge.className = "engraving-badge";
+          engravingBadge.style.position = "absolute";
+          engravingBadge.style.top = "1px";
+          engravingBadge.style.right = "1px";
+          engravingBadge.style.background = "var(--color-primary)";
+          engravingBadge.style.color = "white";
+          engravingBadge.style.padding = "2px 4px";
+          engravingBadge.style.borderRadius = "2px";
+          engravingBadge.style.fontSize = "8px";
+          engravingBadge.style.fontWeight = "700";
+          engravingBadge.textContent = "각인";
+          engravingBadge.style.pointerEvents = "none";
+          engravingBadge.style.zIndex = "10";
+          slot.appendChild(engravingBadge);
+        }
+      }
 
       // x 버튼 제거 (팝업에서 제거 가능)
     } else {
@@ -1602,8 +2063,8 @@ function showSpiritLevelPopup(category, index, slot, event) {
 
   // 클릭 위치 기준으로 팝업 위치 설정
   const rect = slot.getBoundingClientRect();
-  const popupWidth = 250; // 예상 너비
-  const popupHeight = 180; // 예상 높이
+  const popupWidth = Math.min(500, window.innerWidth - 40); // 최대 500px, 화면 크기 고려
+  const popupHeight = Math.min(600, window.innerHeight - 40); // 최대 600px, 화면 크기 고려
 
   // 기본 위치: 슬롯 아래 중앙
   let left = rect.left + rect.width / 2 - popupWidth / 2;
@@ -1632,35 +2093,71 @@ function showSpiritLevelPopup(category, index, slot, event) {
 
   popup.innerHTML = `
     <button class="my-info-spirit-popup-close">×</button>
-    <div class="my-info-spirit-popup-header">
-      <img src="${spirit.image}" alt="${spirit.name}">
-      <div class="my-info-spirit-popup-name">${spirit.name}</div>
+    <div class="kakao-ad-popup-container desktop-popup-ad">
+      <ins class="kakao_ad_area"
+          data-ad-unit="DAN-aOM3JPGvOLhHlyoS"
+          data-ad-width="728"
+          data-ad-height="90"></ins>
     </div>
-    <div class="spirit-level-control">
-      ${
-        isFixed
-          ? `<div class="fixed-level-control">
-              <span class="fixed-level-label">25 (고정)</span>
-            </div>`
-          : `<button class="level-btn minus-btn" data-action="level-down">-</button>
-            <input type="number" class="level-input" min="0" max="25" value="${
-              spirit.level || 25
-            }">
-            <button class="level-btn plus-btn" data-action="level-up">+</button>`
-      }
+    <div class="kakao-ad-popup-container mobile-popup-ad">
+      <ins class="kakao_ad_area"
+          data-ad-unit="DAN-epbkjAaeHSxv0MYl"
+          data-ad-width="320"
+          data-ad-height="50"></ins>
     </div>
-    <div class="my-info-spirit-popup-actions">
-      <button class="my-info-spirit-popup-action-btn ${
-        isActive ? "active" : ""
-      }" data-action="set-active">
-        ${isActive ? "✓ 사용 중" : "사용 중"}
-      </button>
-      <button class="my-info-spirit-popup-action-btn remove" data-action="remove">제거</button>
+    <div class="my-info-spirit-popup-content">
+      <div class="my-info-spirit-popup-header">
+        <img src="${spirit.image}" alt="${spirit.name}">
+        <div class="my-info-spirit-popup-name">${spirit.name}</div>
+      </div>
+      <div class="spirit-level-control">
+        ${
+          isFixed
+            ? `<div class="fixed-level-control">
+                <span class="fixed-level-label">레벨 25 (고정)</span>
+              </div>`
+            : `<div style="display: flex; align-items: center; gap: 8px; width: 100%; justify-content: center;">
+                <button class="level-btn minus-btn" data-action="level-down">-</button>
+                <input type="number" class="level-input" min="0" max="25" value="${
+                  spirit.level || 25
+                }">
+                <button class="level-btn plus-btn" data-action="level-up">+</button>
+              </div>`
+        }
+      </div>
+      <div class="my-info-spirit-popup-actions">
+        <button class="my-info-spirit-popup-action-btn ${
+          isActive ? "active" : ""
+        }" data-action="set-active">
+          ${isActive ? "✓ 사용 중" : "사용 중"}
+        </button>
+        <button class="my-info-spirit-popup-action-btn engraving" data-action="engraving">각인추가</button>
+        <button class="my-info-spirit-popup-action-btn remove" data-action="remove">제거</button>
+      </div>
     </div>
   `;
 
   document.body.appendChild(popup);
   currentPopup = popup;
+
+  // 광고 렌더링
+  setTimeout(() => {
+    try {
+      const desktopAdElement = popup.querySelector(
+        ".desktop-popup-ad .kakao_ad_area"
+      );
+      const mobileAdElement = popup.querySelector(
+        ".mobile-popup-ad .kakao_ad_area"
+      );
+
+      if (window.adfit && typeof window.adfit.render === "function") {
+        if (desktopAdElement) window.adfit.render(desktopAdElement);
+        if (mobileAdElement) window.adfit.render(mobileAdElement);
+      }
+    } catch (error) {
+      Logger.error("Kakao AdFit: Error rendering ads in popup:", error);
+    }
+  }, 100);
 
   // 이벤트 리스너
   const closeBtn = popup.querySelector(".my-info-spirit-popup-close");
@@ -1962,6 +2459,430 @@ function showSpiritLevelPopup(category, index, slot, event) {
     stopPopupLongPress();
     removeBondSpirit(category, index);
     cleanup();
+  });
+
+  const engravingBtn = popup.querySelector("[data-action='engraving']");
+  if (engravingBtn) {
+    engravingBtn.addEventListener("click", () => {
+      showEngravingModal(category, spirit.name, spirit);
+    });
+  }
+}
+
+// 각인 설정 모달 표시
+function showEngravingModal(category, spiritName, spirit) {
+  // 기존 모달 제거
+  const existingModal = document.querySelector(".my-info-engraving-modal");
+  if (existingModal) {
+    existingModal.remove();
+  }
+
+  // 현재 각인 데이터 가져오기
+  const currentEngraving =
+    pageState.engravingData[category]?.[spiritName] || {};
+
+  // 등록효과 개수 확인 (새 데이터 구조)
+  const registrationCount = Array.isArray(currentEngraving.registration)
+    ? currentEngraving.registration.length
+    : 0;
+
+  // 모달 생성
+  const modal = createElement("div", "my-info-engraving-modal");
+  modal.innerHTML = `
+    <div class="kakao-ad-engraving-container">
+      <ins class="kakao_ad_area" style="display:none;"
+          data-ad-unit="DAN-kZBVsx56qwzvnaxx"
+          data-ad-width="728"
+          data-ad-height="90"></ins>
+    </div>
+    <div class="my-info-engraving-modal-content">
+      <div class="my-info-engraving-modal-header">
+        <div class="my-info-engraving-modal-title">${spiritName} 각인 설정</div>
+        <button class="my-info-engraving-modal-close">×</button>
+      </div>
+      <div class="my-info-engraving-tabs">
+        <button class="my-info-engraving-tab active" data-tab="registration">등록효과</button>
+        <button class="my-info-engraving-tab" data-tab="bind">장착효과</button>
+      </div>
+      <div class="my-info-engraving-tab-content active" id="registrationTab">
+        <div id="registrationItemsContainer"></div>
+        <button class="my-info-engraving-add-btn" id="addEngravingBtn" ${
+          registrationCount >= 4 ? "disabled" : ""
+        }>
+          + 등록효과 추가 (${registrationCount}/4)
+        </button>
+      </div>
+      <div class="my-info-engraving-tab-content" id="bindTab">
+        <div id="bindItemsContainer"></div>
+      </div>
+      <button class="my-info-engraving-save-btn" id="saveEngravingBtn">저장</button>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // 광고 렌더링
+  setTimeout(() => {
+    try {
+      const adElement = modal.querySelector(
+        ".kakao-ad-engraving-container .kakao_ad_area"
+      );
+      if (
+        adElement &&
+        window.adfit &&
+        typeof window.adfit.render === "function"
+      ) {
+        adElement.style.display = "block";
+        window.adfit.render(adElement);
+      }
+    } catch (error) {
+      Logger.error(
+        "Kakao AdFit: Error rendering ad in engraving modal:",
+        error
+      );
+    }
+  }, 100);
+
+  const registrationContainer = modal.querySelector(
+    "#registrationItemsContainer"
+  );
+  const bindContainer = modal.querySelector("#bindItemsContainer");
+  const addBtn = modal.querySelector("#addEngravingBtn");
+  const saveBtn = modal.querySelector("#saveEngravingBtn");
+  const closeBtn = modal.querySelector(".my-info-engraving-modal-close");
+  const tabs = modal.querySelectorAll(".my-info-engraving-tab");
+  const tabContents = modal.querySelectorAll(".my-info-engraving-tab-content");
+
+  // 등록효과와 장착효과 데이터 가져오기
+  function getEngravingData() {
+    const currentEngraving =
+      pageState.engravingData[category]?.[spiritName] || {};
+
+    // 기존 데이터 구조 호환성 처리
+    let registrationItems = [];
+    let bindStats = {};
+
+    // 새로운 데이터 구조 확인 (registration 또는 bind 속성이 있으면)
+    if (
+      currentEngraving.registration !== undefined ||
+      currentEngraving.bind !== undefined
+    ) {
+      // 새로운 데이터 구조
+      registrationItems = Array.isArray(currentEngraving.registration)
+        ? currentEngraving.registration
+        : [];
+      bindStats = currentEngraving.bind || {};
+    } else if (Object.keys(currentEngraving).length > 0) {
+      // 기존 데이터 구조 변환 (빈 객체가 아닌 경우만)
+      Object.entries(currentEngraving).forEach(([statKey, engravingData]) => {
+        if (typeof engravingData === "object" && engravingData !== null) {
+          // { registration: value, bind: value } 형태
+          if (engravingData.registration !== undefined) {
+            registrationItems.push({
+              statKey: statKey,
+              value: engravingData.registration,
+            });
+          }
+          if (engravingData.bind !== undefined) {
+            bindStats[statKey] = engravingData.bind;
+          }
+        } else {
+          // 단일 값 형태 (등록효과로 간주)
+          registrationItems.push({
+            statKey: statKey,
+            value: engravingData,
+          });
+        }
+      });
+    }
+
+    return { registrationItems, bindStats };
+  }
+
+  // 등록효과 탭 렌더링
+  function renderRegistrationTab() {
+    registrationContainer.innerHTML = "";
+    const { registrationItems } = getEngravingData();
+
+    // 등록효과 항목 렌더링 (각 항목을 개별적으로 표시)
+    registrationItems.forEach((regItem, index) => {
+      const statKey = regItem.statKey || "";
+      const value = regItem.value || "";
+      const item = createEngravingItem(
+        statKey,
+        value,
+        "",
+        "registration",
+        index
+      );
+      registrationContainer.appendChild(item);
+    });
+
+    // 추가 버튼 상태 업데이트
+    if (addBtn) {
+      const registrationCount = registrationItems.length;
+      addBtn.disabled = registrationCount >= 4;
+      addBtn.textContent = `+ 등록효과 추가 (${registrationCount}/4)`;
+    }
+  }
+
+  // 장착효과 탭 렌더링 (등록효과에 있는 고유한 스탯만 표시)
+  function renderBindTab() {
+    bindContainer.innerHTML = "";
+
+    // 등록효과 컨테이너에서 현재 입력된 값들을 가져옴
+    const registrationItemsElements = registrationContainer.querySelectorAll(
+      '.my-info-engraving-item[data-type="registration"]'
+    );
+
+    // 등록효과에서 고유한 스탯 추출 (스탯이 선택된 경우 모두 포함)
+    const uniqueStats = new Set();
+    registrationItemsElements.forEach((item) => {
+      const statSelect = item.querySelector(".my-info-engraving-stat-select");
+      const statKey = statSelect?.value || "";
+
+      // 스탯이 선택된 경우 모두 포함 (값은 나중에 입력 가능)
+      if (statKey) {
+        uniqueStats.add(statKey);
+      }
+    });
+
+    // 저장된 장착효과 데이터 가져오기
+    const { bindStats } = getEngravingData();
+
+    // 고유한 스탯별로 장착효과 항목 생성
+    uniqueStats.forEach((statKey) => {
+      const currentValue = bindStats[statKey] || "";
+      const item = createEngravingItem(statKey, "", currentValue, "bind");
+      bindContainer.appendChild(item);
+    });
+  }
+
+  // 전체 렌더링
+  function renderEngravingItems() {
+    renderRegistrationTab();
+    renderBindTab();
+  }
+
+  // 각인 항목 생성
+  function createEngravingItem(
+    statKey = "",
+    registrationValue = "",
+    bindValue = "",
+    type = "registration", // "registration" 또는 "bind"
+    registrationIndex = null // 등록효과 항목의 인덱스
+  ) {
+    const item = createElement("div", "my-info-engraving-item");
+    item.dataset.type = type;
+    if (registrationIndex !== null) {
+      item.dataset.registrationIndex = registrationIndex;
+    }
+
+    // 스탯 선택 드롭다운
+    const statSelect = createElement("select", "my-info-engraving-stat-select");
+    statSelect.innerHTML = '<option value="">스탯 선택</option>';
+    STATS_CONFIG.forEach((stat) => {
+      const option = createElement("option");
+      option.value = stat.key;
+      option.textContent = stat.name;
+      if (stat.key === statKey) {
+        option.selected = true;
+      }
+      statSelect.appendChild(option);
+    });
+
+    if (type === "registration") {
+      // 등록효과: 개별 항목
+      const registrationLabel = createElement(
+        "span",
+        "my-info-engraving-value-label"
+      );
+      registrationLabel.textContent = "등록:";
+      const registrationInput = createElement(
+        "input",
+        "my-info-engraving-value-input"
+      );
+      registrationInput.type = "number";
+      registrationInput.min = "0";
+      registrationInput.value = registrationValue;
+      registrationInput.placeholder = "등록";
+
+      // 스탯 선택 변경 시 장착효과 탭 업데이트
+      statSelect.addEventListener("change", () => {
+        renderBindTab();
+      });
+
+      item.appendChild(statSelect);
+      item.appendChild(registrationLabel);
+      item.appendChild(registrationInput);
+    } else {
+      // 장착효과: 합산값 (스탯은 고정)
+      const statName =
+        STATS_CONFIG.find((s) => s.key === statKey)?.name || statKey;
+      const statLabel = createElement("span", "my-info-engraving-value-label");
+      statLabel.textContent = statName;
+      statLabel.style.fontWeight = "600";
+      statLabel.style.minWidth = "100px";
+
+      // statKey를 data 속성에 저장
+      item.dataset.statKey = statKey;
+
+      const bindLabel = createElement("span", "my-info-engraving-value-label");
+      bindLabel.textContent = "합산:";
+      const bindInput = createElement("input", "my-info-engraving-value-input");
+      bindInput.type = "number";
+      bindInput.min = "0";
+      bindInput.value = bindValue;
+      bindInput.placeholder = "합산값";
+
+      item.appendChild(statLabel);
+      item.appendChild(bindLabel);
+      item.appendChild(bindInput);
+    }
+
+    // 제거 버튼 (등록효과에만 표시)
+    if (type === "registration") {
+      const removeBtn = createElement("button", "my-info-engraving-remove-btn");
+      removeBtn.textContent = "×";
+      removeBtn.addEventListener("click", () => {
+        item.remove();
+        // 제거 후 버튼 상태만 업데이트 (렌더링은 하지 않음)
+        if (addBtn) {
+          const newCount = registrationContainer.querySelectorAll(
+            '.my-info-engraving-item[data-type="registration"]'
+          ).length;
+          addBtn.disabled = newCount >= 4;
+          addBtn.textContent = `+ 등록효과 추가 (${newCount}/4)`;
+        }
+        // 장착효과 탭 업데이트 (등록효과 변경 반영)
+        renderBindTab();
+      });
+      item.appendChild(removeBtn);
+    }
+
+    return item;
+  }
+
+  // 탭 전환 기능
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const targetTab = tab.dataset.tab;
+
+      // 탭 활성화
+      tabs.forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+
+      // 탭 컨텐츠 표시
+      tabContents.forEach((content) => {
+        content.classList.remove("active");
+        if (content.id === `${targetTab}Tab`) {
+          content.classList.add("active");
+        }
+      });
+    });
+  });
+
+  // 초기 렌더링
+  renderEngravingItems();
+
+  // 각인 추가 버튼 (등록효과만 추가)
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      // 현재 등록효과 항목 수 확인
+      const currentRegistrationItems = registrationContainer.querySelectorAll(
+        '.my-info-engraving-item[data-type="registration"]'
+      );
+      if (currentRegistrationItems.length >= 4) {
+        return;
+      }
+      const item = createEngravingItem("", "", "", "registration");
+      registrationContainer.appendChild(item);
+      // 등록효과 변경 시 장착효과 탭도 업데이트
+      renderBindTab();
+      // 버튼 상태만 업데이트
+      if (addBtn) {
+        const newCount = registrationContainer.querySelectorAll(
+          '.my-info-engraving-item[data-type="registration"]'
+        ).length;
+        addBtn.disabled = newCount >= 4;
+        addBtn.textContent = `+ 등록효과 추가 (${newCount}/4)`;
+      }
+    });
+  }
+
+  // 저장 버튼
+  if (saveBtn) {
+    saveBtn.addEventListener("click", () => {
+      const registrationItems = []; // 등록효과 배열
+      const bindStats = {}; // 장착효과 객체 (스탯별 합산값)
+
+      // 등록효과 항목 수집
+      const registrationItemsElements = registrationContainer.querySelectorAll(
+        '.my-info-engraving-item[data-type="registration"]'
+      );
+      registrationItemsElements.forEach((item) => {
+        const statSelect = item.querySelector(".my-info-engraving-stat-select");
+        const valueInput = item.querySelector(".my-info-engraving-value-input");
+        const statKey = statSelect.value;
+        const value = parseFloat(valueInput.value) || 0;
+
+        // 스탯이 선택된 경우 값이 0이어도 저장 (나중에 입력할 수 있도록)
+        if (statKey) {
+          registrationItems.push({
+            statKey: statKey,
+            value: value,
+          });
+        }
+      });
+
+      // 장착효과 항목 수집
+      const bindItemsElements = bindContainer.querySelectorAll(
+        '.my-info-engraving-item[data-type="bind"]'
+      );
+      bindItemsElements.forEach((item) => {
+        // statKey를 data 속성에서 가져옴
+        const statKey = item.dataset.statKey;
+        if (!statKey) return;
+
+        const valueInput = item.querySelector(".my-info-engraving-value-input");
+        const value = parseFloat(valueInput.value) || 0;
+
+        // 값이 0이어도 저장 (나중에 입력할 수 있도록)
+        bindStats[statKey] = value;
+      });
+
+      // 각인 데이터 저장
+      const engravingData = {
+        registration: registrationItems,
+        bind: bindStats,
+      };
+
+      if (!pageState.engravingData[category]) {
+        pageState.engravingData[category] = {};
+      }
+      pageState.engravingData[category][spiritName] = engravingData;
+      saveData();
+
+      // 스탯 업데이트
+      updateTotalStats();
+
+      // 모달 닫기
+      modal.remove();
+    });
+  }
+
+  // 닫기 버튼
+  if (closeBtn) {
+    closeBtn.addEventListener("click", () => {
+      modal.remove();
+    });
+  }
+
+  // 외부 클릭 시 닫기
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
   });
 }
 
@@ -2356,8 +3277,8 @@ function updateStatItems() {
 
 function updateStatItemsWithValues(
   allStats,
-  allBondStats,
-  allActiveStats,
+  allTotalStats, // 새로운 전체 스탯 변수 (allBondStats 대신)
+  allActiveStats, // 사용하지 않지만 호환성을 위해 유지
   forceZeroChange = false
 ) {
   if (!elements.container) {
@@ -2365,21 +3286,28 @@ function updateStatItemsWithValues(
   }
 
   allStats.forEach((stat) => {
-    // 나의 스탯은 전체 모든 점수를 합산한 스탯 (userStats + allBondStats + allActiveStats)
+    // 나의 스탯은 전체 모든 점수를 합산한 스탯 (userStats + allTotalStats)
     const baseValue = pageState.userStats[stat.key] || 0;
-    const bondValue = allBondStats[stat.key] || 0;
-    const activeValue = allActiveStats[stat.key] || 0;
-    const totalValue = baseValue + bondValue + activeValue;
+    const totalStatsValue = allTotalStats[stat.key] || 0;
+    const calculatedTotalValue = baseValue + totalStatsValue;
 
     // 기준값과 비교
     const baselineValue = pageState.baselineStats.hasOwnProperty(stat.key)
       ? pageState.baselineStats[stat.key]
-      : totalValue; // 기준값이 없으면 현재 값을 기준으로 설정하여 증감 0 표시
+      : calculatedTotalValue; // 기준값이 없으면 현재 값을 기준으로 설정하여 증감 0 표시
+
+    // 초기 로딩 시 저장된 값이 있으면 저장된 값을 표시, 아니면 계산된 값 표시
+    const hasBaseline = pageState.baselineStats.hasOwnProperty(stat.key);
+    const displayValue =
+      pageState.isInitialLoad && hasBaseline
+        ? baselineValue
+        : calculatedTotalValue;
 
     // forceZeroChange가 true이면 changeValue를 강제로 0으로 설정
+    // 모든 수치는 정수이므로 소수점 처리 없이 반올림
     let changeValue = forceZeroChange
       ? 0
-      : Math.round((totalValue - baselineValue) * 100) / 100;
+      : Math.round(calculatedTotalValue - baselineValue);
 
     // 해당 스탯 아이템 찾기
     const statItem = elements.container.querySelector(
@@ -2432,8 +3360,8 @@ function updateStatItemsWithValues(
       delete totalValueSpan.dataset.lastEditedTime;
     }
 
-    // 합산값을 메인으로 표시
-    const formattedTotalValue = Math.round(totalValue).toLocaleString();
+    // 합산값을 메인으로 표시 (저장된 값 또는 계산된 값)
+    const formattedTotalValue = Math.round(displayValue).toLocaleString();
     totalValueSpan.textContent = formattedTotalValue;
     totalValueSpan.style.display = "inline";
     totalValueSpan.style.visibility = "visible";
@@ -2466,32 +3394,22 @@ function updateStatItemsWithValues(
   });
 
   // 주요 스탯 변화 업데이트
-  updateKeyStats(allStats, allBondStats, allActiveStats);
+  updateKeyStats(allStats, allTotalStats, {});
 }
 
-function updateKeyStats(allStats, allBondStats, allActiveStats) {
+function updateKeyStats(
+  allStats,
+  allTotalStats,
+  allActiveStats,
+  forceZeroChange = false
+) {
   // 환산타채 합 계산: 피해저항관통 + 피해저항 + (대인피해% × 10) + (대인방어% × 10)
-  // 화면에 표시된 값을 우선 사용, 없으면 계산된 값 사용
+  // 항상 계산된 값 사용 (저장 시와 동일한 방식)
   const getTotalValue = (key) => {
-    // 화면에 표시된 총합값을 읽어옴
-    const statItem = elements.container?.querySelector(`[data-stat="${key}"]`);
-    if (statItem) {
-      const totalValueSpan = statItem.querySelector(".my-info-stat-total");
-      if (totalValueSpan) {
-        const displayedValue = totalValueSpan.textContent
-          .replace(/,/g, "")
-          .trim();
-        const parsedValue = parseFloat(displayedValue);
-        if (!isNaN(parsedValue)) {
-          return parsedValue;
-        }
-      }
-    }
-    // 화면에 표시된 값이 없으면 계산된 값 사용
+    // 저장 시와 동일한 방식으로 계산: userStats + allTotalStats (정수로 반올림)
     const baseValue = pageState.userStats[key] || 0;
-    const bondValue = allBondStats[key] || 0;
-    const activeValue = allActiveStats[key] || 0;
-    return baseValue + bondValue + activeValue;
+    const totalStatsValue = allTotalStats[key] || 0;
+    return Math.round(baseValue + totalStatsValue);
   };
 
   const damageResistancePenetration = getTotalValue(
@@ -2500,11 +3418,14 @@ function updateKeyStats(allStats, allBondStats, allActiveStats) {
   const damageResistance = getTotalValue("damageResistance");
   const pvpDamagePercent = getTotalValue("pvpDamagePercent");
   const pvpDefensePercent = getTotalValue("pvpDefensePercent");
-  const tachaeTotal =
+  // 환산타채 합 계산: 모든 계산 결과를 정수로 반올림
+  // pvpDamagePercent * 10 계산 전에 먼저 정수화
+  const tachaeTotal = Math.round(
     damageResistancePenetration +
-    damageResistance +
-    pvpDamagePercent * 10 +
-    pvpDefensePercent * 10;
+      damageResistance +
+      Math.round(Math.round(pvpDamagePercent) * 10) +
+      Math.round(Math.round(pvpDefensePercent) * 10)
+  );
 
   // 상태이상저항
   const statusEffectResistance = getTotalValue("statusEffectResistance");
@@ -2512,9 +3433,12 @@ function updateKeyStats(allStats, allBondStats, allActiveStats) {
   // 상태이상적중
   const statusEffectAccuracy = getTotalValue("statusEffectAccuracy");
 
-  // 기준값 가져오기
+  // 기준값 가져오기 (저장된 baselineStats 값 사용)
   const getBaselineValue = (key) => {
-    return pageState.baselineStats[key] || 0;
+    // 저장된 값이 있으면 사용, 없으면 0
+    return pageState.baselineStats.hasOwnProperty(key)
+      ? pageState.baselineStats[key]
+      : 0;
   };
 
   const baselineDamageResistancePenetration = getBaselineValue(
@@ -2523,22 +3447,102 @@ function updateKeyStats(allStats, allBondStats, allActiveStats) {
   const baselineDamageResistance = getBaselineValue("damageResistance");
   const baselinePvpDamagePercent = getBaselineValue("pvpDamagePercent");
   const baselinePvpDefensePercent = getBaselineValue("pvpDefensePercent");
-  const baselineTachaeTotal =
-    baselineDamageResistancePenetration +
-    baselineDamageResistance +
-    baselinePvpDamagePercent * 10 +
-    baselinePvpDefensePercent * 10;
+  // 환산타채 합 기준값: 저장된 값이 있으면 사용, 없으면 개별 스탯으로 계산
+  let baselineTachaeTotal = 0;
+  if (
+    pageState.baselineKeyStats.tachaeTotal !== undefined &&
+    pageState.baselineKeyStats.tachaeTotal !== null
+  ) {
+    // 저장된 값이 있으면 사용
+    baselineTachaeTotal = pageState.baselineKeyStats.tachaeTotal;
+  } else {
+    // 저장된 값이 없으면 개별 스탯으로 계산 (하위 호환성, 정수로 반올림)
+    // pvpDamagePercent * 10 계산 전에 먼저 정수화
+    baselineTachaeTotal = Math.round(
+      baselineDamageResistancePenetration +
+        baselineDamageResistance +
+        Math.round(Math.round(baselinePvpDamagePercent) * 10) +
+        Math.round(Math.round(baselinePvpDefensePercent) * 10)
+    );
+  }
 
-  const baselineStatusEffectResistance = getBaselineValue(
-    "statusEffectResistance"
-  );
-  const baselineStatusEffectAccuracy = getBaselineValue("statusEffectAccuracy");
+  // 상태이상저항/적중 기준값: 저장된 값이 있으면 사용, 없으면 개별 스탯으로 계산
+  let baselineStatusEffectResistance = 0;
+  if (
+    pageState.baselineKeyStats.statusEffectResistance !== undefined &&
+    pageState.baselineKeyStats.statusEffectResistance !== null
+  ) {
+    baselineStatusEffectResistance =
+      pageState.baselineKeyStats.statusEffectResistance;
+  } else {
+    baselineStatusEffectResistance = getBaselineValue("statusEffectResistance");
+  }
+
+  let baselineStatusEffectAccuracy = 0;
+  if (
+    pageState.baselineKeyStats.statusEffectAccuracy !== undefined &&
+    pageState.baselineKeyStats.statusEffectAccuracy !== null
+  ) {
+    baselineStatusEffectAccuracy =
+      pageState.baselineKeyStats.statusEffectAccuracy;
+  } else {
+    baselineStatusEffectAccuracy = getBaselineValue("statusEffectAccuracy");
+  }
 
   // 변화값 계산
-  const tachaeChange = tachaeTotal - baselineTachaeTotal;
-  const resistanceChange =
-    statusEffectResistance - baselineStatusEffectResistance;
-  const accuracyChange = statusEffectAccuracy - baselineStatusEffectAccuracy;
+  // 디버깅: 환산타채 합 계산 값 확인
+  if (Math.abs(tachaeTotal - baselineTachaeTotal) > 1000) {
+    console.error("[환산타채 합 계산] 이상값 감지:", {
+      tachaeTotal,
+      baselineTachaeTotal,
+      change: tachaeTotal - baselineTachaeTotal,
+      damageResistancePenetration,
+      damageResistance,
+      pvpDamagePercent,
+      pvpDefensePercent,
+      baselineDamageResistancePenetration,
+      baselineDamageResistance,
+      baselinePvpDamagePercent,
+      baselinePvpDefensePercent,
+      savedTachaeTotal: pageState.baselineKeyStats.tachaeTotal,
+      baselineStats_pvpDamagePercent: pageState.baselineStats.pvpDamagePercent,
+      baselineStats_pvpDefensePercent:
+        pageState.baselineStats.pvpDefensePercent,
+    });
+
+    // 문제 해결: baselineKeyStats.tachaeTotal이 잘못 저장되었을 수 있으므로 재계산
+    // 개별 스탯 기준값으로 재계산 (정수로 반올림)
+    // pvpDamagePercent * 10 계산 전에 먼저 정수화
+    const recalculatedBaseline = Math.round(
+      baselineDamageResistancePenetration +
+        baselineDamageResistance +
+        Math.round(Math.round(baselinePvpDamagePercent) * 10) +
+        Math.round(Math.round(baselinePvpDefensePercent) * 10)
+    );
+
+    // 재계산된 값이 더 합리적이면 사용
+    if (
+      Math.abs(recalculatedBaseline - tachaeTotal) <
+      Math.abs(baselineTachaeTotal - tachaeTotal)
+    ) {
+      console.warn("[환산타채 합 계산] 기준값 재계산:", {
+        old: baselineTachaeTotal,
+        new: recalculatedBaseline,
+      });
+      baselineTachaeTotal = recalculatedBaseline;
+      // 재계산된 값을 저장
+      pageState.baselineKeyStats.tachaeTotal = recalculatedBaseline;
+      saveData();
+    }
+  }
+
+  const tachaeChange = forceZeroChange ? 0 : tachaeTotal - baselineTachaeTotal;
+  const resistanceChange = forceZeroChange
+    ? 0
+    : statusEffectResistance - baselineStatusEffectResistance;
+  const accuracyChange = forceZeroChange
+    ? 0
+    : statusEffectAccuracy - baselineStatusEffectAccuracy;
 
   // UI 업데이트
   const tachaeValueEl = elements.container.querySelector("#keyStatTachae");
@@ -2661,11 +3665,11 @@ async function updateTotalStats() {
     const calc = pageState.lastTotalStatsCalculation;
     updateStatItemsWithValues(
       calc.allStats,
-      calc.allBondStats,
-      calc.allActiveStats,
+      calc.allTotalStats || calc.allBondStats, // allTotalStats 우선 사용
+      {}, // allActiveStats는 사용하지 않음
       false
     );
-    updateKeyStats(calc.allStats, calc.allBondStats, calc.allActiveStats);
+    updateKeyStats(calc.allStats, calc.allTotalStats || calc.allBondStats, {});
     return;
   }
 
@@ -2674,35 +3678,218 @@ async function updateTotalStats() {
     const categories = ["수호", "탑승", "변신"];
     const allBondStats = {};
     const allActiveStats = {};
+    const allTotalStats = {}; // 새로운 전체 스탯 변수
 
-    // 결속 스탯 합산 (직접 계산 - 최대 6개만 선택되므로 API 호출 불필요)
+    // 등급효과와 세력효과 계산을 위한 상수 (spiritRanking.js에서 가져옴)
+    const GRADE_SET_EFFECTS = {
+      수호: {
+        전설: {
+          2: { damageResistance: 100, pvpDefensePercent: 1 },
+          3: { damageResistance: 200, pvpDefensePercent: 2 },
+          4: { damageResistance: 350, pvpDefensePercent: 3.5 },
+          5: { damageResistance: 550, pvpDefensePercent: 5.5 },
+        },
+        불멸: {
+          2: { damageResistance: 150, pvpDefensePercent: 1.5 },
+          3: { damageResistance: 300, pvpDefensePercent: 3 },
+          4: { damageResistance: 525, pvpDefensePercent: 5.25 },
+          5: { damageResistance: 825, pvpDefensePercent: 8.25 },
+        },
+      },
+      탑승: {
+        전설: {
+          2: { damageResistancePenetration: 100, pvpDamagePercent: 1 },
+          3: { damageResistancePenetration: 200, pvpDamagePercent: 2 },
+          4: { damageResistancePenetration: 350, pvpDamagePercent: 3.5 },
+          5: { damageResistancePenetration: 550, pvpDamagePercent: 5.5 },
+        },
+        불멸: {
+          2: { damageResistancePenetration: 150, pvpDamagePercent: 1.5 },
+          3: { damageResistancePenetration: 300, pvpDamagePercent: 3 },
+          4: { damageResistancePenetration: 525, pvpDamagePercent: 5.25 },
+          5: { damageResistancePenetration: 825, pvpDamagePercent: 8.25 },
+        },
+      },
+      변신: {
+        전설: {
+          2: {
+            damageResistance: 50,
+            damageResistancePenetration: 50,
+            pvpDefensePercent: 0.5,
+            pvpDamagePercent: 0.5,
+          },
+          3: {
+            damageResistance: 100,
+            damageResistancePenetration: 100,
+            pvpDefensePercent: 1,
+            pvpDamagePercent: 1,
+          },
+          4: {
+            damageResistance: 175,
+            damageResistancePenetration: 175,
+            pvpDefensePercent: 1.75,
+            pvpDamagePercent: 1.75,
+          },
+          5: {
+            damageResistance: 275,
+            damageResistancePenetration: 275,
+            pvpDefensePercent: 2.75,
+            pvpDamagePercent: 2.75,
+          },
+        },
+        불멸: {
+          2: {
+            damageResistance: 75,
+            damageResistancePenetration: 75,
+            pvpDefensePercent: 0.75,
+            pvpDamagePercent: 0.75,
+          },
+          3: {
+            damageResistance: 150,
+            damageResistancePenetration: 150,
+            pvpDefensePercent: 1.5,
+            pvpDamagePercent: 1.5,
+          },
+          4: {
+            damageResistance: 262,
+            damageResistancePenetration: 262,
+            pvpDefensePercent: 2.62,
+            pvpDamagePercent: 2.62,
+          },
+          5: {
+            damageResistance: 412,
+            damageResistancePenetration: 412,
+            pvpDefensePercent: 4.12,
+            pvpDamagePercent: 4.12,
+          },
+        },
+      },
+    };
+
+    const FACTION_SET_EFFECTS = {
+      결의: {
+        2: { damageResistance: 200 },
+        3: { damageResistance: 400 },
+        4: { damageResistance: 600 },
+        5: { damageResistance: 800 },
+      },
+      고요: {
+        2: { damageResistancePenetration: 200 },
+        3: { damageResistancePenetration: 400 },
+        4: { damageResistancePenetration: 600 },
+        5: { damageResistancePenetration: 800 },
+      },
+      의지: {
+        2: { pvpDamagePercent: 2 },
+        3: { pvpDamagePercent: 4 },
+        4: { pvpDamagePercent: 6 },
+        5: { pvpDamagePercent: 8 },
+      },
+      침착: {
+        2: { pvpDefensePercent: 2 },
+        3: { pvpDefensePercent: 4 },
+        4: { pvpDefensePercent: 6 },
+        5: { pvpDefensePercent: 8 },
+      },
+      냉정: {
+        2: { damageResistance: 100, damageResistancePenetration: 100 },
+        3: { damageResistance: 200, damageResistancePenetration: 200 },
+        4: { damageResistance: 300, damageResistancePenetration: 300 },
+        5: { damageResistance: 400, damageResistancePenetration: 400 },
+      },
+      활력: {
+        2: { pvpDamagePercent: 1, pvpDefensePercent: 1 },
+        3: { pvpDamagePercent: 2, pvpDefensePercent: 2 },
+        4: { pvpDamagePercent: 3, pvpDefensePercent: 3 },
+        5: { pvpDamagePercent: 4, pvpDefensePercent: 4 },
+      },
+    };
+
+    // 각 카테고리별로 계산
     for (const category of categories) {
       const bondSpirits = pageState.bondSpirits[category] || [];
-      if (bondSpirits.length > 0) {
-        for (const bondSpirit of bondSpirits) {
-          const spirit = getSpiritsForCategory(category).find(
-            (s) => s.name === bondSpirit.name
-          );
-          if (spirit) {
-            const level =
-              bondSpirit.level !== undefined && bondSpirit.level !== null
-                ? bondSpirit.level
-                : 25;
-            const levelStat = spirit.stats?.find((s) => s.level === level);
-            if (levelStat?.bindStat) {
-              Object.entries(levelStat.bindStat).forEach(([key, value]) => {
-                const numValue =
-                  typeof value === "number" ? value : parseFloat(value) || 0;
-                allBondStats[key] = (allBondStats[key] || 0) + numValue;
-              });
-            }
+      if (bondSpirits.length === 0) continue;
+
+      // 등급별 개수 집계
+      const gradeCounts = {};
+      const factionCounts = {};
+
+      // 결속 환수의 장착효과 합산
+      for (const bondSpirit of bondSpirits) {
+        const spirit = getSpiritsForCategory(category).find(
+          (s) => s.name === bondSpirit.name
+        );
+        if (spirit) {
+          // 등급 집계
+          if (spirit.grade) {
+            gradeCounts[spirit.grade] = (gradeCounts[spirit.grade] || 0) + 1;
+          }
+          // 세력 집계
+          if (spirit.influence) {
+            factionCounts[spirit.influence] =
+              (factionCounts[spirit.influence] || 0) + 1;
+          }
+
+          const level =
+            bondSpirit.level !== undefined && bondSpirit.level !== null
+              ? bondSpirit.level
+              : 25;
+          const levelStat = spirit.stats?.find((s) => s.level === level);
+          if (levelStat?.bindStat) {
+            Object.entries(levelStat.bindStat).forEach(([key, value]) => {
+              const numValue =
+                typeof value === "number" ? value : parseFloat(value) || 0;
+              allBondStats[key] = (allBondStats[key] || 0) + numValue;
+              allTotalStats[key] = (allTotalStats[key] || 0) + numValue;
+            });
           }
         }
       }
-    }
 
-    // 사용 환수 스탯 합산
-    for (const category of categories) {
+      // 등급효과 계산
+      const categoryGradeEffects = GRADE_SET_EFFECTS[category];
+      if (categoryGradeEffects) {
+        Object.entries(gradeCounts).forEach(([grade, count]) => {
+          const gradeRules = categoryGradeEffects[grade];
+          if (!gradeRules) return;
+
+          let highestStep = 0;
+          for (let step = 2; step <= count; step++) {
+            if (gradeRules[step.toString()]) {
+              highestStep = step;
+            }
+          }
+
+          if (highestStep > 0) {
+            const stepEffects = gradeRules[highestStep.toString()];
+            Object.entries(stepEffects).forEach(([statKey, value]) => {
+              allTotalStats[statKey] = (allTotalStats[statKey] || 0) + value;
+            });
+          }
+        });
+      }
+
+      // 세력효과 계산
+      Object.entries(factionCounts).forEach(([faction, count]) => {
+        const factionRules = FACTION_SET_EFFECTS[faction];
+        if (!factionRules) return;
+
+        let highestStep = 0;
+        for (let step = 2; step <= count; step++) {
+          if (factionRules[step.toString()]) {
+            highestStep = step;
+          }
+        }
+
+        if (highestStep > 0) {
+          const stepEffects = factionRules[highestStep.toString()];
+          Object.entries(stepEffects).forEach(([statKey, value]) => {
+            allTotalStats[statKey] = (allTotalStats[statKey] || 0) + value;
+          });
+        }
+      });
+
+      // 사용 중인 환수의 등록효과 추가
       const active = pageState.activeSpirits[category];
       if (active) {
         const spirit = getSpiritsForCategory(category).find(
@@ -2716,9 +3903,79 @@ async function updateTotalStats() {
                 const numValue =
                   typeof value === "number" ? value : parseFloat(value) || 0;
                 allActiveStats[key] = (allActiveStats[key] || 0) + numValue;
+                allTotalStats[key] = (allTotalStats[key] || 0) + numValue;
               }
             );
           }
+        }
+      }
+
+      // 각인 점수 계산
+      // 모든 결속 환수의 각인 장착효과 (합산값)
+      for (const bondSpirit of bondSpirits) {
+        const engraving =
+          pageState.engravingData[category]?.[bondSpirit.name] || {};
+
+        // 새로운 데이터 구조: { registration: [...], bind: {...} }
+        if (engraving.bind) {
+          Object.entries(engraving.bind).forEach(([statKey, value]) => {
+            const numValue =
+              typeof value === "number" ? value : parseFloat(value) || 0;
+            if (numValue > 0) {
+              allTotalStats[statKey] = (allTotalStats[statKey] || 0) + numValue;
+            }
+          });
+        }
+
+        // 기존 데이터 구조 호환성 (하위 호환)
+        if (!engraving.registration && !engraving.bind) {
+          Object.entries(engraving).forEach(([statKey, engravingData]) => {
+            let bindValue = 0;
+            if (typeof engravingData === "object" && engravingData !== null) {
+              bindValue = engravingData.bind || 0;
+            } else {
+              bindValue = engravingData || 0;
+            }
+            if (bindValue > 0) {
+              allTotalStats[statKey] =
+                (allTotalStats[statKey] || 0) + bindValue;
+            }
+          });
+        }
+      }
+
+      // 사용 중인 환수의 각인 등록효과 (배열의 모든 항목 합산)
+      if (active) {
+        const engraving =
+          pageState.engravingData[category]?.[active.name] || {};
+
+        // 새로운 데이터 구조: { registration: [...], bind: {...} }
+        if (Array.isArray(engraving.registration)) {
+          engraving.registration.forEach((regItem) => {
+            const statKey = regItem.statKey;
+            const value = regItem.value || 0;
+            const numValue =
+              typeof value === "number" ? value : parseFloat(value) || 0;
+            if (numValue > 0 && statKey) {
+              allTotalStats[statKey] = (allTotalStats[statKey] || 0) + numValue;
+            }
+          });
+        }
+
+        // 기존 데이터 구조 호환성 (하위 호환)
+        if (!engraving.registration && !engraving.bind) {
+          Object.entries(engraving).forEach(([statKey, engravingData]) => {
+            let registrationValue = 0;
+            if (typeof engravingData === "object" && engravingData !== null) {
+              registrationValue = engravingData.registration || 0;
+            } else {
+              registrationValue = engravingData || 0;
+            }
+            if (registrationValue > 0) {
+              allTotalStats[statKey] =
+                (allTotalStats[statKey] || 0) + registrationValue;
+            }
+          });
         }
       }
     }
@@ -2727,7 +3984,9 @@ async function updateTotalStats() {
     const allStats = [...STATS_CONFIG];
 
     // 기본 스탯 아이템에 합산값과 증감 표시 업데이트
-    updateStatItemsWithValues(allStats, allBondStats, allActiveStats);
+    // allTotalStats를 사용하여 최종 스탯 계산
+    updateStatItemsWithValues(allStats, allTotalStats, {});
+    updateKeyStats(allStats, allTotalStats, {});
 
     // 결과 캐싱
     pageState.lastTotalStatsHash = currentHash;
@@ -2735,6 +3994,7 @@ async function updateTotalStats() {
       allStats,
       allBondStats,
       allActiveStats,
+      allTotalStats, // 새로운 전체 스탯 변수
     };
   } catch (error) {
     Logger.error("Error updating total stats:", error);
@@ -2811,6 +4071,24 @@ function generateTotalStatsHash() {
     const active = pageState.activeSpirits[category];
     if (active) {
       hashParts.push(`${category}_active:${active.name}:${active.level || 25}`);
+    }
+  });
+
+  // 각인 데이터 해시
+  categories.forEach((category) => {
+    const engravingData = pageState.engravingData[category] || {};
+    if (Object.keys(engravingData).length > 0) {
+      const engravingStr = Object.entries(engravingData)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([spiritName, stats]) => {
+          const statsStr = Object.entries(stats)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([k, v]) => `${k}:${v}`)
+            .join(",");
+          return `${spiritName}:{${statsStr}}`;
+        })
+        .join("|");
+      hashParts.push(`${category}_engraving:${engravingStr}`);
     }
   });
 
@@ -2914,10 +4192,20 @@ async function updateSoulExp() {
       }
     });
 
+    // 환수혼 이미지(최상급 환수혼) 필요 개수 계산
+    // 환수혼 계산기 참고: 최상급 = 1000 exp
+    const SOUL_IMAGE_EXP = 1000; // 최상급 환수혼 경험치
+
+    const soulImageCount = Math.ceil(totalExp / SOUL_IMAGE_EXP);
+
     html += `
       <div class="my-info-soul-exp-item" style="background: var(--color-primary-light);">
         <div class="my-info-soul-exp-label">총합</div>
         <div class="my-info-soul-exp-value" style="color: var(--color-primary);">${totalExp.toLocaleString()} exp</div>
+        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px; display: flex; align-items: center; gap: 6px;">
+          <img src="assets/img/high-soul.jpg" style="width: 20px; height: 20px; border-radius: 2px;" alt="최상급 환수혼">
+          <span>약 <strong style="color: var(--color-primary);">${soulImageCount.toLocaleString()}</strong>개</span>
+        </div>
       </div>
     `;
 
@@ -3008,42 +4296,222 @@ function setupEventListeners() {
       pageState.isSavingBaseline = true;
 
       try {
-        // 현재 스탯 계산
+        // updateTotalStats와 동일한 로직으로 allTotalStats 계산
         const allStats = [...STATS_CONFIG];
-        const allBondStats = {};
-        const allActiveStats = {};
+        const allTotalStats = {}; // updateTotalStats와 동일한 변수 사용
 
-        // 결속 스탯 계산 (직접 계산 - 최대 6개만 선택되므로 API 호출 불필요)
+        // 등급효과와 세력효과 계산을 위한 상수
+        const GRADE_SET_EFFECTS = {
+          수호: {
+            전설: {
+              2: { damageResistance: 100, pvpDefensePercent: 1 },
+              3: { damageResistance: 200, pvpDefensePercent: 2 },
+              4: { damageResistance: 350, pvpDefensePercent: 3.5 },
+              5: { damageResistance: 550, pvpDefensePercent: 5.5 },
+            },
+            불멸: {
+              2: { damageResistance: 150, pvpDefensePercent: 1.5 },
+              3: { damageResistance: 300, pvpDefensePercent: 3 },
+              4: { damageResistance: 525, pvpDefensePercent: 5.25 },
+              5: { damageResistance: 825, pvpDefensePercent: 8.25 },
+            },
+          },
+          탑승: {
+            전설: {
+              2: { damageResistancePenetration: 100, pvpDamagePercent: 1 },
+              3: { damageResistancePenetration: 200, pvpDamagePercent: 2 },
+              4: { damageResistancePenetration: 350, pvpDamagePercent: 3.5 },
+              5: { damageResistancePenetration: 550, pvpDamagePercent: 5.5 },
+            },
+            불멸: {
+              2: { damageResistancePenetration: 150, pvpDamagePercent: 1.5 },
+              3: { damageResistancePenetration: 300, pvpDamagePercent: 3 },
+              4: { damageResistancePenetration: 525, pvpDamagePercent: 5.25 },
+              5: { damageResistancePenetration: 825, pvpDamagePercent: 8.25 },
+            },
+          },
+          변신: {
+            전설: {
+              2: {
+                damageResistance: 50,
+                damageResistancePenetration: 50,
+                pvpDefensePercent: 0.5,
+                pvpDamagePercent: 0.5,
+              },
+              3: {
+                damageResistance: 100,
+                damageResistancePenetration: 100,
+                pvpDefensePercent: 1,
+                pvpDamagePercent: 1,
+              },
+              4: {
+                damageResistance: 175,
+                damageResistancePenetration: 175,
+                pvpDefensePercent: 1.75,
+                pvpDamagePercent: 1.75,
+              },
+              5: {
+                damageResistance: 275,
+                damageResistancePenetration: 275,
+                pvpDefensePercent: 2.75,
+                pvpDamagePercent: 2.75,
+              },
+            },
+            불멸: {
+              2: {
+                damageResistance: 75,
+                damageResistancePenetration: 75,
+                pvpDefensePercent: 0.75,
+                pvpDamagePercent: 0.75,
+              },
+              3: {
+                damageResistance: 150,
+                damageResistancePenetration: 150,
+                pvpDefensePercent: 1.5,
+                pvpDamagePercent: 1.5,
+              },
+              4: {
+                damageResistance: 262,
+                damageResistancePenetration: 262,
+                pvpDefensePercent: 2.62,
+                pvpDamagePercent: 2.62,
+              },
+              5: {
+                damageResistance: 412,
+                damageResistancePenetration: 412,
+                pvpDefensePercent: 4.12,
+                pvpDamagePercent: 4.12,
+              },
+            },
+          },
+        };
+
+        const FACTION_SET_EFFECTS = {
+          결의: {
+            2: { damageResistance: 200 },
+            3: { damageResistance: 400 },
+            4: { damageResistance: 600 },
+            5: { damageResistance: 800 },
+          },
+          고요: {
+            2: { damageResistancePenetration: 200 },
+            3: { damageResistancePenetration: 400 },
+            4: { damageResistancePenetration: 600 },
+            5: { damageResistancePenetration: 800 },
+          },
+          의지: {
+            2: { pvpDamagePercent: 2 },
+            3: { pvpDamagePercent: 4 },
+            4: { pvpDamagePercent: 6 },
+            5: { pvpDamagePercent: 8 },
+          },
+          침착: {
+            2: { pvpDefensePercent: 2 },
+            3: { pvpDefensePercent: 4 },
+            4: { pvpDefensePercent: 6 },
+            5: { pvpDefensePercent: 8 },
+          },
+          냉정: {
+            2: { damageResistance: 100, damageResistancePenetration: 100 },
+            3: { damageResistance: 200, damageResistancePenetration: 200 },
+            4: { damageResistance: 300, damageResistancePenetration: 300 },
+            5: { damageResistance: 400, damageResistancePenetration: 400 },
+          },
+          활력: {
+            2: { pvpDamagePercent: 1, pvpDefensePercent: 1 },
+            3: { pvpDamagePercent: 2, pvpDefensePercent: 2 },
+            4: { pvpDamagePercent: 3, pvpDefensePercent: 3 },
+            5: { pvpDamagePercent: 4, pvpDefensePercent: 4 },
+          },
+        };
+
+        // 각 카테고리별로 계산 (updateTotalStats와 동일한 로직)
         const categories = ["수호", "탑승", "변신"];
         for (const category of categories) {
           const bondSpirits = pageState.bondSpirits[category] || [];
-          if (bondSpirits.length > 0) {
-            for (const bondSpirit of bondSpirits) {
-              const spirit = getSpiritsForCategory(category).find(
-                (s) => s.name === bondSpirit.name
-              );
-              if (spirit) {
-                const level =
-                  bondSpirit.level !== undefined && bondSpirit.level !== null
-                    ? bondSpirit.level
-                    : 25;
-                const levelStat = spirit.stats?.find((s) => s.level === level);
-                if (levelStat?.bindStat) {
-                  Object.entries(levelStat.bindStat).forEach(([key, value]) => {
-                    const numValue =
-                      typeof value === "number"
-                        ? value
-                        : parseFloat(value) || 0;
-                    allBondStats[key] = (allBondStats[key] || 0) + numValue;
-                  });
-                }
+          if (bondSpirits.length === 0) continue;
+
+          // 등급별 개수 집계
+          const gradeCounts = {};
+          const factionCounts = {};
+
+          // 결속 환수의 장착효과 합산
+          for (const bondSpirit of bondSpirits) {
+            const spirit = getSpiritsForCategory(category).find(
+              (s) => s.name === bondSpirit.name
+            );
+            if (spirit) {
+              // 등급 집계
+              if (spirit.grade) {
+                gradeCounts[spirit.grade] =
+                  (gradeCounts[spirit.grade] || 0) + 1;
+              }
+              // 세력 집계
+              if (spirit.influence) {
+                factionCounts[spirit.influence] =
+                  (factionCounts[spirit.influence] || 0) + 1;
+              }
+
+              const level =
+                bondSpirit.level !== undefined && bondSpirit.level !== null
+                  ? bondSpirit.level
+                  : 25;
+              const levelStat = spirit.stats?.find((s) => s.level === level);
+              if (levelStat?.bindStat) {
+                Object.entries(levelStat.bindStat).forEach(([key, value]) => {
+                  const numValue =
+                    typeof value === "number" ? value : parseFloat(value) || 0;
+                  allTotalStats[key] = (allTotalStats[key] || 0) + numValue;
+                });
               }
             }
           }
-        }
 
-        // 활성 스탯 계산
-        for (const category of categories) {
+          // 등급효과 계산
+          const categoryGradeEffects = GRADE_SET_EFFECTS[category];
+          if (categoryGradeEffects) {
+            Object.entries(gradeCounts).forEach(([grade, count]) => {
+              const gradeRules = categoryGradeEffects[grade];
+              if (!gradeRules) return;
+
+              let highestStep = 0;
+              for (let step = 2; step <= count; step++) {
+                if (gradeRules[step.toString()]) {
+                  highestStep = step;
+                }
+              }
+
+              if (highestStep > 0) {
+                const stepEffects = gradeRules[highestStep.toString()];
+                Object.entries(stepEffects).forEach(([statKey, value]) => {
+                  allTotalStats[statKey] =
+                    (allTotalStats[statKey] || 0) + value;
+                });
+              }
+            });
+          }
+
+          // 세력효과 계산
+          Object.entries(factionCounts).forEach(([faction, count]) => {
+            const factionRules = FACTION_SET_EFFECTS[faction];
+            if (!factionRules) return;
+
+            let highestStep = 0;
+            for (let step = 2; step <= count; step++) {
+              if (factionRules[step.toString()]) {
+                highestStep = step;
+              }
+            }
+
+            if (highestStep > 0) {
+              const stepEffects = factionRules[highestStep.toString()];
+              Object.entries(stepEffects).forEach(([statKey, value]) => {
+                allTotalStats[statKey] = (allTotalStats[statKey] || 0) + value;
+              });
+            }
+          });
+
+          // 사용 중인 환수의 등록효과 추가
           const active = pageState.activeSpirits[category];
           if (active) {
             const spirit = getSpiritsForCategory(category).find(
@@ -3060,48 +4528,164 @@ function setupEventListeners() {
                       typeof value === "number"
                         ? value
                         : parseFloat(value) || 0;
-                    allActiveStats[key] = (allActiveStats[key] || 0) + numValue;
+                    allTotalStats[key] = (allTotalStats[key] || 0) + numValue;
                   }
                 );
               }
             }
           }
+
+          // 각인 점수 계산
+          // 모든 결속 환수의 각인 장착효과
+          for (const bondSpirit of bondSpirits) {
+            const engraving =
+              pageState.engravingData[category]?.[bondSpirit.name] || {};
+
+            // 새로운 데이터 구조: { registration: [...], bind: {...} }
+            if (engraving.bind) {
+              Object.entries(engraving.bind).forEach(([statKey, value]) => {
+                const numValue =
+                  typeof value === "number" ? value : parseFloat(value) || 0;
+                if (numValue > 0) {
+                  allTotalStats[statKey] =
+                    (allTotalStats[statKey] || 0) + numValue;
+                }
+              });
+            }
+
+            // 기존 데이터 구조 호환성 (하위 호환)
+            if (!engraving.registration && !engraving.bind) {
+              Object.entries(engraving).forEach(([statKey, engravingData]) => {
+                let bindValue = 0;
+                if (
+                  typeof engravingData === "object" &&
+                  engravingData !== null
+                ) {
+                  bindValue = engravingData.bind || 0;
+                } else {
+                  bindValue = engravingData || 0;
+                }
+                if (bindValue > 0) {
+                  allTotalStats[statKey] =
+                    (allTotalStats[statKey] || 0) + bindValue;
+                }
+              });
+            }
+          }
+
+          // 사용 중인 환수의 각인 등록효과
+          if (active) {
+            const engraving =
+              pageState.engravingData[category]?.[active.name] || {};
+
+            // 새로운 데이터 구조: { registration: [...], bind: {...} }
+            if (Array.isArray(engraving.registration)) {
+              engraving.registration.forEach((regItem) => {
+                const statKey = regItem.statKey;
+                const value = regItem.value || 0;
+                const numValue =
+                  typeof value === "number" ? value : parseFloat(value) || 0;
+                if (numValue > 0 && statKey) {
+                  allTotalStats[statKey] =
+                    (allTotalStats[statKey] || 0) + numValue;
+                }
+              });
+            }
+
+            // 기존 데이터 구조 호환성 (하위 호환)
+            if (!engraving.registration && !engraving.bind) {
+              Object.entries(engraving).forEach(([statKey, engravingData]) => {
+                let registrationValue = 0;
+                if (
+                  typeof engravingData === "object" &&
+                  engravingData !== null
+                ) {
+                  registrationValue = engravingData.registration || 0;
+                } else {
+                  registrationValue = engravingData || 0;
+                }
+                if (registrationValue > 0) {
+                  allTotalStats[statKey] =
+                    (allTotalStats[statKey] || 0) + registrationValue;
+                }
+              });
+            }
+          }
         }
 
-        // 스탯 기준값 저장 - 화면에 표시된 총합값을 기준으로 저장
+        // 스탯 기준값 저장 - 화면에 표시된 값을 우선 사용, 없으면 계산된 값 사용
         allStats.forEach((stat) => {
-          // 화면에 표시된 총합값을 읽어옴
           const statItem = elements.container?.querySelector(
             `[data-stat="${stat.key}"]`
           );
+          let totalValue = 0;
+
           if (statItem) {
             const totalValueSpan = statItem.querySelector(
               ".my-info-stat-total"
             );
-            if (totalValueSpan) {
-              // 화면에 표시된 값을 읽어서 숫자로 변환
-              const displayedValue = totalValueSpan.textContent
-                .replace(/,/g, "")
-                .trim();
-              const totalValue = parseFloat(displayedValue) || 0;
-              pageState.baselineStats[stat.key] = totalValue;
-            } else {
-              // totalValueSpan이 없으면 계산된 값 사용
-              const baseValue = pageState.userStats[stat.key] || 0;
-              const bondValue = allBondStats[stat.key] || 0;
-              const activeValue = allActiveStats[stat.key] || 0;
-              pageState.baselineStats[stat.key] =
-                baseValue + bondValue + activeValue;
+            if (totalValueSpan && totalValueSpan.textContent) {
+              // 화면에 표시된 값을 읽어옴 (수동 편집된 값 포함)
+              const displayedText = totalValueSpan.textContent.replace(
+                /,/g,
+                ""
+              );
+              totalValue = parseFloat(displayedText) || 0;
             }
-          } else {
-            // statItem이 없으면 계산된 값 사용
-            const baseValue = pageState.userStats[stat.key] || 0;
-            const bondValue = allBondStats[stat.key] || 0;
-            const activeValue = allActiveStats[stat.key] || 0;
-            pageState.baselineStats[stat.key] =
-              baseValue + bondValue + activeValue;
           }
+
+          // 화면에 값이 없으면 계산된 값 사용
+          if (totalValue === 0 || isNaN(totalValue)) {
+            const baseValue = pageState.userStats[stat.key] || 0;
+            const totalStatsValue = allTotalStats[stat.key] || 0;
+            totalValue = baseValue + totalStatsValue;
+          }
+
+          pageState.baselineStats[stat.key] = totalValue;
         });
+
+        // 주요 스탯 기준값 저장 (환산타채 합 등)
+        // 저장 시점의 계산된 값을 사용 (화면 표시값이 아닌 계산된 값)
+        const getTotalValueForSave = (key) => {
+          // 항상 계산된 값을 사용 (저장 시와 동일한 방식, 정수로 반올림)
+          const baseValue = pageState.userStats[key] || 0;
+          const totalStatsValue = allTotalStats[key] || 0;
+          return Math.round(baseValue + totalStatsValue);
+        };
+
+        // 개별 스탯 기준값을 사용하여 환산타채 합 계산 (일관성 보장)
+        const savedDamageResistancePenetration =
+          pageState.baselineStats.damageResistancePenetration !== undefined
+            ? pageState.baselineStats.damageResistancePenetration
+            : getTotalValueForSave("damageResistancePenetration");
+        const savedDamageResistance =
+          pageState.baselineStats.damageResistance !== undefined
+            ? pageState.baselineStats.damageResistance
+            : getTotalValueForSave("damageResistance");
+        const savedPvpDamagePercent =
+          pageState.baselineStats.pvpDamagePercent !== undefined
+            ? pageState.baselineStats.pvpDamagePercent
+            : getTotalValueForSave("pvpDamagePercent");
+        const savedPvpDefensePercent =
+          pageState.baselineStats.pvpDefensePercent !== undefined
+            ? pageState.baselineStats.pvpDefensePercent
+            : getTotalValueForSave("pvpDefensePercent");
+
+        // 환산타채 합 계산: 개별 스탯 기준값 사용 (정수로 반올림)
+        // getTotalValueForSave가 이미 정수화하지만, pvpDamagePercent * 10 계산 전에 먼저 정수화
+        const savedTachaeTotal = Math.round(
+          Math.round(savedDamageResistancePenetration) +
+            Math.round(savedDamageResistance) +
+            Math.round(Math.round(savedPvpDamagePercent) * 10) +
+            Math.round(Math.round(savedPvpDefensePercent) * 10)
+        );
+
+        pageState.baselineKeyStats.tachaeTotal = savedTachaeTotal;
+        pageState.baselineKeyStats.statusEffectResistance =
+          getTotalValueForSave("statusEffectResistance");
+        pageState.baselineKeyStats.statusEffectAccuracy = getTotalValueForSave(
+          "statusEffectAccuracy"
+        );
 
         // 환수혼 경험치 기준값도 함께 저장
         const expTable = pageState.expTable;
@@ -3168,7 +4752,10 @@ function setupEventListeners() {
         pageState.lastTotalStatsCalculation = null;
 
         // 주요 스탯 변화 업데이트 (증감은 0으로)
-        updateKeyStats(allStats, allBondStats, allActiveStats);
+        // updateTotalStats를 호출하여 allTotalStats를 다시 계산
+        // 저장 후에는 환산합 증감도 0으로 설정
+        updateKeyStats(allStats, allTotalStats, {}, true); // forceZeroChange = true
+        debouncedUpdateTotalStats();
 
         // 저장 피드백
         const originalText = saveBtn.innerHTML;
@@ -3233,13 +4820,75 @@ export function init(container) {
 
   // 초기 로딩 시에는 즉시 실행 (Promise.all로 완료 대기)
   // 에러가 발생해도 페이지는 표시되도록 처리
+  // baselineStats가 없으면 현재 계산값으로 초기화
   Promise.all([updateTotalStats(), updateSoulExp()])
     .then(() => {
-      // 초기 로드 후 baselineStats가 있으면 증감을 다시 계산
-      if (Object.keys(pageState.baselineStats).length > 0) {
-        // baselineStats가 있으면 스탯을 다시 업데이트하여 증감을 올바르게 표시
-        debouncedUpdateTotalStats();
+      const allStats = [...STATS_CONFIG];
+      const calc = pageState.lastTotalStatsCalculation;
+
+      if (!calc || !calc.allTotalStats) {
+        return;
       }
+
+      // baselineStats가 비어있으면 현재 계산값으로 초기화하여 증감 0으로 시작
+      if (Object.keys(pageState.baselineStats).length === 0) {
+        // 계산된 allTotalStats를 사용하여 baselineStats 초기화
+        allStats.forEach((stat) => {
+          const baseValue = pageState.userStats[stat.key] || 0;
+          const totalStatsValue = calc.allTotalStats[stat.key] || 0;
+          const totalValue = Math.round(baseValue + totalStatsValue);
+          pageState.baselineStats[stat.key] = totalValue;
+        });
+
+        // 주요 스탯 기준값 초기화 (모든 계산 결과를 정수로 반올림)
+        const initDamageResistancePenetration = Math.round(
+          (pageState.userStats.damageResistancePenetration || 0) +
+            (calc.allTotalStats.damageResistancePenetration || 0)
+        );
+        const initDamageResistance = Math.round(
+          (pageState.userStats.damageResistance || 0) +
+            (calc.allTotalStats.damageResistance || 0)
+        );
+        const initPvpDamagePercent = Math.round(
+          (pageState.userStats.pvpDamagePercent || 0) +
+            (calc.allTotalStats.pvpDamagePercent || 0)
+        );
+        const initPvpDefensePercent = Math.round(
+          (pageState.userStats.pvpDefensePercent || 0) +
+            (calc.allTotalStats.pvpDefensePercent || 0)
+        );
+        // pvpDamagePercent * 10 계산 전에 먼저 정수화
+        const initTachaeTotal = Math.round(
+          initDamageResistancePenetration +
+            initDamageResistance +
+            Math.round(initPvpDamagePercent * 10) +
+            Math.round(initPvpDefensePercent * 10)
+        );
+
+        pageState.baselineKeyStats.tachaeTotal = initTachaeTotal;
+        pageState.baselineKeyStats.statusEffectResistance = Math.round(
+          (pageState.userStats.statusEffectResistance || 0) +
+            (calc.allTotalStats.statusEffectResistance || 0)
+        );
+        pageState.baselineKeyStats.statusEffectAccuracy = Math.round(
+          (pageState.userStats.statusEffectAccuracy || 0) +
+            (calc.allTotalStats.statusEffectAccuracy || 0)
+        );
+
+        saveData(); // 초기 baselineStats 저장
+      }
+
+      // 저장된 값 표시 및 증감 0으로 설정
+      updateStatItemsWithValues(
+        allStats,
+        calc.allTotalStats,
+        {},
+        true // forceZeroChange = true (증감 0)
+      );
+      updateKeyStats(allStats, calc.allTotalStats, {}, true); // forceZeroChange = true (증감 0)
+
+      // 초기 로딩 완료
+      pageState.isInitialLoad = false;
     })
     .catch((error) => {
       Logger.error("Error initializing stats:", error);
