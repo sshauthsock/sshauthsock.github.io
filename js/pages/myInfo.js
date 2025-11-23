@@ -36,6 +36,8 @@ const pageState = {
   recentlyEditedStats: new Set(), // 방금 편집한 스탯 목록 (updateTotalStats에서 업데이트하지 않도록)
   isSavingBaseline: false, // 기준값 저장 중 플래그
   isInitialLoad: true, // 초기 로딩 플래그 (저장된 값 표시용)
+  isUpdatingTotalStats: false, // updateTotalStats 실행 중 플래그 (중복 호출 방지)
+  baselineStatsHash: null, // baselineStats 저장 시점의 해시값
   engravingData: {
     // 각인 데이터: { 카테고리: { 환수이름: { 스탯키: 각인점수 } } }
     수호: {},
@@ -2001,6 +2003,14 @@ function loadSavedData() {
       Logger.error("Error loading baseline key stats:", e);
     }
   }
+
+  // baselineStatsHash 로드
+  const savedBaselineStatsHash = localStorage.getItem(
+    "myInfo_baselineStatsHash"
+  );
+  if (savedBaselineStatsHash) {
+    pageState.baselineStatsHash = savedBaselineStatsHash;
+  }
 }
 
 function saveData() {
@@ -2028,6 +2038,12 @@ function saveData() {
     "myInfo_engravingData",
     JSON.stringify(pageState.engravingData)
   );
+  if (pageState.baselineStatsHash) {
+    localStorage.setItem(
+      "myInfo_baselineStatsHash",
+      pageState.baselineStatsHash
+    );
+  }
 }
 
 function renderBondSlots(category) {
@@ -2456,6 +2472,16 @@ function showSpiritLevelPopup(category, index, slot, event) {
       if (level > 25) level = 25;
       levelInput.value = level;
       spirit.level = level;
+
+      // 사용중 환수인 경우 activeSpirits의 레벨도 함께 업데이트
+      const active = pageState.activeSpirits[category];
+      if (active && active.name === spirit.name) {
+        pageState.activeSpirits[category] = {
+          ...active,
+          level: level,
+        };
+      }
+
       // saveData() 제거: 저장 버튼을 눌러야 저장됨
       renderBondSlots(category);
       updatePopupActiveState(popup, category, spirit);
@@ -2513,6 +2539,17 @@ function showSpiritLevelPopup(category, index, slot, event) {
 
           if (changed) {
             currentSpirit.level = level;
+
+            // 사용중 환수인 경우 activeSpirits의 레벨도 함께 업데이트
+            const active =
+              pageState.activeSpirits[popupLongPressState.category];
+            if (active && active.name === currentSpirit.name) {
+              pageState.activeSpirits[popupLongPressState.category] = {
+                ...active,
+                level: level,
+              };
+            }
+
             const levelInput = popup.querySelector(".level-input");
             if (levelInput) {
               levelInput.value = level;
@@ -2577,6 +2614,16 @@ function showSpiritLevelPopup(category, index, slot, event) {
 
         if (currentSpirit) {
           currentSpirit.level = targetValue;
+
+          // 사용중 환수인 경우 activeSpirits의 레벨도 함께 업데이트
+          const active = pageState.activeSpirits[popupLongPressState.category];
+          if (active && active.name === currentSpirit.name) {
+            pageState.activeSpirits[popupLongPressState.category] = {
+              ...active,
+              level: targetValue,
+            };
+          }
+
           const levelInput = popup.querySelector(".level-input");
           if (levelInput) {
             levelInput.value = targetValue;
@@ -2660,30 +2707,55 @@ function showSpiritLevelPopup(category, index, slot, event) {
 
   const setActiveBtn = popup.querySelector("[data-action='set-active']");
   setActiveBtn.addEventListener("click", () => {
+    const previousActive = pageState.activeSpirits[category];
     const active = pageState.activeSpirits[category];
+
+    console.log(`[사용중 환수 변경] 카테고리: ${category}`);
+    console.log(`  이전 사용중:`, previousActive);
+    console.log(`  현재 클릭한 환수:`, spirit.name);
+
     if (active && active.name === spirit.name) {
+      // 같은 환수를 다시 클릭하면 사용중 해제
       pageState.activeSpirits[category] = null;
+      console.log(`  → 사용중 해제`);
     } else {
       const level = isFixed
         ? 25
         : parseInt(popup.querySelector(".level-input")?.value, 10) ||
           spirit.level ||
           25;
-      pageState.activeSpirits[category] = {
-        ...spirit,
+      // activeSpirits에 저장할 때 spirit 객체의 모든 속성을 복사하되, level은 최신 값으로 설정
+      const newActive = {
+        name: spirit.name,
         level: level,
+        ...spirit, // spirit의 다른 속성들도 포함 (grade, influence 등)
       };
+      // level은 명시적으로 설정한 값으로 덮어쓰기
+      newActive.level = level;
+      pageState.activeSpirits[category] = newActive;
       spirit.level = level;
+      console.log(`  → 새 사용중:`, pageState.activeSpirits[category]);
+      console.log(
+        `  → 각인 데이터:`,
+        pageState.engravingData[category]?.[spirit.name]
+      );
+      console.log(`  → 각인 데이터 확인:`, {
+        category,
+        spiritName: spirit.name,
+        engravingData: pageState.engravingData[category],
+        targetEngraving: pageState.engravingData[category]?.[spirit.name],
+      });
     }
+
     // saveData() 제거: 저장 버튼을 눌러야 저장됨
     renderBondSlots(category);
     updatePopupActiveState(popup, category, spirit);
 
-    // 캐시 무효화
+    // 캐시 무효화 및 즉시 업데이트 (사용중 환수 변경 시 각인 등록효과가 즉시 반영되어야 함)
     pageState.lastTotalStatsHash = null;
     pageState.lastSoulExpHash = null;
-    debouncedUpdateTotalStats();
-    debouncedUpdateSoulExp();
+    updateTotalStats();
+    updateSoulExp();
   });
 
   const removeBtn = popup.querySelector("[data-action='remove']");
@@ -3186,6 +3258,15 @@ function startPopupLongPress() {
     }
 
     if (changed) {
+      // 사용중 환수인 경우 activeSpirits의 레벨도 함께 업데이트
+      const active = pageState.activeSpirits[popupLongPressState.category];
+      if (active && active.name === currentSpirit.name) {
+        pageState.activeSpirits[popupLongPressState.category] = {
+          ...active,
+          level: currentSpirit.level,
+        };
+      }
+
       // saveData() 제거: 저장 버튼을 눌러야 저장됨
       const levelInput = currentPopup?.querySelector(".level-input");
       if (levelInput) {
@@ -3348,6 +3429,16 @@ function createPopupHint() {
           popupLongPressState.action === "level-down" ? 0 : 25;
         if (popupLongPressState.spirit) {
           popupLongPressState.spirit.level = targetValue;
+
+          // 사용중 환수인 경우 activeSpirits의 레벨도 함께 업데이트
+          const active = pageState.activeSpirits[popupLongPressState.category];
+          if (active && active.name === popupLongPressState.spirit.name) {
+            pageState.activeSpirits[popupLongPressState.category] = {
+              ...active,
+              level: targetValue,
+            };
+          }
+
           const levelInput = currentPopup?.querySelector(".level-input");
           if (levelInput) {
             levelInput.value = targetValue;
@@ -3521,7 +3612,8 @@ function updateStatItemsWithValues(
     // 나의 스탯은 전체 모든 점수를 합산한 스탯 (userStats + allTotalStats)
     const baseValue = pageState.userStats[stat.key] || 0;
     const totalStatsValue = allTotalStats[stat.key] || 0;
-    const calculatedTotalValue = baseValue + totalStatsValue;
+    // 모든 수치는 정수이므로 반올림
+    const calculatedTotalValue = Math.round(baseValue + totalStatsValue);
 
     // 기준값과 비교
     const baselineValue = pageState.baselineStats.hasOwnProperty(stat.key)
@@ -3540,6 +3632,30 @@ function updateStatItemsWithValues(
     let changeValue = forceZeroChange
       ? 0
       : Math.round(calculatedTotalValue - baselineValue);
+
+    // 디버깅: 상태이상저항, 상태이상적중, 경험치획득증가만 로그 출력
+    if (
+      !forceZeroChange &&
+      (stat.key === "statusEffectResistance" ||
+        stat.key === "statusEffectAccuracy" ||
+        stat.key === "experienceGainIncrease")
+    ) {
+      console.log(`[스탯 증감] ${stat.name}:`, {
+        statKey: stat.key,
+        baseValue,
+        totalStatsValue,
+        calculatedTotalValue,
+        baselineValue,
+        changeValue,
+        hasBaseline,
+        isInitialLoad: pageState.isInitialLoad,
+        activeSpirits: Object.entries(pageState.activeSpirits)
+          .map(([cat, active]) =>
+            active ? `${cat}: ${active.name} Lv${active.level}` : null
+          )
+          .filter(Boolean),
+      });
+    }
 
     // 해당 스탯 아이템 찾기
     const statItem = elements.container.querySelector(
@@ -3887,6 +4003,15 @@ async function updateTotalStats() {
     return;
   }
 
+  // 이미 실행 중이면 중복 호출 방지
+  if (pageState.isUpdatingTotalStats) {
+    console.log("[updateTotalStats] 이미 실행 중이므로 중복 호출 방지");
+    return;
+  }
+
+  pageState.isUpdatingTotalStats = true;
+  console.log("[updateTotalStats] 시작");
+
   // 캐시 확인
   const currentHash = generateTotalStatsHash();
   if (
@@ -3895,13 +4020,20 @@ async function updateTotalStats() {
   ) {
     // 이미 계산된 경우 저장된 계산 결과로 스탯 아이템만 업데이트
     const calc = pageState.lastTotalStatsCalculation;
+    // 초기 로딩 시에는 증감을 0으로 표시
+    const shouldForceZeroChange = pageState.isInitialLoad;
     updateStatItemsWithValues(
       calc.allStats,
       calc.allTotalStats || calc.allBondStats, // allTotalStats 우선 사용
       {}, // allActiveStats는 사용하지 않음
-      false
+      shouldForceZeroChange
     );
-    updateKeyStats(calc.allStats, calc.allTotalStats || calc.allBondStats, {});
+    updateKeyStats(
+      calc.allStats,
+      calc.allTotalStats || calc.allBondStats,
+      {},
+      shouldForceZeroChange
+    );
     return;
   }
 
@@ -4181,6 +4313,14 @@ async function updateTotalStats() {
         const engraving =
           pageState.engravingData[category]?.[active.name] || {};
 
+        // 디버깅: 각인 등록효과 계산 확인
+        if (engraving && Object.keys(engraving).length > 0) {
+          console.log(
+            `[각인 등록효과] 카테고리: ${category}, 환수: ${active.name}, 레벨: ${active.level}`,
+            engraving
+          );
+        }
+
         // 새로운 데이터 구조: { registration: [...], bind: {...} }
         if (Array.isArray(engraving.registration)) {
           engraving.registration.forEach((regItem) => {
@@ -4189,7 +4329,11 @@ async function updateTotalStats() {
             const numValue =
               typeof value === "number" ? value : parseFloat(value) || 0;
             if (numValue > 0 && statKey) {
+              const beforeValue = allTotalStats[statKey] || 0;
               allTotalStats[statKey] = (allTotalStats[statKey] || 0) + numValue;
+              console.log(
+                `[각인 등록효과 추가] ${statKey}: ${beforeValue} + ${numValue} = ${allTotalStats[statKey]}`
+              );
             }
           });
         }
@@ -4204,12 +4348,82 @@ async function updateTotalStats() {
               registrationValue = engravingData || 0;
             }
             if (registrationValue > 0) {
+              const beforeValue = allTotalStats[statKey] || 0;
               allTotalStats[statKey] =
                 (allTotalStats[statKey] || 0) + registrationValue;
+              console.log(
+                `[각인 등록효과 추가 (하위호환)] ${statKey}: ${beforeValue} + ${registrationValue} = ${allTotalStats[statKey]}`
+              );
             }
           });
         }
+      } else {
+        // 디버깅: 사용중 환수가 없는 경우
+        console.log(`[각인 등록효과] 카테고리: ${category}, 사용중 환수 없음`);
       }
+    }
+
+    // baselineStatsHash와 currentHash 비교하여 baselineStats 자동 업데이트
+    // (사용중 환수 변경 등으로 저장된 상태로 돌아온 경우)
+    let shouldForceZeroChange = pageState.isInitialLoad;
+
+    console.log("[updateTotalStats] 해시 비교:", {
+      baselineStatsHash: pageState.baselineStatsHash,
+      currentHash: currentHash,
+      일치: pageState.baselineStatsHash === currentHash,
+      isInitialLoad: pageState.isInitialLoad,
+    });
+
+    if (pageState.baselineStatsHash) {
+      if (currentHash === pageState.baselineStatsHash) {
+        // 현재 상태가 저장된 baseline과 일치하면 baselineStats를 현재 값으로 업데이트
+        console.log(
+          "[updateTotalStats] baselineStatsHash 일치 - baselineStats 자동 업데이트"
+        );
+        Object.keys(allTotalStats).forEach((statKey) => {
+          const totalValue = Math.round(
+            (pageState.userStats[statKey] || 0) + (allTotalStats[statKey] || 0)
+          );
+          const oldBaseline = pageState.baselineStats[statKey];
+          pageState.baselineStats[statKey] = totalValue;
+
+          // 디버깅: 주요 스탯만 로그 출력
+          if (
+            statKey === "statusEffectResistance" ||
+            statKey === "statusEffectAccuracy" ||
+            statKey === "experienceGainIncrease"
+          ) {
+            console.log(
+              `[baselineStats 업데이트] ${statKey}: ${oldBaseline} → ${totalValue}`
+            );
+          }
+        });
+
+        // baselineKeyStats도 업데이트
+        const tachaeTotal = Math.round(
+          (allTotalStats.damageResistancePenetration || 0) +
+            (allTotalStats.damageResistance || 0) +
+            Math.round((allTotalStats.pvpDamagePercent || 0) * 10) +
+            Math.round((allTotalStats.pvpDefensePercent || 0) * 10)
+        );
+        pageState.baselineKeyStats.tachaeTotal = tachaeTotal;
+        pageState.baselineKeyStats.statusEffectResistance = Math.round(
+          allTotalStats.statusEffectResistance || 0
+        );
+        pageState.baselineKeyStats.statusEffectAccuracy = Math.round(
+          allTotalStats.statusEffectAccuracy || 0
+        );
+
+        shouldForceZeroChange = true;
+      } else {
+        console.log(
+          "[updateTotalStats] baselineStatsHash 불일치 - baselineStats 유지"
+        );
+      }
+    } else {
+      // baselineStatsHash가 없으면 초기화
+      console.log("[updateTotalStats] baselineStatsHash 없음 - 초기화");
+      pageState.baselineStatsHash = currentHash;
     }
 
     // 합산 스탯은 기본 스탯 섹션에 통합되어 표시됨
@@ -4217,8 +4431,14 @@ async function updateTotalStats() {
 
     // 기본 스탯 아이템에 합산값과 증감 표시 업데이트
     // allTotalStats를 사용하여 최종 스탯 계산
-    updateStatItemsWithValues(allStats, allTotalStats, {});
-    updateKeyStats(allStats, allTotalStats, {});
+    // 초기 로딩 시에는 증감을 0으로 표시
+    updateStatItemsWithValues(
+      allStats,
+      allTotalStats,
+      {},
+      shouldForceZeroChange
+    );
+    updateKeyStats(allStats, allTotalStats, {}, shouldForceZeroChange);
 
     // 결과 캐싱
     pageState.lastTotalStatsHash = currentHash;
@@ -4228,10 +4448,13 @@ async function updateTotalStats() {
       allActiveStats,
       allTotalStats, // 새로운 전체 스탯 변수
     };
+    console.log("[updateTotalStats] 완료");
   } catch (error) {
     Logger.error("Error updating total stats:", error);
     // 에러가 발생해도 페이지는 표시되도록 (컨테이너를 덮어쓰지 않음)
     // 스탯 계산은 실패했지만 기본 UI는 유지됨
+  } finally {
+    pageState.isUpdatingTotalStats = false;
   }
 }
 
@@ -4845,35 +5068,35 @@ function setupEventListeners() {
           }
         }
 
-        // 스탯 기준값 저장 - 화면에 표시된 값을 우선 사용, 없으면 계산된 값 사용
+        // 스탯 기준값 저장 - 항상 계산된 값을 사용 (저장 시점의 정확한 계산값)
+        // 화면 표시값이 아닌 실제 계산값을 저장하여 일관성 보장
         allStats.forEach((stat) => {
-          const statItem = elements.container?.querySelector(
-            `[data-stat="${stat.key}"]`
-          );
-          let totalValue = 0;
+          // 항상 계산된 값을 사용 (화면 표시값이 아닌 실제 계산값)
+          const baseValue = pageState.userStats[stat.key] || 0;
+          const totalStatsValue = allTotalStats[stat.key] || 0;
+          const totalValue = Math.round(baseValue + totalStatsValue);
 
-          if (statItem) {
-            const totalValueSpan = statItem.querySelector(
-              ".my-info-stat-total"
-            );
-            if (totalValueSpan && totalValueSpan.textContent) {
-              // 화면에 표시된 값을 읽어옴 (수동 편집된 값 포함)
-              const displayedText = totalValueSpan.textContent.replace(
-                /,/g,
-                ""
-              );
-              totalValue = parseFloat(displayedText) || 0;
-            }
-          }
-
-          // 화면에 값이 없으면 계산된 값 사용
-          if (totalValue === 0 || isNaN(totalValue)) {
-            const baseValue = pageState.userStats[stat.key] || 0;
-            const totalStatsValue = allTotalStats[stat.key] || 0;
-            totalValue = baseValue + totalStatsValue;
-          }
-
+          const oldBaseline = pageState.baselineStats[stat.key];
           pageState.baselineStats[stat.key] = totalValue;
+
+          // 디버깅: 상태이상저항, 상태이상적중, 경험치획득증가만 로그 출력
+          if (
+            stat.key === "statusEffectResistance" ||
+            stat.key === "statusEffectAccuracy" ||
+            stat.key === "experienceGainIncrease"
+          ) {
+            console.log(`[저장] ${stat.name}:`, {
+              oldBaseline,
+              newBaseline: totalValue,
+              baseValue,
+              totalStatsValue,
+              activeSpirits: Object.entries(pageState.activeSpirits)
+                .map(([cat, active]) =>
+                  active ? `${cat}: ${active.name} Lv${active.level}` : null
+                )
+                .filter(Boolean),
+            });
+          }
         });
 
         // 주요 스탯 기준값 저장 (환산타채 합 등)
@@ -4947,6 +5170,11 @@ function setupEventListeners() {
 
         // userStats도 함께 저장
         saveUserStats();
+
+        // baselineStatsHash 저장 (저장 시점의 해시값)
+        const currentHash = generateTotalStatsHash();
+        pageState.baselineStatsHash = currentHash;
+        console.log("[저장] baselineStatsHash 업데이트:", currentHash);
 
         saveData();
 
@@ -5129,6 +5357,8 @@ export function init(container) {
       Logger.error("Error initializing stats:", error);
       // 에러가 발생해도 기본 스탯은 표시되도록
       // 스탯 아이템이 이미 렌더링되었으므로 페이지는 표시됨
+      // 초기 로딩 완료 플래그는 에러 발생 시에도 설정 (무한 루프 방지)
+      pageState.isInitialLoad = false;
     });
 }
 
