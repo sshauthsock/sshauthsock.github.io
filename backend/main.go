@@ -464,6 +464,9 @@ func main() {
 	appLogger.Info("CORS configured. Allowed origins: %v", originsList)
 	router.Use(cors.New(corsConfig))
 
+	// 보안 헤더 미들웨어 적용 (모든 요청에 대해 보안 헤더 추가)
+	router.Use(SecurityHeadersMiddleware())
+
 	// 모니터링 미들웨어 적용 (모든 요청에 대해 메트릭 수집)
 	router.Use(MonitoringMiddleware())
 
@@ -523,7 +526,7 @@ func (a *App) calculateBond(c *gin.Context) {
 	var req BondCalculationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		appLogger.Warn("Invalid JSON in calculateBond request: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body: " + err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body format"})
 		return
 	}
 
@@ -649,7 +652,7 @@ func (a *App) calculateSoulHandler(c *gin.Context) {
 	var req SoulCalculationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		appLogger.Warn("Invalid JSON in calculateSoulHandler request: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: " + err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body format"})
 		return
 	}
 
@@ -665,8 +668,8 @@ func (a *App) calculateSoulHandler(c *gin.Context) {
 
 	result, err := calculateSoulStats(req, a.soulExpTable) // Pass a.soulExpTable
 	if err != nil {
-		log.Printf("ERROR: calculateSoulStats failed: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		appLogger.Error("calculateSoulStats failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to calculate soul stats. Please try again."})
 		return
 	}
 	if jsonBytes, marshalErr := json.Marshal(result); marshalErr == nil {
@@ -705,7 +708,7 @@ func (a *App) calculateChakHandler(c *gin.Context) {
 	var req ChakCalculationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		appLogger.Warn("Invalid JSON in calculateChakHandler request: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: " + err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body format"})
 		return
 	}
 
@@ -721,7 +724,8 @@ func (a *App) calculateChakHandler(c *gin.Context) {
 
 	result, err := calculateChakStats(req, a.rawChakData, a.chakCosts)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		appLogger.Error("calculateChakStats failed: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to calculate chak stats. Please try again."})
 		return
 	}
 	c.JSON(http.StatusOK, result)

@@ -188,3 +188,35 @@ func MaxBodySizeMiddleware(maxSize int64) gin.HandlerFunc {
 	}
 }
 
+// SecurityHeadersMiddleware: 보안 헤더 추가 미들웨어
+func SecurityHeadersMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// X-Frame-Options: 클릭재킹 방지
+		c.Header("X-Frame-Options", "DENY")
+		
+		// X-Content-Type-Options: MIME 타입 스니핑 방지
+		c.Header("X-Content-Type-Options", "nosniff")
+		
+		// X-XSS-Protection: XSS 필터 활성화 (구형 브라우저용)
+		c.Header("X-XSS-Protection", "1; mode=block")
+		
+		// Referrer-Policy: 리퍼러 정보 제한
+		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+		
+		// Permissions-Policy: 브라우저 기능 제한
+		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+		
+		// Content-Security-Policy: XSS 및 데이터 주입 공격 방지
+		// API 서버이므로 스크립트 실행이 필요 없음
+		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'none'; style-src 'none'; img-src 'none'; font-src 'none'; connect-src 'self'")
+		
+		// Strict-Transport-Security (HSTS): HTTPS 강제 (HTTPS 환경에서만)
+		// 프로덕션 환경에서만 적용 (로컬 개발 환경에서는 적용하지 않음)
+		if c.Request.TLS != nil {
+			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload")
+		}
+		
+		c.Next()
+	}
+}
+
