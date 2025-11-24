@@ -721,35 +721,6 @@ function getHTML() {
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       }
 
-      .my-info-info-btn {
-        width: 24px;
-        height: 24px;
-        border-radius: 6px;
-        border: none;
-        background: transparent;
-        color: var(--color-primary);
-        font-size: 13px;
-        font-weight: 700;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      .my-info-info-btn:hover {
-        background: var(--bg-gray, #f5f5f5);
-        color: var(--color-primary);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-      }
-
-      .my-info-info-btn:active {
-        transform: translateY(0);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-      }
 
       .my-info-stats-list {
         display: grid;
@@ -2158,64 +2129,10 @@ function getHTML() {
                 <button class="my-info-profile-btn danger" id="deleteProfileBtn" disabled>삭제</button>
               </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px; position: relative;">
+            <div style="display: flex; align-items: center; gap: 8px;">
               <button id="saveBaselineBtn" class="my-info-save-btn">
                 <span>저장</span>
               </button>
-              <button id="saveInfoBtn" class="my-info-info-btn">ℹ️</button>
-              <div id="saveInfoTooltip" class="my-info-info-tooltip" style="
-                display: none;
-                position: absolute;
-                top: 100%;
-                right: 0;
-                margin-top: 4px;
-                background: var(--bg-white, #fff);
-                border: 1px solid var(--border-light, #ddd);
-                border-radius: 6px;
-                padding: 12px 16px;
-                font-size: 12px;
-                color: var(--text-primary, #333);
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-                z-index: 1000;
-                max-width: 400px;
-                line-height: 1.6;
-                white-space: normal;
-              ">
-                <div style="font-weight: 600; margin-bottom: 8px; color: var(--color-primary);">📋 내정보 페이지 사용 가이드</div>
-                <div style="margin-bottom: 10px;">
-                  <strong>1. 프로파일 관리</strong><br>
-                  • <strong>+ 버튼</strong>: 새로운 프로파일 생성 (예: PvP, PvE 등)<br>
-                  • <strong>✏️ 버튼</strong>: 프로파일 이름 수정<br>
-                  • <strong>삭제 버튼</strong>: 프로파일 삭제<br>
-                  • 각 프로파일은 독립적으로 환수, 스탯, 각인 정보를 저장합니다
-                </div>
-                <div style="margin-bottom: 10px;">
-                  <strong>2. 환수 결속 관리</strong><br>
-                  • 왼쪽 카테고리(수호/탑승/변신)에서 환수 이미지를 클릭하여 결속 슬롯에 추가<br>
-                  • 환수 이미지를 다시 클릭하면 레벨 조정 및 각인 설정 가능<br>
-                  • <strong>사용하기</strong>: 해당 환수를 활성화 (주황색 테두리 표시)<br>
-                  • <strong>결속 제거</strong>: 결속 슬롯에서 환수 제거
-                </div>
-                <div style="margin-bottom: 10px;">
-                  <strong>3. 스탯 입력 및 저장</strong><br>
-                  • <strong>나의 스탯</strong> 섹션에서 기본 스탯을 직접 입력<br>
-                  • <strong>저장 버튼</strong>: 현재 스탯을 기준값으로 저장<br>
-                  • 저장 후 환수 레벨 변경이나 각인 변경 시 <strong>증감값</strong>이 표시됩니다<br>
-                  • 초록색: 증가, 빨간색: 감소, 회색: 변화 없음
-                </div>
-                <div style="margin-bottom: 10px;">
-                  <strong>4. 각인 설정</strong><br>
-                  • 환수 이미지 클릭 → <strong>등록효과</strong> 탭에서 각인 등록 (최대 4개)<br>
-                  • <strong>장착효과</strong> 탭에서 각인 장착 스탯 입력<br>
-                  • ⚠️ 각인 정보는 레벨에 따라 자동 계산되지 않으므로 직접 입력해야 합니다<br>
-                  • 설정 후 <strong>각인 저장</strong> 버튼 클릭
-                </div>
-                <div style="margin-bottom: 0;">
-                  <strong>5. 환수 혼 경험치</strong><br>
-                  • 하단 왼쪽에서 환수 초기화 시 획득 가능한 경험치 확인<br>
-                  • 수호/탑승/변신별 경험치와 총합, 필요 경험치 표시
-                </div>
-              </div>
             </div>
           </div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm); margin-top: var(--space-xs); position: relative;">
@@ -6391,29 +6308,6 @@ function setupEventListeners() {
     });
   });
 
-  // 정보 아이콘 클릭 이벤트
-  const infoBtn = elements.container?.querySelector("#saveInfoBtn");
-  const infoTooltip = elements.container?.querySelector("#saveInfoTooltip");
-  if (infoBtn && infoTooltip) {
-    infoBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const isVisible = infoTooltip.style.display === "block";
-      infoTooltip.style.display = isVisible ? "none" : "block";
-    });
-
-    // 외부 클릭 시 툴팁 닫기
-    document.addEventListener("click", (e) => {
-      if (
-        infoBtn &&
-        infoTooltip &&
-        !infoBtn.contains(e.target) &&
-        !infoTooltip.contains(e.target)
-      ) {
-        infoTooltip.style.display = "none";
-      }
-    });
-  }
-
   // 기준값 저장 버튼
   const saveBtn = elements.container?.querySelector("#saveBaselineBtn");
   if (saveBtn) {
@@ -7103,12 +6997,43 @@ export function getHelpContentHTML() {
         <li>스탯을 입력한 후 반드시 <strong>저장</strong> 버튼을 클릭해야 증감 기능이 정상 작동합니다</li>
         <li>환수 레벨을 변경하면 즉시 스탯 증감이 반영됩니다</li>
         <li>각인 설정은 환수별로 독립적으로 저장되며, 프로파일별로 관리됩니다</li>
-        <li>저장 버튼 옆의 <strong>ℹ️</strong> 아이콘을 클릭하면 간단한 사용 가이드를 확인할 수 있습니다</li>
+        <li>우측 하단의 <strong>?</strong> 도움말 버튼을 클릭하면 상세한 사용 가이드를 확인할 수 있습니다</li>
       </ul>
     </div>
   `;
 }
 
 export function cleanup() {
-  // 정리 작업
+  // 팝업 및 오버레이 제거
+  if (currentPopup) {
+    const closeBtn = currentPopup.querySelector(".my-info-spirit-popup-close");
+    if (closeBtn) {
+      // 팝업 내부의 cleanup 함수 호출 (이벤트 리스너 제거)
+      closeBtn.click();
+    } else {
+      currentPopup.remove();
+    }
+    currentPopup = null;
+  }
+  if (currentPopupOverlay) {
+    currentPopupOverlay.remove();
+    currentPopupOverlay = null;
+  }
+
+  // 팝업 롱프레스 상태 초기화
+  stopPopupLongPress();
+
+  // touchmove 이벤트 리스너 제거
+  if (popupLongPressState.touchMoveHandler) {
+    document.removeEventListener(
+      "touchmove",
+      popupLongPressState.touchMoveHandler
+    );
+    popupLongPressState.touchMoveHandler = null;
+  }
+
+  // elements 초기화
+  Object.keys(elements).forEach((key) => {
+    delete elements[key];
+  });
 }
