@@ -7,6 +7,7 @@ import Logger from "../utils/logger.js";
 
 const pageState = {
   currentCategory: "수호", // 오른쪽 그리드에서 보여줄 카테고리
+  currentProfileId: null, // 현재 선택된 프로파일 ID
   // 결속 환수: 각 카테고리별 최대 6개
   bondSpirits: {
     수호: [], // [{ name, level, ...spirit }]
@@ -88,6 +89,182 @@ function getHTML() {
         max-width: 1600px;
         margin: 0 auto;
         padding: var(--space-md) var(--space-lg);
+      }
+
+      .my-info-profile-section {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-md);
+        padding: var(--space-sm);
+        background: var(--bg-gray);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-light);
+      }
+
+      .my-info-profile-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+      }
+
+      .my-info-profile-select {
+        flex: 1;
+        padding: 8px 12px;
+        border: 1px solid var(--border-medium);
+        border-radius: var(--radius-sm);
+        background: var(--bg-white);
+        font-size: 14px;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: var(--transition-normal);
+      }
+
+      .my-info-profile-select:hover {
+        border-color: var(--color-primary);
+      }
+
+      .my-info-profile-select:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 2px var(--color-primary-light);
+      }
+
+      .my-info-profile-actions {
+        display: flex;
+        gap: var(--space-xs);
+      }
+
+      .my-info-profile-btn {
+        padding: 8px 16px;
+        border: 1px solid var(--border-medium);
+        border-radius: var(--radius-sm);
+        background: var(--bg-white);
+        color: var(--text-primary);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: var(--transition-normal);
+        white-space: nowrap;
+      }
+
+      .my-info-profile-btn:hover {
+        background: var(--bg-gray);
+        border-color: var(--color-primary);
+      }
+
+      .my-info-profile-btn.primary {
+        background: var(--color-primary);
+        color: white;
+        border-color: var(--color-primary);
+      }
+
+      .my-info-profile-btn.primary:hover {
+        background: var(--color-primary-dark);
+      }
+
+      .my-info-profile-btn.danger {
+        background: var(--color-danger);
+        color: white;
+        border-color: var(--color-danger);
+      }
+
+      .my-info-profile-btn.danger:hover {
+        background: var(--color-danger-dark);
+      }
+
+      .my-info-profile-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+      }
+
+      .my-info-profile-modal-content {
+        background: var(--bg-white);
+        border-radius: var(--radius-lg);
+        padding: var(--space-lg);
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .my-info-profile-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: var(--space-md);
+      }
+
+      .my-info-profile-modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .my-info-profile-modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-sm);
+        transition: var(--transition-normal);
+      }
+
+      .my-info-profile-modal-close:hover {
+        background: var(--bg-gray);
+        color: var(--text-primary);
+      }
+
+      .my-info-profile-form-group {
+        margin-bottom: var(--space-md);
+      }
+
+      .my-info-profile-form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: var(--space-xs);
+      }
+
+      .my-info-profile-form-input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid var(--border-medium);
+        border-radius: var(--radius-sm);
+        background: var(--bg-white);
+        font-size: 14px;
+        color: var(--text-primary);
+        box-sizing: border-box;
+      }
+
+      .my-info-profile-form-input:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 2px var(--color-primary-light);
+      }
+
+      .my-info-profile-modal-actions {
+        display: flex;
+        gap: var(--space-sm);
+        justify-content: flex-end;
+        margin-top: var(--space-lg);
       }
 
       .my-info-top-section {
@@ -1811,6 +1988,18 @@ function getHTML() {
     </style>
 
     <div class="my-info-container">
+      <!-- 프로파일 선택 섹션 -->
+      <div class="my-info-profile-section">
+        <label class="my-info-profile-label">프로파일:</label>
+        <select class="my-info-profile-select" id="profileSelect">
+          <option value="">프로파일 없음</option>
+        </select>
+        <div class="my-info-profile-actions">
+          <button class="my-info-profile-btn primary" id="createProfileBtn">새 프로파일</button>
+          <button class="my-info-profile-btn" id="editProfileBtn" disabled>이름 수정</button>
+          <button class="my-info-profile-btn danger" id="deleteProfileBtn" disabled>삭제</button>
+        </div>
+      </div>
     <div class="my-info-top-section">
       <!-- 왼쪽: 환수 섹션 (50%) -->
       <div class="my-info-spirit-section-wrapper">
@@ -2004,7 +2193,11 @@ function createStatItem(stat) {
 
   // 기본값은 숨김 (더블클릭 편집용으로만 사용)
   const baseValue = createElement("span", "my-info-stat-base");
-  baseValue.textContent = pageState.userStats[stat.key] || "0";
+  // 현재 프로파일의 userStats에서 값을 가져옴
+  const currentUserStatValue = pageState.userStats && pageState.userStats[stat.key] !== undefined 
+    ? pageState.userStats[stat.key] 
+    : 0;
+  baseValue.textContent = currentUserStatValue.toString();
   baseValue.style.display = "none";
 
   // 합산값을 메인으로 표시
@@ -2366,7 +2559,175 @@ function handleStatEdit(item, statKey, valueSpan) {
   });
 }
 
+// 프로파일 관리 함수들
+function getProfiles() {
+  const saved = localStorage.getItem("myInfo_profiles");
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      Logger.error("Error loading profiles:", e);
+      return [];
+    }
+  }
+  return [];
+}
+
+function saveProfiles(profiles) {
+  localStorage.setItem("myInfo_profiles", JSON.stringify(profiles));
+}
+
+function getCurrentProfileId() {
+  const saved = localStorage.getItem("myInfo_currentProfileId");
+  return saved || null;
+}
+
+function setCurrentProfileId(profileId) {
+  if (profileId) {
+    localStorage.setItem("myInfo_currentProfileId", profileId);
+  } else {
+    localStorage.removeItem("myInfo_currentProfileId");
+  }
+  pageState.currentProfileId = profileId;
+}
+
+function createProfile(name) {
+  const profiles = getProfiles();
+  const profileId = `profile_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const newProfile = {
+    id: profileId,
+    name: name || `프로파일 ${profiles.length + 1}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  profiles.push(newProfile);
+  saveProfiles(profiles);
+  return newProfile;
+}
+
+function updateProfile(profileId, updates) {
+  const profiles = getProfiles();
+  const profile = profiles.find((p) => p.id === profileId);
+  if (profile) {
+    Object.assign(profile, updates);
+    profile.updatedAt = new Date().toISOString();
+    saveProfiles(profiles);
+    return profile;
+  }
+  return null;
+}
+
+function deleteProfile(profileId) {
+  const profiles = getProfiles();
+  const filtered = profiles.filter((p) => p.id !== profileId);
+  saveProfiles(filtered);
+  
+  // 프로파일 데이터 삭제
+  localStorage.removeItem(`myInfo_profile_${profileId}`);
+  
+  // 현재 프로파일이 삭제된 경우 첫 번째 프로파일 선택
+  if (pageState.currentProfileId === profileId) {
+    if (filtered.length > 0) {
+      setCurrentProfileId(filtered[0].id);
+      loadProfileData(filtered[0].id);
+    } else {
+      setCurrentProfileId(null);
+      // 기본값으로 초기화
+      pageState.userStats = {};
+      pageState.bondSpirits = { 수호: [], 탑승: [], 변신: [] };
+      pageState.activeSpirits = { 수호: null, 탑승: null, 변신: null };
+      pageState.baselineStats = {};
+      pageState.baselineKeyStats = { tachaeTotal: 0, statusEffectResistance: 0, statusEffectAccuracy: 0 };
+      pageState.savedSoulExp = 0;
+      pageState.engravingData = { 수호: {}, 탑승: {}, 변신: {} };
+      pageState.baselineStatsHash = null;
+    }
+  }
+}
+
+function saveProfileData(profileId) {
+  const profileData = {
+    userStats: pageState.userStats,
+    bondSpirits: pageState.bondSpirits,
+    activeSpirits: pageState.activeSpirits,
+    baselineStats: pageState.baselineStats,
+    baselineKeyStats: pageState.baselineKeyStats,
+    savedSoulExp: pageState.savedSoulExp,
+    engravingData: pageState.engravingData,
+    baselineStatsHash: pageState.baselineStatsHash,
+  };
+  localStorage.setItem(`myInfo_profile_${profileId}`, JSON.stringify(profileData));
+  
+  // 프로파일 업데이트 시간 갱신
+  updateProfile(profileId, { updatedAt: new Date().toISOString() });
+}
+
+function loadProfileData(profileId) {
+  const saved = localStorage.getItem(`myInfo_profile_${profileId}`);
+  if (saved) {
+    try {
+      const profileData = JSON.parse(saved);
+      pageState.userStats = profileData.userStats || {};
+      pageState.bondSpirits = profileData.bondSpirits || { 수호: [], 탑승: [], 변신: [] };
+      pageState.activeSpirits = profileData.activeSpirits || { 수호: null, 탑승: null, 변신: null };
+      pageState.baselineStats = profileData.baselineStats || {};
+      pageState.baselineKeyStats = profileData.baselineKeyStats || { tachaeTotal: 0, statusEffectResistance: 0, statusEffectAccuracy: 0 };
+      pageState.savedSoulExp = profileData.savedSoulExp || 0;
+      pageState.engravingData = profileData.engravingData || { 수호: {}, 탑승: {}, 변신: {} };
+      pageState.baselineStatsHash = profileData.baselineStatsHash || null;
+      
+      // 캐시 무효화 (프로파일 전환 시 새로운 데이터로 재계산)
+      pageState.lastTotalStatsHash = null;
+      pageState.lastTotalStatsCalculation = null;
+      pageState.lastSoulExpHash = null;
+      pageState.lastSoulExpCalculation = null;
+      
+      // 프로파일 로드 시 증감 0으로 초기화 (새로고침과 동일하게 처리)
+      pageState.isInitialLoad = true;
+      
+      // 데이터 로드 후 UI 업데이트
+      if (typeof renderBondSlots === 'function') {
+        renderBondSlots("수호");
+        renderBondSlots("탑승");
+        renderBondSlots("변신");
+      }
+      if (typeof renderActiveSpiritSelect === 'function') {
+        renderActiveSpiritSelect("수호");
+        renderActiveSpiritSelect("탑승");
+        renderActiveSpiritSelect("변신");
+      }
+      if (typeof renderStats === 'function') {
+        renderStats();
+      }
+      // 프로파일 로드 시 스탯 업데이트 (증감 0으로 표시)
+      // updateTotalStats 완료 후 isInitialLoad를 false로 설정하여 이후 변경사항이 반영되도록 함
+      if (typeof updateTotalStats === 'function') {
+        updateTotalStats().then(() => {
+          // 초기 로딩 완료 - 이후 변경사항은 증감으로 표시
+          pageState.isInitialLoad = false;
+        }).catch(() => {
+          // 에러 발생 시에도 플래그 해제 (무한 루프 방지)
+          pageState.isInitialLoad = false;
+        });
+      } else {
+        pageState.isInitialLoad = false;
+      }
+      if (typeof updateSoulExp === 'function') {
+        updateSoulExp();
+      }
+    } catch (e) {
+      Logger.error("Error loading profile data:", e);
+    }
+  }
+}
+
 function loadUserStats() {
+  // 프로파일이 있으면 loadProfileData에서 이미 로드됨
+  if (pageState.currentProfileId) {
+    return;
+  }
+  
+  // 프로파일이 없으면 기존 방식으로 로드 (하위 호환성)
   const saved = localStorage.getItem("myInfo_userStats");
   if (saved) {
     try {
@@ -2379,110 +2740,122 @@ function loadUserStats() {
 }
 
 function saveUserStats() {
-  localStorage.setItem("myInfo_userStats", JSON.stringify(pageState.userStats));
+  // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
+  // 프로파일이 없으면 기존 방식으로 저장 (하위 호환성)
+  if (!pageState.currentProfileId) {
+    localStorage.setItem("myInfo_userStats", JSON.stringify(pageState.userStats));
+  }
 }
 
 function loadSavedData() {
-  // 결속 환수 로드
-  const savedBond = localStorage.getItem("myInfo_bondSpirits");
-  if (savedBond) {
-    try {
-      pageState.bondSpirits = JSON.parse(savedBond);
-    } catch (e) {
-      Logger.error("Error loading bond spirits:", e);
+  // 현재 프로파일 ID 로드
+  const currentProfileId = getCurrentProfileId();
+  pageState.currentProfileId = currentProfileId;
+  
+  if (currentProfileId) {
+    // 프로파일 데이터 로드
+    loadProfileData(currentProfileId);
+  } else {
+    // 프로파일이 없으면 기존 방식으로 로드 (하위 호환성)
+    const savedBond = localStorage.getItem("myInfo_bondSpirits");
+    if (savedBond) {
+      try {
+        pageState.bondSpirits = JSON.parse(savedBond);
+      } catch (e) {
+        Logger.error("Error loading bond spirits:", e);
+      }
     }
-  }
 
-  // 사용 환수 로드
-  const savedActive = localStorage.getItem("myInfo_activeSpirits");
-  if (savedActive) {
-    try {
-      pageState.activeSpirits = JSON.parse(savedActive);
-    } catch (e) {
-      Logger.error("Error loading active spirits:", e);
+    const savedActive = localStorage.getItem("myInfo_activeSpirits");
+    if (savedActive) {
+      try {
+        pageState.activeSpirits = JSON.parse(savedActive);
+      } catch (e) {
+        Logger.error("Error loading active spirits:", e);
+      }
     }
-  }
 
-  // 기준 스탯 로드
-  const savedBaseline = localStorage.getItem("myInfo_baselineStats");
-  if (savedBaseline) {
-    try {
-      pageState.baselineStats = JSON.parse(savedBaseline);
-    } catch (e) {
-      Logger.error("Error loading baseline stats:", e);
+    const savedBaseline = localStorage.getItem("myInfo_baselineStats");
+    if (savedBaseline) {
+      try {
+        pageState.baselineStats = JSON.parse(savedBaseline);
+      } catch (e) {
+        Logger.error("Error loading baseline stats:", e);
+      }
     }
-  }
 
-  // 저장된 환수혼 경험치 로드
-  const savedSoulExp = localStorage.getItem("myInfo_savedSoulExp");
-  if (savedSoulExp) {
-    try {
-      pageState.savedSoulExp = parseInt(savedSoulExp, 10) || 0;
-    } catch (e) {
-      Logger.error("Error loading saved soul exp:", e);
+    const savedSoulExp = localStorage.getItem("myInfo_savedSoulExp");
+    if (savedSoulExp) {
+      try {
+        pageState.savedSoulExp = parseInt(savedSoulExp, 10) || 0;
+      } catch (e) {
+        Logger.error("Error loading saved soul exp:", e);
+      }
     }
-  }
 
-  // 각인 데이터 로드
-  const savedEngraving = localStorage.getItem("myInfo_engravingData");
-  if (savedEngraving) {
-    try {
-      pageState.engravingData = JSON.parse(savedEngraving);
-    } catch (e) {
-      Logger.error("Error loading engraving data:", e);
-      pageState.engravingData = { 수호: {}, 탑승: {}, 변신: {} };
+    const savedEngraving = localStorage.getItem("myInfo_engravingData");
+    if (savedEngraving) {
+      try {
+        pageState.engravingData = JSON.parse(savedEngraving);
+      } catch (e) {
+        Logger.error("Error loading engraving data:", e);
+        pageState.engravingData = { 수호: {}, 탑승: {}, 변신: {} };
+      }
     }
-  }
 
-  // 기준 주요 스탯 로드 (환산타채 합 등)
-  const savedBaselineKeyStats = localStorage.getItem("myInfo_baselineKeyStats");
-  if (savedBaselineKeyStats) {
-    try {
-      pageState.baselineKeyStats = JSON.parse(savedBaselineKeyStats);
-    } catch (e) {
-      Logger.error("Error loading baseline key stats:", e);
+    const savedBaselineKeyStats = localStorage.getItem("myInfo_baselineKeyStats");
+    if (savedBaselineKeyStats) {
+      try {
+        pageState.baselineKeyStats = JSON.parse(savedBaselineKeyStats);
+      } catch (e) {
+        Logger.error("Error loading baseline key stats:", e);
+      }
     }
-  }
 
-  // baselineStatsHash 로드
-  const savedBaselineStatsHash = localStorage.getItem(
-    "myInfo_baselineStatsHash"
-  );
-  if (savedBaselineStatsHash) {
-    pageState.baselineStatsHash = savedBaselineStatsHash;
+    const savedBaselineStatsHash = localStorage.getItem("myInfo_baselineStatsHash");
+    if (savedBaselineStatsHash) {
+      pageState.baselineStatsHash = savedBaselineStatsHash;
+    }
   }
 }
 
 function saveData() {
-  localStorage.setItem(
-    "myInfo_bondSpirits",
-    JSON.stringify(pageState.bondSpirits)
-  );
-  localStorage.setItem(
-    "myInfo_activeSpirits",
-    JSON.stringify(pageState.activeSpirits)
-  );
-  localStorage.setItem(
-    "myInfo_baselineStats",
-    JSON.stringify(pageState.baselineStats)
-  );
-  localStorage.setItem(
-    "myInfo_baselineKeyStats",
-    JSON.stringify(pageState.baselineKeyStats)
-  );
-  localStorage.setItem(
-    "myInfo_savedSoulExp",
-    pageState.savedSoulExp.toString()
-  );
-  localStorage.setItem(
-    "myInfo_engravingData",
-    JSON.stringify(pageState.engravingData)
-  );
-  if (pageState.baselineStatsHash) {
+  if (pageState.currentProfileId) {
+    // 프로파일이 있으면 프로파일 데이터로 저장 (userStats 포함)
+    saveProfileData(pageState.currentProfileId);
+  } else {
+    // 프로파일이 없으면 기존 방식으로 저장 (하위 호환성)
     localStorage.setItem(
-      "myInfo_baselineStatsHash",
-      pageState.baselineStatsHash
+      "myInfo_bondSpirits",
+      JSON.stringify(pageState.bondSpirits)
     );
+    localStorage.setItem(
+      "myInfo_activeSpirits",
+      JSON.stringify(pageState.activeSpirits)
+    );
+    localStorage.setItem(
+      "myInfo_baselineStats",
+      JSON.stringify(pageState.baselineStats)
+    );
+    localStorage.setItem(
+      "myInfo_baselineKeyStats",
+      JSON.stringify(pageState.baselineKeyStats)
+    );
+    localStorage.setItem(
+      "myInfo_savedSoulExp",
+      pageState.savedSoulExp.toString()
+    );
+    localStorage.setItem(
+      "myInfo_engravingData",
+      JSON.stringify(pageState.engravingData)
+    );
+    if (pageState.baselineStatsHash) {
+      localStorage.setItem(
+        "myInfo_baselineStatsHash",
+        pageState.baselineStatsHash
+      );
+    }
+    // userStats는 saveUserStats에서 별도로 저장됨
   }
 }
 
@@ -2659,13 +3032,20 @@ function handleSpiritSelect(spirit) {
     // 이미 있으면 제거
     bondSpirits.splice(existingIndex, 1);
     pageState.bondSpirits[category] = bondSpirits;
-    // saveData() 제거: 저장 버튼을 눌러야 저장됨
+    
+    // 초기 로딩 플래그 해제 (사용자가 환수를 제거했으므로 증감 표시)
+    pageState.isInitialLoad = false;
+    
+    // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
+    
     renderBondSlots(category);
     renderSpiritList();
 
     // 캐시 무효화
     pageState.lastTotalStatsHash = null;
+    pageState.lastTotalStatsCalculation = null;
     pageState.lastSoulExpHash = null;
+    pageState.lastSoulExpCalculation = null;
 
     // 디바운스된 업데이트
     debouncedUpdateTotalStats();
@@ -2678,7 +3058,11 @@ function handleSpiritSelect(spirit) {
         level: 25, // 기본값 25
       });
       pageState.bondSpirits[category] = bondSpirits;
-      // saveData() 제거: 저장 버튼을 눌러야 저장됨
+      
+      // 초기 로딩 플래그 해제 (사용자가 환수를 추가했으므로 증감 표시)
+      pageState.isInitialLoad = false;
+      
+      // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
 
       // 새로 추가된 슬롯 인덱스
       const newIndex = bondSpirits.length - 1;
@@ -2922,12 +3306,21 @@ function showSpiritLevelPopup(category, index, slot, event) {
         };
       }
 
-      // saveData() 제거: 저장 버튼을 눌러야 저장됨
+      // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
+      
       renderBondSlots(category);
       updatePopupActiveState(popup, category, spirit);
 
-      // 캐시 무효화하지 않고 디바운싱된 업데이트만 호출
-      // (해시 기반 캐시가 자동으로 변경사항을 감지함)
+      // 초기 로딩 플래그 해제 (사용자가 레벨을 변경했으므로 증감 표시)
+      pageState.isInitialLoad = false;
+      
+      // 캐시 무효화 (레벨 변경 시 재계산 필요)
+      pageState.lastTotalStatsHash = null;
+      pageState.lastTotalStatsCalculation = null;
+      pageState.lastSoulExpHash = null;
+      pageState.lastSoulExpCalculation = null;
+      
+      // 디바운싱된 업데이트 호출
       debouncedUpdateTotalStats();
       debouncedUpdateSoulExp();
     });
@@ -2994,7 +3387,12 @@ function showSpiritLevelPopup(category, index, slot, event) {
             if (levelInput) {
               levelInput.value = level;
             }
-            // saveData() 제거: 저장 버튼을 눌러야 저장됨
+            
+            // 초기 로딩 플래그 해제 (사용자가 레벨을 변경했으므로 증감 표시)
+            pageState.isInitialLoad = false;
+            
+            // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
+            
             renderBondSlots(popupLongPressState.category);
             updatePopupActiveState(
               popup,
@@ -3004,7 +3402,9 @@ function showSpiritLevelPopup(category, index, slot, event) {
 
             // 캐시 무효화
             pageState.lastTotalStatsHash = null;
+            pageState.lastTotalStatsCalculation = null;
             pageState.lastSoulExpHash = null;
+            pageState.lastSoulExpCalculation = null;
             debouncedUpdateTotalStats();
             debouncedUpdateSoulExp();
           }
@@ -3187,13 +3587,19 @@ function showSpiritLevelPopup(category, index, slot, event) {
       });
     }
 
-    // saveData() 제거: 저장 버튼을 눌러야 저장됨
+    // 초기 로딩 플래그 해제 (사용자가 사용중 환수를 변경했으므로 증감 표시)
+    pageState.isInitialLoad = false;
+    
+    // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
+    
     renderBondSlots(category);
     updatePopupActiveState(popup, category, spirit);
 
     // 캐시 무효화 및 즉시 업데이트 (사용중 환수 변경 시 각인 등록효과가 즉시 반영되어야 함)
     pageState.lastTotalStatsHash = null;
+    pageState.lastTotalStatsCalculation = null;
     pageState.lastSoulExpHash = null;
+    pageState.lastSoulExpCalculation = null;
     updateTotalStats();
     updateSoulExp();
   });
@@ -3605,7 +4011,11 @@ function showEngravingModal(category, spiritName, spirit) {
         pageState.engravingData[category] = {};
       }
       pageState.engravingData[category][spiritName] = engravingData;
-      // saveData() 제거: 저장 버튼을 눌러야 저장됨
+      
+      // 초기 로딩 플래그 해제 (사용자가 각인을 변경했으므로 증감 표시)
+      pageState.isInitialLoad = false;
+      
+      // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
 
       // 스탯 업데이트
       updateTotalStats();
@@ -3707,7 +4117,8 @@ function startPopupLongPress() {
         };
       }
 
-      // saveData() 제거: 저장 버튼을 눌러야 저장됨
+      // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
+      
       const levelInput = currentPopup?.querySelector(".level-input");
       if (levelInput) {
         levelInput.value = currentSpirit.level;
@@ -3719,8 +4130,16 @@ function startPopupLongPress() {
         currentSpirit
       );
 
-      // 캐시 무효화하지 않고 디바운싱된 업데이트만 호출
-      // (해시 기반 캐시가 자동으로 변경사항을 감지함)
+      // 초기 로딩 플래그 해제 (사용자가 레벨을 변경했으므로 증감 표시)
+      pageState.isInitialLoad = false;
+      
+      // 캐시 무효화 (레벨 변경 시 재계산 필요)
+      pageState.lastTotalStatsHash = null;
+      pageState.lastTotalStatsCalculation = null;
+      pageState.lastSoulExpHash = null;
+      pageState.lastSoulExpCalculation = null;
+
+      // 디바운싱된 업데이트 호출
       debouncedUpdateTotalStats();
       debouncedUpdateSoulExp();
 
@@ -3868,6 +4287,9 @@ function createPopupHint() {
         const targetValue =
           popupLongPressState.action === "level-down" ? 0 : 25;
         if (popupLongPressState.spirit) {
+          // 초기 로딩 플래그 해제 (사용자가 레벨을 변경했으므로 증감 표시)
+          pageState.isInitialLoad = false;
+          
           popupLongPressState.spirit.level = targetValue;
 
           // 사용중 환수인 경우 activeSpirits의 레벨도 함께 업데이트
@@ -3883,7 +4305,8 @@ function createPopupHint() {
           if (levelInput) {
             levelInput.value = targetValue;
           }
-          // saveData() 제거: 저장 버튼을 눌러야 저장됨
+          // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
+          
           renderBondSlots(popupLongPressState.category);
           updatePopupActiveState(
             currentPopup,
@@ -4271,10 +4694,10 @@ function updateKeyStats(
     }
   });
 
-  // 각인 장착효과 계산 (모든 카테고리의 결속 환수 + 사용 중인 환수)
+  // 각인 장착효과 계산 (모든 결속 환수 - 사용중 환수는 결속에 포함되어 있으므로 결속 환수만 계산)
   const bindStats = {};
   categories.forEach((category) => {
-    // 결속 환수의 각인 장착효과
+    // 결속 환수의 각인 장착효과 (모든 슬롯에 배치된 환수)
     const bondSpirits = pageState.bondSpirits[category] || [];
     bondSpirits.forEach((bondSpirit) => {
       const engraving =
@@ -4289,22 +4712,6 @@ function updateKeyStats(
         });
       }
     });
-
-    // 사용 중인 환수의 각인 장착효과
-    const active = pageState.activeSpirits[category];
-    if (active) {
-      const engraving =
-        pageState.engravingData[category]?.[active.name] || {};
-      if (engraving.bind) {
-        Object.entries(engraving.bind).forEach(([statKey, value]) => {
-          const numValue =
-            typeof value === "number" ? value : parseFloat(value) || 0;
-          if (numValue > 0) {
-            bindStats[statKey] = (bindStats[statKey] || 0) + numValue;
-          }
-        });
-      }
-    }
   });
 
   // 변화값 계산
@@ -4457,14 +4864,18 @@ function removeBondSpirit(category, index) {
 
   bondSpirits.splice(index, 1);
   pageState.bondSpirits[category] = bondSpirits;
-  // saveData() 제거: 저장 버튼을 눌러야 저장됨
+  
+  // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
+  
   renderBondSlots(category);
   renderActiveSpiritSelect(category);
   renderSpiritList();
 
   // 캐시 무효화
   pageState.lastTotalStatsHash = null;
+  pageState.lastTotalStatsCalculation = null;
   pageState.lastSoulExpHash = null;
+  pageState.lastSoulExpCalculation = null;
 
   // 디바운스된 업데이트
   debouncedUpdateTotalStats();
@@ -4474,13 +4885,13 @@ function removeBondSpirit(category, index) {
 async function updateTotalStats() {
   // 기준값 저장 중이면 업데이트하지 않음
   if (pageState.isSavingBaseline) {
-    return;
+    return Promise.resolve();
   }
 
   // 이미 실행 중이면 중복 호출 방지
   if (pageState.isUpdatingTotalStats) {
     console.log("[updateTotalStats] 이미 실행 중이므로 중복 호출 방지");
-    return;
+    return Promise.resolve();
   }
 
   pageState.isUpdatingTotalStats = true;
@@ -4508,7 +4919,8 @@ async function updateTotalStats() {
       {},
       shouldForceZeroChange
     );
-    return;
+    pageState.isUpdatingTotalStats = false;
+    return Promise.resolve();
   }
 
   try {
@@ -4848,63 +5260,27 @@ async function updateTotalStats() {
       isInitialLoad: pageState.isInitialLoad,
     });
 
+    // baselineStatsHash는 저장 버튼을 눌렀을 때만 업데이트되므로
+    // 여기서는 해시 비교만 하고 baselineStats는 변경하지 않음
+    // 증감 계산은 항상 저장된 baselineStats와 현재 계산값을 비교하여 수행
     if (pageState.baselineStatsHash) {
       if (currentHash === pageState.baselineStatsHash) {
-        // 현재 상태가 저장된 baseline과 일치하면 baselineStats를 현재 값으로 업데이트
+        // 현재 상태가 저장된 baseline과 일치하면 증감을 0으로 표시
         console.log(
-          "[updateTotalStats] baselineStatsHash 일치 - baselineStats 자동 업데이트"
+          "[updateTotalStats] baselineStatsHash 일치 - 증감 0으로 표시"
         );
-        Object.keys(allTotalStats).forEach((statKey) => {
-          const totalValue = Math.round(
-            (pageState.userStats[statKey] || 0) + (allTotalStats[statKey] || 0)
-          );
-          const oldBaseline = pageState.baselineStats[statKey];
-          pageState.baselineStats[statKey] = totalValue;
-
-          // 디버깅: 주요 스탯만 로그 출력
-          if (
-            statKey === "statusEffectResistance" ||
-            statKey === "statusEffectAccuracy" ||
-            statKey === "experienceGainIncrease"
-          ) {
-            console.log(
-              `[baselineStats 업데이트] ${statKey}: ${oldBaseline} → ${totalValue}`
-            );
-          }
-        });
-
-        // baselineKeyStats도 업데이트
-        // 저장 시와 동일한 방식으로 계산: userStats + allTotalStats (정수로 반올림)
-        const getTotalValueForUpdate = (key) => {
-          const baseValue = pageState.userStats[key] || 0;
-          const totalStatsValue = allTotalStats[key] || 0;
-          return Math.round(baseValue + totalStatsValue);
-        };
-
-        const tachaeTotal = Math.round(
-          getTotalValueForUpdate("damageResistancePenetration") +
-            getTotalValueForUpdate("damageResistance") +
-            Math.round(getTotalValueForUpdate("pvpDamagePercent") * 10) +
-            Math.round(getTotalValueForUpdate("pvpDefensePercent") * 10)
-        );
-        pageState.baselineKeyStats.tachaeTotal = tachaeTotal;
-        pageState.baselineKeyStats.statusEffectResistance = getTotalValueForUpdate(
-          "statusEffectResistance"
-        );
-        pageState.baselineKeyStats.statusEffectAccuracy = getTotalValueForUpdate(
-          "statusEffectAccuracy"
-        );
-
         shouldForceZeroChange = true;
       } else {
         console.log(
-          "[updateTotalStats] baselineStatsHash 불일치 - baselineStats 유지"
+          "[updateTotalStats] baselineStatsHash 불일치 - 증감 계산"
         );
+        // 해시가 불일치하면 증감을 계산하여 표시
+        shouldForceZeroChange = false;
       }
     } else {
-      // baselineStatsHash가 없으면 초기화
-      console.log("[updateTotalStats] baselineStatsHash 없음 - 초기화");
-      pageState.baselineStatsHash = currentHash;
+      // baselineStatsHash가 없으면 초기화 (저장 버튼을 누르기 전까지는 해시 설정 안 함)
+      console.log("[updateTotalStats] baselineStatsHash 없음");
+      shouldForceZeroChange = pageState.isInitialLoad;
     }
 
     // 합산 스탯은 기본 스탯 섹션에 통합되어 표시됨
@@ -5202,7 +5578,203 @@ async function updateSoulExp() {
   }
 }
 
+function renderProfileSelect() {
+  const select = elements.profileSelect;
+  if (!select) return;
+  
+  const profiles = getProfiles();
+  const currentProfileId = pageState.currentProfileId;
+  
+  select.innerHTML = '<option value="">프로파일 없음</option>';
+  profiles.forEach((profile) => {
+    const option = createElement("option");
+    option.value = profile.id;
+    option.textContent = profile.name;
+    if (profile.id === currentProfileId) {
+      option.selected = true;
+    }
+    select.appendChild(option);
+  });
+  
+  // 버튼 활성화/비활성화
+  const hasProfile = currentProfileId !== null;
+  if (elements.editProfileBtn) elements.editProfileBtn.disabled = !hasProfile;
+  if (elements.deleteProfileBtn) elements.deleteProfileBtn.disabled = !hasProfile;
+}
+
+function showProfileModal(mode, profileId = null) {
+  const modal = createElement("div", "my-info-profile-modal");
+  const profile = profileId ? getProfiles().find((p) => p.id === profileId) : null;
+  
+  modal.innerHTML = `
+    <div class="my-info-profile-modal-content">
+      <div class="my-info-profile-modal-header">
+        <div class="my-info-profile-modal-title">
+          ${mode === "create" ? "새 프로파일 생성" : mode === "edit" ? "프로파일 이름 수정" : ""}
+        </div>
+        <button class="my-info-profile-modal-close">×</button>
+      </div>
+      <div class="my-info-profile-form-group">
+        <label class="my-info-profile-form-label">프로파일 이름</label>
+        <input type="text" class="my-info-profile-form-input" id="profileNameInput" 
+               value="${profile ? profile.name : ""}" 
+               placeholder="프로파일 이름을 입력하세요" maxlength="50">
+      </div>
+      <div class="my-info-profile-modal-actions">
+        <button class="my-info-profile-btn" id="profileModalCancelBtn">취소</button>
+        <button class="my-info-profile-btn primary" id="profileModalSaveBtn">
+          ${mode === "create" ? "생성" : "저장"}
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  const closeModal = () => modal.remove();
+  
+  modal.querySelector(".my-info-profile-modal-close").addEventListener("click", closeModal);
+  modal.querySelector("#profileModalCancelBtn").addEventListener("click", closeModal);
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeModal();
+  });
+  
+  modal.querySelector("#profileModalSaveBtn").addEventListener("click", () => {
+    const nameInput = modal.querySelector("#profileNameInput");
+    const name = nameInput.value.trim();
+    
+    if (!name) {
+      alert("프로파일 이름을 입력해주세요.");
+      return;
+    }
+    
+    if (mode === "create") {
+      const newProfile = createProfile(name);
+      
+      // 환수 레벨, 각인, 사용중은 현재 상태에서 복사 (깊은 복사)
+      const currentBondSpirits = JSON.parse(JSON.stringify(pageState.bondSpirits));
+      const currentActiveSpirits = JSON.parse(JSON.stringify(pageState.activeSpirits));
+      const currentEngravingData = JSON.parse(JSON.stringify(pageState.engravingData));
+      
+      // 나의 스탯은 새로 시작 (초기화)
+      pageState.userStats = {};
+      pageState.baselineStats = {};
+      pageState.baselineKeyStats = { tachaeTotal: 0, statusEffectResistance: 0, statusEffectAccuracy: 0 };
+      pageState.savedSoulExp = 0;
+      pageState.baselineStatsHash = null;
+      
+      // 환수 데이터 복사
+      pageState.bondSpirits = currentBondSpirits;
+      pageState.activeSpirits = currentActiveSpirits;
+      pageState.engravingData = currentEngravingData;
+      
+      // 캐시 무효화
+      pageState.lastTotalStatsHash = null;
+      pageState.lastTotalStatsCalculation = null;
+      pageState.lastSoulExpHash = null;
+      pageState.lastSoulExpCalculation = null;
+      
+      // 초기 로딩 플래그 설정 (증감 0으로 표시)
+      pageState.isInitialLoad = true;
+      
+      setCurrentProfileId(newProfile.id);
+      
+      // 새 프로파일 데이터 저장
+      saveProfileData(newProfile.id);
+      
+      // UI 업데이트
+      renderProfileSelect();
+      if (typeof renderBondSlots === 'function') {
+        renderBondSlots("수호");
+        renderBondSlots("탑승");
+        renderBondSlots("변신");
+      }
+      if (typeof renderActiveSpiritSelect === 'function') {
+        renderActiveSpiritSelect("수호");
+        renderActiveSpiritSelect("탑승");
+        renderActiveSpiritSelect("변신");
+      }
+      if (typeof renderStats === 'function') {
+        renderStats();
+      }
+      if (typeof updateTotalStats === 'function') {
+        updateTotalStats();
+      }
+      if (typeof updateSoulExp === 'function') {
+        updateSoulExp();
+      }
+      
+      alert("프로파일이 생성되었습니다. 나의 스탯을 새로 입력해주세요.");
+    } else if (mode === "edit" && profileId) {
+      updateProfile(profileId, { name });
+      renderProfileSelect();
+      alert("프로파일 이름이 수정되었습니다.");
+    }
+    
+    closeModal();
+  });
+  
+  // Enter 키로 저장
+  modal.querySelector("#profileNameInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      modal.querySelector("#profileModalSaveBtn").click();
+    }
+  });
+  
+  // 포커스
+  setTimeout(() => {
+    modal.querySelector("#profileNameInput").focus();
+    modal.querySelector("#profileNameInput").select();
+  }, 100);
+}
+
 function setupEventListeners() {
+  // 프로파일 선택
+  if (elements.profileSelect) {
+    elements.profileSelect.addEventListener("change", (e) => {
+      const profileId = e.target.value || null;
+      setCurrentProfileId(profileId);
+      
+      if (profileId) {
+        loadProfileData(profileId);
+        // 프로파일 전환 후 스탯 업데이트는 loadProfileData에서 처리됨
+      } else {
+        // 프로파일 없음으로 전환 시 기존 데이터 유지
+        renderProfileSelect();
+      }
+    });
+  }
+  
+  // 새 프로파일 생성
+  if (elements.createProfileBtn) {
+    elements.createProfileBtn.addEventListener("click", () => {
+      showProfileModal("create");
+    });
+  }
+  
+  // 프로파일 이름 수정
+  if (elements.editProfileBtn) {
+    elements.editProfileBtn.addEventListener("click", () => {
+      if (pageState.currentProfileId) {
+        showProfileModal("edit", pageState.currentProfileId);
+      }
+    });
+  }
+  
+  // 프로파일 삭제
+  if (elements.deleteProfileBtn) {
+    elements.deleteProfileBtn.addEventListener("click", () => {
+      if (pageState.currentProfileId) {
+        const profile = getProfiles().find((p) => p.id === pageState.currentProfileId);
+        if (profile && confirm(`"${profile.name}" 프로파일을 삭제하시겠습니까?`)) {
+          deleteProfile(pageState.currentProfileId);
+          renderProfileSelect();
+          alert("프로파일이 삭제되었습니다.");
+        }
+      }
+    });
+  }
+  
   // 환수 카테고리 탭 (오른쪽 그리드)
   elements.spiritTabs.forEach((tab) => {
     tab.addEventListener("click", (e) => {
@@ -5748,6 +6320,10 @@ export function init(container) {
   elements.spiritTabs = container.querySelectorAll(".my-info-spirit-tab");
   elements.totalStatsGrid = container.querySelector("#totalStatsGrid");
   elements.soulExpInfo = container.querySelector("#soulExpInfo");
+  elements.profileSelect = container.querySelector("#profileSelect");
+  elements.createProfileBtn = container.querySelector("#createProfileBtn");
+  elements.editProfileBtn = container.querySelector("#editProfileBtn");
+  elements.deleteProfileBtn = container.querySelector("#deleteProfileBtn");
 
   // 결속 슬롯 요소들
   elements.bondSlots수호 = container.querySelector("#bondSlots수호");
@@ -5756,6 +6332,9 @@ export function init(container) {
 
   loadUserStats();
   loadSavedData();
+
+  // 프로파일 UI 초기화
+  renderProfileSelect();
 
   renderStats();
 
