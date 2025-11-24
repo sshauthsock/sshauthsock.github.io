@@ -98,6 +98,67 @@ function getHTML() {
         min-height: 500px;
       }
 
+      .my-info-bottom-section {
+        display: flex;
+        gap: var(--space-sm);
+        margin-top: var(--space-md);
+        width: 100%;
+        max-height: 200px;
+      }
+
+      .my-info-bottom-left,
+      .my-info-bottom-right {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .my-info-bottom-left {
+        flex: 0 0 45%;
+      }
+
+      .my-info-bottom-right {
+        flex: 0 0 55%;
+      }
+
+      .my-info-bottom-section .my-info-stats-section {
+        height: 100%;
+        max-height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 4px;
+        background: var(--bg-gray);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-light);
+        gap: 3px;
+        overflow: hidden;
+        min-height: 0;
+      }
+
+      .my-info-bottom-section .my-info-stats-section > * {
+        margin: 0;
+        flex-shrink: 0;
+      }
+
+      .my-info-bottom-section #soulExpInfo {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .my-info-bottom-section .my-info-section-title {
+        font-size: 9px;
+        margin-bottom: 1px;
+        padding-bottom: 1px;
+        border-bottom: 1px solid var(--border-light);
+        line-height: 1.1;
+      }
+
       .my-info-spirit-section-wrapper {
         flex: 0 0 45%;
         min-width: 0;
@@ -144,11 +205,84 @@ function getHTML() {
         flex-shrink: 0;
       }
 
+      .my-info-bottom-section .my-info-key-stats-section {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: none;
+        height: 100%;
+        max-height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: var(--space-sm);
+        background: var(--bg-gray);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border-light);
+        gap: var(--space-xs);
+        overflow: hidden;
+        min-height: 0;
+      }
+
+      .my-info-bottom-section .my-info-key-stats-section > * {
+        margin: 0;
+        flex-shrink: 0;
+      }
+
+      .my-info-bottom-section .my-info-key-stats-grid {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .my-info-bottom-section .my-info-key-stats-section .my-info-section-title {
+        margin-bottom: 0;
+        padding-bottom: 2px;
+        border-bottom: 1px solid var(--border-light);
+      }
+
+      .my-info-engraving-notice {
+        font-size: 9px;
+        color: var(--text-secondary);
+        padding: 0 2px;
+        line-height: 1.3;
+        margin-top: 2px;
+      }
+
       .my-info-key-stats-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: var(--space-sm);
         margin-top: var(--space-sm);
+      }
+
+      .my-info-bottom-section .my-info-key-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-xs);
+        margin-top: var(--space-xs);
+        flex: 1;
+        min-height: 0;
+        align-content: start;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 2px;
+      }
+
+      .my-info-bottom-section .my-info-key-stats-grid::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .my-info-bottom-section .my-info-key-stats-grid::-webkit-scrollbar-track {
+        background: var(--bg-gray);
+        border-radius: 2px;
+      }
+
+      .my-info-bottom-section .my-info-key-stats-grid::-webkit-scrollbar-thumb {
+        background: var(--border-medium);
+        border-radius: 2px;
+      }
+
+      .my-info-bottom-section .my-info-key-stats-grid::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
       }
 
       .my-info-key-stat-item {
@@ -158,6 +292,12 @@ function getHTML() {
         background: var(--bg-gray);
         border-radius: var(--radius-md);
         border: 1px solid var(--border-light);
+      }
+
+      .my-info-bottom-section .my-info-key-stat-item {
+        padding: var(--space-xs);
+        background: var(--bg-white);
+        border-radius: var(--radius-sm);
       }
 
       .my-info-key-stat-label {
@@ -186,6 +326,92 @@ function getHTML() {
         padding: 2px 6px;
         border-radius: 4px;
         white-space: nowrap;
+      }
+
+      .my-info-key-stat-registration-list,
+      .my-info-key-stat-bind-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 10px;
+        max-height: 100px;
+        overflow-y: auto;
+      }
+
+      .my-info-bottom-section .my-info-key-stat-label {
+        font-size: 10px;
+        margin-bottom: 2px;
+        font-weight: 500;
+      }
+
+      .my-info-key-stat-registration-list,
+      .my-info-key-stat-bind-list {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-size: 10px;
+        max-height: 100px;
+        overflow-y: auto;
+      }
+
+      .my-info-bottom-section .my-info-key-stat-registration-list,
+      .my-info-bottom-section .my-info-key-stat-bind-list {
+        max-height: 150px;
+        gap: 1px;
+        margin-top: 2px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding-right: 2px;
+      }
+
+      .my-info-bottom-section .my-info-key-stat-registration-list::-webkit-scrollbar,
+      .my-info-bottom-section .my-info-key-stat-bind-list::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .my-info-bottom-section .my-info-key-stat-registration-list::-webkit-scrollbar-track,
+      .my-info-bottom-section .my-info-key-stat-bind-list::-webkit-scrollbar-track {
+        background: var(--bg-gray);
+        border-radius: 2px;
+      }
+
+      .my-info-bottom-section .my-info-key-stat-registration-list::-webkit-scrollbar-thumb,
+      .my-info-bottom-section .my-info-key-stat-bind-list::-webkit-scrollbar-thumb {
+        background: var(--border-medium);
+        border-radius: 2px;
+      }
+
+      .my-info-bottom-section .my-info-key-stat-registration-list::-webkit-scrollbar-thumb:hover,
+      .my-info-bottom-section .my-info-key-stat-bind-list::-webkit-scrollbar-thumb:hover {
+        background: var(--text-secondary);
+      }
+
+      .my-info-key-stat-registration-item,
+      .my-info-key-stat-bind-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 2px 4px;
+        border-radius: 3px;
+        background: rgba(0, 0, 0, 0.05);
+      }
+
+      .my-info-key-stat-registration-item-name,
+      .my-info-key-stat-bind-item-name {
+        color: var(--text-secondary);
+        font-size: 9px;
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .my-info-key-stat-registration-item-value,
+      .my-info-key-stat-bind-item-value {
+        font-weight: 600;
+        color: var(--text-primary);
+        font-size: 9px;
+        margin-left: 4px;
       }
 
       .my-info-key-stat-change.positive {
@@ -1270,32 +1496,227 @@ function getHTML() {
         margin-top: var(--space-md);
       }
 
+      .my-info-bottom-section .my-info-section-title {
+        font-size: 11px;
+        margin-bottom: var(--space-xs);
+        padding-bottom: 2px;
+        border-bottom: 1px solid var(--border-light);
+      }
+
       .my-info-soul-exp-info {
+        flex: 1;
+        overflow-y: auto;
         display: flex;
-        gap: var(--space-lg);
-        margin-top: var(--space-md);
-        flex-wrap: wrap;
+        flex-direction: column;
+        gap: var(--space-xs);
       }
 
       .my-info-soul-exp-item {
-        flex: 1;
-        min-width: 200px;
-        background: var(--bg-gray);
-        padding: var(--space-md);
-        border-radius: var(--radius-md);
+        background: var(--bg-white);
+        padding: var(--space-xs);
+        border-radius: var(--radius-sm);
         border: 1px solid var(--border-light);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        text-align: center;
       }
 
       .my-info-soul-exp-label {
-        font-size: 12px;
+        font-size: 10px;
         color: var(--text-secondary);
-        margin-bottom: 4px;
+        font-weight: 500;
       }
 
       .my-info-soul-exp-value {
-        font-size: 16px;
+        font-size: 12px;
         font-weight: 700;
         color: var(--text-primary);
+      }
+
+      .my-info-soul-exp-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        gap: 3px;
+        width: 100%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        box-sizing: border-box;
+      }
+
+      .my-info-soul-exp-category-item,
+      .my-info-soul-exp-total-item,
+      .my-info-soul-exp-need-item,
+      .my-info-soul-exp-baseline-item {
+        background: var(--bg-white);
+        padding: 3px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-light);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 0;
+        min-height: 0;
+        min-width: 0;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+
+      .my-info-soul-exp-category-item {
+        background: var(--bg-gray);
+      }
+
+      .my-info-soul-exp-total-item {
+        background: var(--color-primary-light);
+        border-color: var(--color-primary);
+      }
+
+      .my-info-soul-exp-need-item {
+        /* 자동 배치 */
+      }
+
+      .my-info-soul-exp-baseline-item {
+        background: var(--bg-gray);
+      }
+
+      .my-info-soul-exp-category-label,
+      .my-info-soul-exp-total-label,
+      .my-info-soul-exp-need-label {
+        font-size: 8px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        line-height: 1;
+        margin-bottom: 1px;
+      }
+
+      .my-info-soul-exp-category-value,
+      .my-info-soul-exp-total-value,
+      .my-info-soul-exp-need-value {
+        font-size: 9px;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        line-height: 1.1;
+      }
+
+      .my-info-soul-exp-total-value {
+        color: var(--color-primary);
+        font-size: 10px;
+      }
+
+      .my-info-soul-exp-need-value img {
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+      }
+
+      .my-info-soul-exp-baseline-label {
+        font-size: 8px;
+        color: var(--text-secondary);
+        font-weight: 500;
+        line-height: 1;
+        margin-bottom: 1px;
+      }
+
+      .my-info-soul-exp-baseline-value {
+        font-size: 9px;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.1;
+      }
+
+      .my-info-soul-exp-baseline-text {
+        font-size: 7px;
+        color: var(--text-secondary);
+        line-height: 1.1;
+        margin-top: 1px;
+      }
+
+      .my-info-soul-exp-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: auto auto;
+        gap: var(--space-xs);
+        width: 100%;
+      }
+
+      .my-info-soul-exp-category-item,
+      .my-info-soul-exp-total-item,
+      .my-info-soul-exp-need-item,
+      .my-info-soul-exp-baseline-item {
+        background: var(--bg-white);
+        padding: var(--space-xs);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-light);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        gap: 2px;
+      }
+
+      .my-info-soul-exp-category-item {
+        background: var(--bg-gray);
+      }
+
+      .my-info-soul-exp-total-item {
+        background: var(--color-primary-light);
+        border-color: var(--color-primary);
+      }
+
+      .my-info-soul-exp-need-item {
+        /* 자동 배치 */
+      }
+
+      .my-info-soul-exp-baseline-item {
+        background: var(--bg-gray);
+      }
+
+      .my-info-soul-exp-category-label,
+      .my-info-soul-exp-total-label,
+      .my-info-soul-exp-need-label {
+        font-size: 10px;
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
+
+      .my-info-soul-exp-category-value,
+      .my-info-soul-exp-total-value,
+      .my-info-soul-exp-need-value {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+      }
+
+      .my-info-soul-exp-total-value {
+        color: var(--color-primary);
+        font-size: 12px;
+      }
+
+      .my-info-soul-exp-need-value img {
+        width: 14px;
+        height: 14px;
+        border-radius: 2px;
+      }
+
+      .my-info-soul-exp-baseline-text {
+        font-size: 9px;
+        color: var(--text-secondary);
+        line-height: 1.3;
       }
 
       .my-info-selected-spirits {
@@ -1376,6 +1797,15 @@ function getHTML() {
 
         .my-info-total-stats-grid {
           grid-template-columns: 1fr;
+        }
+
+        .my-info-bottom-section {
+          flex-direction: column;
+        }
+
+        .my-info-bottom-left,
+        .my-info-bottom-right {
+          flex: 1 1 100%;
         }
       }
     </style>
@@ -1459,30 +1889,13 @@ function getHTML() {
             <div class="my-info-stats-column" id="statsColumn3"></div>
           </div>
           
-          <!-- 주요 스탯 변화 섹션 -->
+          <!-- 환산타채 합 -->
           <div class="my-info-key-stats-section">
-            <div class="my-info-key-stats-grid" id="keyStatsGrid">
-              <div class="my-info-key-stat-item">
-                <div class="my-info-key-stat-label">환산타채 합</div>
-                <div class="my-info-key-stat-value-wrapper">
-                  <div class="my-info-key-stat-value" id="keyStatTachae">-</div>
-                  <div class="my-info-key-stat-change" id="keyStatTachaeChange">-</div>
-                </div>
-              </div>
-              <div class="my-info-key-stat-item">
-                <div class="my-info-key-stat-label">상태이상저항</div>
-                <div class="my-info-key-stat-value-wrapper">
-                  <div class="my-info-key-stat-value" id="keyStatResistance">-</div>
-                  <div class="my-info-key-stat-change" id="keyStatResistanceChange">-</div>
-                </div>
-
-              </div>
-              <div class="my-info-key-stat-item">
-                <div class="my-info-key-stat-label">상태이상적중</div>
-                <div class="my-info-key-stat-value-wrapper">
-                  <div class="my-info-key-stat-value" id="keyStatAccuracy">-</div>
-                  <div class="my-info-key-stat-change" id="keyStatAccuracyChange">-</div>
-                </div>
+            <div class="my-info-key-stat-item" style="max-width: 300px;">
+              <div class="my-info-key-stat-label">환산타채 합</div>
+              <div class="my-info-key-stat-value-wrapper">
+                <div class="my-info-key-stat-value" id="keyStatTachae">-</div>
+                <div class="my-info-key-stat-change" id="keyStatTachaeChange">-</div>
               </div>
             </div>
           </div>
@@ -1490,10 +1903,37 @@ function getHTML() {
       </div>
     </div>
 
-    <!-- 환수 혼 경험치 섹션 -->
-    <div class="my-info-stats-section">
-      <h2 class="my-info-section-title">환수 초기화 시 환수 혼 경험치</h2>
-      <div id="soulExpInfo"></div>
+    <!-- 하단 영역 -->
+    <div class="my-info-bottom-section">
+      <!-- 왼쪽: 환수 혼 경험치 -->
+      <div class="my-info-bottom-left">
+        <div class="my-info-stats-section">
+          <h2 class="my-info-section-title">환수 초기화 시 환수 혼 경험치</h2>
+          <div id="soulExpInfo"></div>
+        </div>
+      </div>
+
+      <!-- 오른쪽: 각인 등록효과, 각인 장착효과 -->
+      <div class="my-info-bottom-right">
+        <div class="my-info-key-stats-section">
+          <div style="display: flex; flex-direction: column; gap: 2px;">
+            <h2 class="my-info-section-title">각인 효과</h2>
+            <div class="my-info-engraving-notice" style="font-size: 9px; color: var(--text-secondary); padding: 0 2px;">
+              ⚠️ 각인 정보는 레벨에 따른 스탯 자동으로 계산 안됩니다. 직접 입력해야합니다.
+            </div>
+          </div>
+          <div class="my-info-key-stats-grid" id="keyStatsGrid">
+            <div class="my-info-key-stat-item">
+              <div class="my-info-key-stat-label">각인 등록효과</div>
+              <div class="my-info-key-stat-registration-list" id="keyStatRegistrationList"></div>
+            </div>
+            <div class="my-info-key-stat-item">
+              <div class="my-info-key-stat-label">각인 장착효과</div>
+              <div class="my-info-key-stat-bind-list" id="keyStatBindList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     </div>
   `;
@@ -3775,12 +4215,6 @@ function updateKeyStats(
       Math.round(Math.round(pvpDefensePercent) * 10)
   );
 
-  // 상태이상저항
-  const statusEffectResistance = getTotalValue("statusEffectResistance");
-
-  // 상태이상적중
-  const statusEffectAccuracy = getTotalValue("statusEffectAccuracy");
-
   // 기준값 가져오기 (저장된 baselineStats 값 사용)
   const getBaselineValue = (key) => {
     // 저장된 값이 있으면 사용, 없으면 0
@@ -3814,28 +4248,64 @@ function updateKeyStats(
     );
   }
 
-  // 상태이상저항/적중 기준값: 저장된 값이 있으면 사용, 없으면 개별 스탯으로 계산
-  let baselineStatusEffectResistance = 0;
-  if (
-    pageState.baselineKeyStats.statusEffectResistance !== undefined &&
-    pageState.baselineKeyStats.statusEffectResistance !== null
-  ) {
-    baselineStatusEffectResistance =
-      pageState.baselineKeyStats.statusEffectResistance;
-  } else {
-    baselineStatusEffectResistance = getBaselineValue("statusEffectResistance");
-  }
+  // 각인 등록효과 계산 (모든 카테고리의 사용 중인 환수)
+  const registrationStats = {};
+  const categories = ["수호", "탑승", "변신"];
+  categories.forEach((category) => {
+    const active = pageState.activeSpirits[category];
+    if (active) {
+      const engraving =
+        pageState.engravingData[category]?.[active.name] || {};
+      if (Array.isArray(engraving.registration)) {
+        engraving.registration.forEach((regItem) => {
+          const statKey = regItem.statKey;
+          const value = regItem.value || 0;
+          const numValue =
+            typeof value === "number" ? value : parseFloat(value) || 0;
+          if (numValue > 0 && statKey) {
+            registrationStats[statKey] =
+              (registrationStats[statKey] || 0) + numValue;
+          }
+        });
+      }
+    }
+  });
 
-  let baselineStatusEffectAccuracy = 0;
-  if (
-    pageState.baselineKeyStats.statusEffectAccuracy !== undefined &&
-    pageState.baselineKeyStats.statusEffectAccuracy !== null
-  ) {
-    baselineStatusEffectAccuracy =
-      pageState.baselineKeyStats.statusEffectAccuracy;
-  } else {
-    baselineStatusEffectAccuracy = getBaselineValue("statusEffectAccuracy");
-  }
+  // 각인 장착효과 계산 (모든 카테고리의 결속 환수 + 사용 중인 환수)
+  const bindStats = {};
+  categories.forEach((category) => {
+    // 결속 환수의 각인 장착효과
+    const bondSpirits = pageState.bondSpirits[category] || [];
+    bondSpirits.forEach((bondSpirit) => {
+      const engraving =
+        pageState.engravingData[category]?.[bondSpirit.name] || {};
+      if (engraving.bind) {
+        Object.entries(engraving.bind).forEach(([statKey, value]) => {
+          const numValue =
+            typeof value === "number" ? value : parseFloat(value) || 0;
+          if (numValue > 0) {
+            bindStats[statKey] = (bindStats[statKey] || 0) + numValue;
+          }
+        });
+      }
+    });
+
+    // 사용 중인 환수의 각인 장착효과
+    const active = pageState.activeSpirits[category];
+    if (active) {
+      const engraving =
+        pageState.engravingData[category]?.[active.name] || {};
+      if (engraving.bind) {
+        Object.entries(engraving.bind).forEach(([statKey, value]) => {
+          const numValue =
+            typeof value === "number" ? value : parseFloat(value) || 0;
+          if (numValue > 0) {
+            bindStats[statKey] = (bindStats[statKey] || 0) + numValue;
+          }
+        });
+      }
+    }
+  });
 
   // 변화값 계산
   // 디버깅: 환산타채 합 계산 값 확인
@@ -3885,27 +4355,16 @@ function updateKeyStats(
   }
 
   const tachaeChange = forceZeroChange ? 0 : tachaeTotal - baselineTachaeTotal;
-  const resistanceChange = forceZeroChange
-    ? 0
-    : statusEffectResistance - baselineStatusEffectResistance;
-  const accuracyChange = forceZeroChange
-    ? 0
-    : statusEffectAccuracy - baselineStatusEffectAccuracy;
 
   // UI 업데이트
   const tachaeValueEl = elements.container.querySelector("#keyStatTachae");
   const tachaeChangeEl = elements.container.querySelector(
     "#keyStatTachaeChange"
   );
-  const resistanceValueEl =
-    elements.container.querySelector("#keyStatResistance");
-  const resistanceChangeEl = elements.container.querySelector(
-    "#keyStatResistanceChange"
+  const registrationListEl = elements.container.querySelector(
+    "#keyStatRegistrationList"
   );
-  const accuracyValueEl = elements.container.querySelector("#keyStatAccuracy");
-  const accuracyChangeEl = elements.container.querySelector(
-    "#keyStatAccuracyChange"
-  );
+  const bindListEl = elements.container.querySelector("#keyStatBindList");
 
   if (tachaeValueEl) {
     tachaeValueEl.textContent = Math.round(tachaeTotal).toLocaleString();
@@ -3927,46 +4386,61 @@ function updateKeyStats(
     }
   }
 
-  if (resistanceValueEl) {
-    resistanceValueEl.textContent = Math.round(
-      statusEffectResistance
-    ).toLocaleString();
-  }
-  if (resistanceChangeEl) {
-    if (Math.abs(resistanceChange) > 0.01) {
-      resistanceChangeEl.textContent =
-        resistanceChange > 0
-          ? `+${Math.round(resistanceChange).toLocaleString()}`
-          : `${Math.round(resistanceChange).toLocaleString()}`;
-      resistanceChangeEl.className = `my-info-key-stat-change ${
-        resistanceChange > 0 ? "positive" : "negative"
-      }`;
-      resistanceChangeEl.style.display = "block";
+  // 각인 등록효과 표시
+  if (registrationListEl) {
+    registrationListEl.innerHTML = "";
+    const registrationEntries = Object.entries(registrationStats).sort(
+      (a, b) => b[1] - a[1]
+    );
+    if (registrationEntries.length === 0) {
+      registrationListEl.innerHTML = '<div style="color: var(--text-secondary); font-size: 9px; padding: 4px;">등록효과 없음</div>';
     } else {
-      resistanceChangeEl.textContent = "0";
-      resistanceChangeEl.className = "my-info-key-stat-change neutral";
-      resistanceChangeEl.style.display = "block";
+      registrationEntries.forEach(([statKey, value]) => {
+        const statName =
+          STATS_CONFIG.find((s) => s.key === statKey)?.name || statKey;
+        const item = createElement("div", "my-info-key-stat-registration-item");
+        const nameEl = createElement(
+          "span",
+          "my-info-key-stat-registration-item-name"
+        );
+        nameEl.textContent = statName;
+        const valueEl = createElement(
+          "span",
+          "my-info-key-stat-registration-item-value"
+        );
+        valueEl.textContent = Math.round(value).toLocaleString();
+        item.appendChild(nameEl);
+        item.appendChild(valueEl);
+        registrationListEl.appendChild(item);
+      });
     }
   }
 
-  if (accuracyValueEl) {
-    accuracyValueEl.textContent =
-      Math.round(statusEffectAccuracy).toLocaleString();
-  }
-  if (accuracyChangeEl) {
-    if (Math.abs(accuracyChange) > 0.01) {
-      accuracyChangeEl.textContent =
-        accuracyChange > 0
-          ? `+${Math.round(accuracyChange).toLocaleString()}`
-          : `${Math.round(accuracyChange).toLocaleString()}`;
-      accuracyChangeEl.className = `my-info-key-stat-change ${
-        accuracyChange > 0 ? "positive" : "negative"
-      }`;
-      accuracyChangeEl.style.display = "block";
+  // 각인 장착효과 표시
+  if (bindListEl) {
+    bindListEl.innerHTML = "";
+    const bindEntries = Object.entries(bindStats).sort((a, b) => b[1] - a[1]);
+    if (bindEntries.length === 0) {
+      bindListEl.innerHTML = '<div style="color: var(--text-secondary); font-size: 9px; padding: 4px;">장착효과 없음</div>';
     } else {
-      accuracyChangeEl.textContent = "0";
-      accuracyChangeEl.className = "my-info-key-stat-change neutral";
-      accuracyChangeEl.style.display = "block";
+      bindEntries.forEach(([statKey, value]) => {
+        const statName =
+          STATS_CONFIG.find((s) => s.key === statKey)?.name || statKey;
+        const item = createElement("div", "my-info-key-stat-bind-item");
+        const nameEl = createElement(
+          "span",
+          "my-info-key-stat-bind-item-name"
+        );
+        nameEl.textContent = statName;
+        const valueEl = createElement(
+          "span",
+          "my-info-key-stat-bind-item-value"
+        );
+        valueEl.textContent = Math.round(value).toLocaleString();
+        item.appendChild(nameEl);
+        item.appendChild(valueEl);
+        bindListEl.appendChild(item);
+      });
     }
   }
 }
@@ -4400,18 +4874,25 @@ async function updateTotalStats() {
         });
 
         // baselineKeyStats도 업데이트
+        // 저장 시와 동일한 방식으로 계산: userStats + allTotalStats (정수로 반올림)
+        const getTotalValueForUpdate = (key) => {
+          const baseValue = pageState.userStats[key] || 0;
+          const totalStatsValue = allTotalStats[key] || 0;
+          return Math.round(baseValue + totalStatsValue);
+        };
+
         const tachaeTotal = Math.round(
-          (allTotalStats.damageResistancePenetration || 0) +
-            (allTotalStats.damageResistance || 0) +
-            Math.round((allTotalStats.pvpDamagePercent || 0) * 10) +
-            Math.round((allTotalStats.pvpDefensePercent || 0) * 10)
+          getTotalValueForUpdate("damageResistancePenetration") +
+            getTotalValueForUpdate("damageResistance") +
+            Math.round(getTotalValueForUpdate("pvpDamagePercent") * 10) +
+            Math.round(getTotalValueForUpdate("pvpDefensePercent") * 10)
         );
         pageState.baselineKeyStats.tachaeTotal = tachaeTotal;
-        pageState.baselineKeyStats.statusEffectResistance = Math.round(
-          allTotalStats.statusEffectResistance || 0
+        pageState.baselineKeyStats.statusEffectResistance = getTotalValueForUpdate(
+          "statusEffectResistance"
         );
-        pageState.baselineKeyStats.statusEffectAccuracy = Math.round(
-          allTotalStats.statusEffectAccuracy || 0
+        pageState.baselineKeyStats.statusEffectAccuracy = getTotalValueForUpdate(
+          "statusEffectAccuracy"
         );
 
         shouldForceZeroChange = true;
@@ -4632,39 +5113,34 @@ async function updateSoulExp() {
       return;
     }
 
-    let html = `<div class="my-info-soul-exp-info">`;
-
-    categories.forEach((category) => {
-      if (categoryExp[category] > 0) {
-        html += `
-          <div class="my-info-soul-exp-item">
-            <div class="my-info-soul-exp-label">${category}</div>
-            <div class="my-info-soul-exp-value">${categoryExp[
-              category
-            ].toLocaleString()} exp</div>
-          </div>
-        `;
-      }
-    });
-
     // 환수혼 이미지(최상급 환수혼) 필요 개수 계산
     // 환수혼 계산기 참고: 최상급 = 1000 exp
     const SOUL_IMAGE_EXP = 1000; // 최상급 환수혼 경험치
-
     const soulImageCount = Math.ceil(totalExp / SOUL_IMAGE_EXP);
 
-    html += `
-      <div class="my-info-soul-exp-item" style="background: var(--color-primary-light);">
-        <div class="my-info-soul-exp-label">총합</div>
-        <div class="my-info-soul-exp-value" style="color: var(--color-primary);">${totalExp.toLocaleString()} exp</div>
-        <div style="font-size: 11px; color: var(--text-secondary); margin-top: 6px; display: flex; align-items: center; gap: 6px;">
-          <img src="assets/img/high-soul.jpg" style="width: 20px; height: 20px; border-radius: 2px;" alt="최상급 환수혼">
-          <span>약 <strong style="color: var(--color-primary);">${soulImageCount.toLocaleString()}</strong>개</span>
+    // 그리드 형식으로 변경 (3열 2행)
+    let html = `<div class="my-info-soul-exp-grid">`;
+    
+    // 첫 번째 행: 수호, 탑승, 변신
+    categories.forEach((category) => {
+      const exp = categoryExp[category] || 0;
+      html += `
+        <div class="my-info-soul-exp-category-item">
+          <div class="my-info-soul-exp-category-label">${category}</div>
+          <div class="my-info-soul-exp-category-value">${exp.toLocaleString()} exp</div>
         </div>
+      `;
+    });
+
+    // 두 번째 행: 총합, 기준 대비, 필요경험치
+    html += `
+      <div class="my-info-soul-exp-total-item">
+        <div class="my-info-soul-exp-total-label">총합</div>
+        <div class="my-info-soul-exp-total-value">${totalExp.toLocaleString()} exp</div>
       </div>
     `;
 
-    // 저장된 기준 환수혼과 비교
+    // 기준 대비 정보
     if (pageState.savedSoulExp > 0) {
       const diff = totalExp - pageState.savedSoulExp;
       let diffText = "";
@@ -4672,27 +5148,46 @@ async function updateSoulExp() {
 
       if (diff > 0) {
         diffText = `+${diff.toLocaleString()} exp (부족)`;
-        diffColor = "#e74c3c"; // 빨간색
+        diffColor = "#e74c3c";
       } else if (diff < 0) {
         diffText = `${diff.toLocaleString()} exp (여유)`;
-        diffColor = "#4CAF50"; // 초록색
+        diffColor = "#4CAF50";
       } else {
         diffText = "0 exp (동일)";
         diffColor = "var(--text-secondary)";
       }
 
       html += `
-        <div class="my-info-soul-exp-item" style="background: var(--bg-gray); border: 1px solid var(--border-medium);">
-          <div class="my-info-soul-exp-label">기준 대비</div>
-          <div class="my-info-soul-exp-value" style="color: ${diffColor};">
+        <div class="my-info-soul-exp-baseline-item">
+          <div class="my-info-soul-exp-baseline-label">기준 대비</div>
+          <div class="my-info-soul-exp-baseline-value" style="color: ${diffColor};">
             ${diffText}
           </div>
-          <div style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
-            저장된 기준: ${pageState.savedSoulExp.toLocaleString()} exp
+          <div class="my-info-soul-exp-baseline-text">
+            기준: ${pageState.savedSoulExp.toLocaleString()} exp
           </div>
         </div>
       `;
+    } else {
+      // 기준이 없으면 빈 공간
+      html += `
+        <div class="my-info-soul-exp-baseline-item" style="opacity: 0.5;">
+          <div class="my-info-soul-exp-baseline-label">기준 대비</div>
+          <div class="my-info-soul-exp-baseline-value">-</div>
+        </div>
+      `;
     }
+
+    // 필요경험치
+    html += `
+      <div class="my-info-soul-exp-need-item">
+        <div class="my-info-soul-exp-need-label">필요경험치</div>
+        <div class="my-info-soul-exp-need-value">
+          <img src="assets/img/high-soul.jpg" alt="최상급 환수혼">
+          <span>약 <strong>${soulImageCount.toLocaleString()}</strong>개</span>
+        </div>
+      </div>
+    `;
 
     html += `</div>`;
     container.innerHTML = html;
