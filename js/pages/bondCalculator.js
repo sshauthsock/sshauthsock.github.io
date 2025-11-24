@@ -4,8 +4,16 @@ import { createElement } from "../utils.js";
 import { showResultModal as showOptimalResultModal } from "../resultModal.js";
 import { addResult as addHistory } from "../historyManager.js";
 import { renderSpiritGrid } from "../components/spritGrid.js";
-import { showLoading, hideLoading, showLoadingWithProgress, updateLoadingProgress } from "../loadingIndicator.js";
-import { trackCalculationPerformance, trackUserAction } from "../utils/performanceMonitor.js";
+import {
+  showLoading,
+  hideLoading,
+  showLoadingWithProgress,
+  updateLoadingProgress,
+} from "../loadingIndicator.js";
+import {
+  trackCalculationPerformance,
+  trackUserAction,
+} from "../utils/performanceMonitor.js";
 import errorBoundary from "../utils/errorBoundary.js";
 import { checkSpiritStats, checkItemForStatEffect } from "../utils.js";
 import { createStatFilter } from "../components/statFilter.js";
@@ -211,9 +219,9 @@ function renderSelectedList() {
     container.appendChild(card);
 
     // 제거 버튼에 직접 이벤트 리스너 추가
-    const removeBtn = card.querySelector('.remove-spirit');
+    const removeBtn = card.querySelector(".remove-spirit");
     if (removeBtn) {
-      removeBtn.addEventListener('click', (e) => {
+      removeBtn.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
         if (pageState.selectedSpirits.has(spirit.name)) {
@@ -222,7 +230,7 @@ function renderSelectedList() {
           renderAll();
         }
       });
-      removeBtn.addEventListener('touchend', (e) => {
+      removeBtn.addEventListener("touchend", (e) => {
         e.preventDefault();
         e.stopPropagation();
         if (pageState.selectedSpirits.has(spirit.name)) {
@@ -240,9 +248,9 @@ function renderSelectedList() {
       mobileSelectedSpiritsContainer.appendChild(mobileCard);
 
       // 모바일 카드의 제거 버튼에도 이벤트 리스너 추가
-      const mobileRemoveBtn = mobileCard.querySelector('.remove-spirit');
+      const mobileRemoveBtn = mobileCard.querySelector(".remove-spirit");
       if (mobileRemoveBtn) {
-        mobileRemoveBtn.addEventListener('click', (e) => {
+        mobileRemoveBtn.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
           if (pageState.selectedSpirits.has(spirit.name)) {
@@ -251,7 +259,7 @@ function renderSelectedList() {
             renderAll();
           }
         });
-        mobileRemoveBtn.addEventListener('touchend', (e) => {
+        mobileRemoveBtn.addEventListener("touchend", (e) => {
           e.preventDefault();
           e.stopPropagation();
           if (pageState.selectedSpirits.has(spirit.name)) {
@@ -530,7 +538,7 @@ function handleContainerClick(e) {
   const target = e.target;
 
   // 제거 버튼 클릭 처리 (버튼 내부 텍스트 클릭도 처리) - 최우선 처리
-  const removeButton = target.closest('.remove-spirit');
+  const removeButton = target.closest(".remove-spirit");
   if (removeButton) {
     e.preventDefault();
     e.stopPropagation();
@@ -568,7 +576,7 @@ function handleContainerClick(e) {
     }
 
     // data-action 속성을 가진 가장 가까운 요소 찾기 (버튼 내부 텍스트 클릭 대응)
-    const actionElement = target.closest('[data-action]');
+    const actionElement = target.closest("[data-action]");
     const action = actionElement ? actionElement.dataset.action : null;
     let shouldRender = false;
 
@@ -612,7 +620,7 @@ function handleContainerMouseDown(e) {
   if (!card) return;
 
   // 제거 버튼은 클릭 이벤트로 처리되도록 여기서 early return
-  const removeButton = target.closest('.remove-spirit');
+  const removeButton = target.closest(".remove-spirit");
   if (removeButton) {
     return;
   }
@@ -661,7 +669,7 @@ function handleContainerTouchStart(e) {
   }
 
   // 제거 버튼인지 확인 (버튼 내부 텍스트 클릭도 처리)
-  const removeButton = target.closest('.remove-spirit');
+  const removeButton = target.closest(".remove-spirit");
   if (removeButton) {
     // 제거 버튼은 클릭 이벤트로 처리되도록 preventDefault 하지 않음
     return;
@@ -1118,7 +1126,6 @@ function restartLongPressInterval() {
 function createHint() {
   if (!longPressState.button) return;
 
-
   const targetValue = longPressState.action === "level-down" ? 0 : 25;
   const hintText = targetValue.toString();
 
@@ -1407,7 +1414,7 @@ async function handleFindOptimal() {
 
   const appContainer = document.getElementById("app-container");
   const calculationStartTime = performance.now();
-  
+
   // 진행률 표시와 함께 로딩 시작
   const numCreatures = creaturesForCalc.length;
   let progressMessage = "";
@@ -1416,7 +1423,7 @@ async function handleFindOptimal() {
   } else {
     progressMessage = "조합 계산 중...";
   }
-  
+
   showLoadingWithProgress(
     appContainer,
     "최적 조합 계산 중",
@@ -1431,7 +1438,10 @@ async function handleFindOptimal() {
     if (progress < 90) {
       progress += Math.random() * 10;
       if (numCreatures > 6) {
-        updateLoadingProgress(progress, `조합 탐색 중... ${Math.round(progress)}%`);
+        updateLoadingProgress(
+          progress,
+          `조합 탐색 중... ${Math.round(progress)}%`
+        );
       } else {
         updateLoadingProgress(progress, `계산 중... ${Math.round(progress)}%`);
       }
@@ -1440,27 +1450,27 @@ async function handleFindOptimal() {
 
   try {
     const result = await api.calculateOptimalCombination(creaturesForCalc);
-    
+
     clearInterval(progressInterval);
     updateLoadingProgress(100, "완료!");
-    
+
     // 완료 표시를 잠시 보여줌
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
+    await new Promise((resolve) => setTimeout(resolve, 300));
+
     // 계산 성능 추적
     const calculationDuration = performance.now() - calculationStartTime;
     trackCalculationPerformance("bond", calculationDuration, {
       num_creatures: numCreatures,
       score: result?.scoreWithBind || 0,
     });
-    
+
     if (!result || !result.spirits) {
       throw new Error("API에서 유효한 응답을 받지 못했습니다.");
     }
 
     addHistory(result);
     showOptimalResultModal(result, false);
-    
+
     // 모달 열기 추적
     trackUserAction("open_result_modal", "Bond Calculator");
   } catch (error) {
@@ -1547,7 +1557,7 @@ export function getHelpContentHTML() {
             <p>환수 결속 시스템은 6마리 환수의 조합을 통해 다양한 능력치 시너지를 얻는 핵심 콘텐츠입니다. '바연화연'의 결속 계산기는 여러분이 보유한 환수들로 달성할 수 있는 최적의 조합을 찾아드립니다.</p>
             <p>이 계산기는 <strong>피해저항, 피해저항관통, 대인피해%*10, 대인방어%*10</strong>를 합산한 '환산 점수'를 기준으로 최적의 조합을 찾아내며, 유전 알고리즘을 통해 수많은 경우의 수를 빠르게 탐색합니다.</p>
 
-            <h3>🔎 페이지 기능 설명</h3>
+            <h3>페이지 기능 설명</h3>
             <ul>
                 <li><strong>카테고리 선택:</strong> '수호', '탑승', '변신' 탭을 클릭하여 해당 종류의 환수 목록을 확인하세요. 결속 조합은 동일 카테고리 내에서만 가능합니다.</li>
                 <li><strong>환수 선택:</strong> 좌측 '전체 환수 목록'에서 결속 조합에 사용할 환수를 클릭하여 선택하세요. 선택된 환수는 우측 '선택된 환수' 목록에 추가됩니다. (레벨은 0으로 자동 설정됩니다.)</li>
@@ -1568,7 +1578,7 @@ export function getHelpContentHTML() {
                 <li><strong>기록 탭:</strong> 이전에 계산했던 최적 조합 결과들을 기록 탭에서 다시 확인하고 비교할 수 있습니다. '최신', '최고' 점수를 쉽게 파악할 수 있습니다.</li>
             </ul>
 
-            <h3>💡 결속 시스템 팁 & 전략</h3>
+            <h3>결속 시스템 팁 & 전략</h3>
             <ul>
                 <li><strong>PvE와 PvP 조합:</strong> 보스 사냥을 위한 조합(피해저항관통, 보스몬스터추가피해)과 PvP를 위한 조합(대인방어%, 피해저해)은 스탯 우선순위가 다릅니다. 목표에 맞는 조합을 찾아보세요.</li>
                 <li><strong>등급 시너지 vs 세력 시너지:</strong> 전설/불멸 환수 갯수에 따른 등급 시너지와 같은 세력 환수 갯수에 따른 세력 시너지을 모두 고려하는 것이 중요합니다. 때로는 낮은 등급이라도 세력 시너지를 맞추는 것이 더 유리할 수 있습니다.</li>

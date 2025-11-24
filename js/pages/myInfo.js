@@ -78,6 +78,26 @@ const STATS_CONFIG = [
   { key: "bossMonsterResistance", name: "보스몬스터 저항" },
 ];
 
+// 환수 각인 등록효과에 사용 가능한 스탯 리스트
+const ENGRAVING_REGISTRATION_STATS = [
+  { key: "healthIncrease", name: "체력증가" },
+  { key: "magicIncrease", name: "마력증가" },
+  { key: "criticalChance", name: "치명확률" },
+  { key: "criticalResistance", name: "치명저항" },
+  { key: "healthPotionEnhancement", name: "체력시약향상" },
+  { key: "magicPotionEnhancement", name: "마력시약향상" },
+  { key: "pvpDefense", name: "대인방어" },
+  { key: "damageAbsorption", name: "피해흡수" },
+  { key: "power", name: "위력" },
+  { key: "criticalDamageResistance", name: "치명피해저항" },
+  { key: "castingEnhancement", name: "시전향상" },
+  { key: "bossMonsterAdditionalDamage", name: "보스몬스터 추가피해" },
+  { key: "normalMonsterAdditionalDamage", name: "일반몬스터 추가피해" },
+  { key: "damageResistancePenetration", name: "피해저항관통" },
+  { key: "statusEffectResistance", name: "상태이상저항" },
+  { key: "statusEffectAccuracy", name: "상태이상적중" },
+];
+
 const COLUMN_1_STATS = STATS_CONFIG.slice(0, 8);
 const COLUMN_2_STATS = STATS_CONFIG.slice(8, 16);
 const COLUMN_3_STATS = STATS_CONFIG.slice(16);
@@ -89,36 +109,40 @@ function getHTML() {
         max-width: 1600px;
         margin: 0 auto;
         padding: var(--space-md) var(--space-lg);
+        background: transparent;
       }
 
       .my-info-profile-section {
         display: flex;
         align-items: center;
-        gap: var(--space-sm);
-        margin-bottom: var(--space-md);
-        padding: var(--space-sm);
-        background: var(--bg-gray);
-        border-radius: var(--radius-md);
-        border: 1px solid var(--border-light);
+        gap: var(--space-xs);
+        margin-bottom: var(--space-sm);
+        padding: var(--space-xs) var(--space-sm);
+        background: var(--bg-white);
+        flex-wrap: wrap;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       }
 
       .my-info-profile-label {
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 600;
         color: var(--text-primary);
         white-space: nowrap;
       }
 
       .my-info-profile-select {
-        flex: 1;
-        padding: 8px 12px;
+        flex: 0 0 auto;
+        min-width: 120px;
+        max-width: 180px;
+        padding: 4px 8px;
         border: 1px solid var(--border-medium);
         border-radius: var(--radius-sm);
         background: var(--bg-white);
-        font-size: 14px;
+        font-size: 11px;
+        font-weight: 500;
         color: var(--text-primary);
         cursor: pointer;
-        transition: var(--transition-normal);
+        transition: all 0.2s ease;
       }
 
       .my-info-profile-select:hover {
@@ -134,24 +158,40 @@ function getHTML() {
       .my-info-profile-actions {
         display: flex;
         gap: var(--space-xs);
+        flex-wrap: wrap;
       }
 
       .my-info-profile-btn {
-        padding: 8px 16px;
+        padding: 6px 14px;
         border: 1px solid var(--border-medium);
-        border-radius: var(--radius-sm);
+        border-radius: 6px;
         background: var(--bg-white);
         color: var(--text-primary);
-        font-size: 13px;
-        font-weight: 500;
+        font-size: 12px;
+        font-weight: 600;
         cursor: pointer;
-        transition: var(--transition-normal);
+        transition: all 0.2s ease;
         white-space: nowrap;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+      }
+
+      .my-info-profile-btn.primary {
+        font-size: 18px;
+        font-weight: 700;
+        padding: 6px;
+        min-width: 32px;
+        width: 32px;
       }
 
       .my-info-profile-btn:hover {
         background: var(--bg-gray);
         border-color: var(--color-primary);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       }
 
       .my-info-profile-btn.primary {
@@ -305,13 +345,14 @@ function getHTML() {
         max-height: 100%;
         display: flex;
         flex-direction: column;
-        padding: 4px;
-        background: var(--bg-gray);
-        border-radius: var(--radius-md);
+        padding: var(--space-sm);
+        background: var(--bg-white);
+        border-radius: var(--radius-lg);
         border: 1px solid var(--border-light);
-        gap: 3px;
+        gap: var(--space-xs);
         overflow: hidden;
         min-height: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
       }
 
       .my-info-bottom-section .my-info-stats-section > * {
@@ -329,11 +370,11 @@ function getHTML() {
       }
 
       .my-info-bottom-section .my-info-section-title {
-        font-size: 9px;
-        margin-bottom: 1px;
-        padding-bottom: 1px;
+        font-size: 11px;
+        margin-bottom: var(--space-xs);
+        padding-bottom: 4px;
         border-bottom: 1px solid var(--border-light);
-        line-height: 1.1;
+        line-height: 1.2;
       }
 
       .my-info-spirit-section-wrapper {
@@ -348,6 +389,9 @@ function getHTML() {
         flex: 0 0 55%;
         min-width: 0;
         overflow: visible;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
       }
 
       .my-info-left-panel {
@@ -367,19 +411,28 @@ function getHTML() {
 
       .my-info-stats-section {
         background: var(--bg-white);
-        border-radius: var(--radius-md);
-        padding: var(--space-lg);
-        box-shadow: var(--shadow-md);
+        border-radius: var(--radius-lg);
+        padding: var(--space-md);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         display: flex;
         flex-direction: column;
         min-height: 0;
+        height: 100%;
+        border: 1px solid var(--border-light);
+        overflow-y: auto;
       }
 
       .my-info-key-stats-section {
-        margin-top: var(--space-md);
-        padding-top: var(--space-md);
+        margin-top: var(--space-xs);
+        padding-top: var(--space-xs);
         border-top: 1px solid var(--border-light);
         flex-shrink: 0;
+      }
+
+      .my-info-stats-section .my-info-key-stats-section {
+        margin-top: var(--space-xs);
+        padding-top: var(--space-xs);
+        padding-bottom: 0;
       }
 
       .my-info-bottom-section .my-info-key-stats-section {
@@ -391,12 +444,13 @@ function getHTML() {
         display: flex;
         flex-direction: column;
         padding: var(--space-sm);
-        background: var(--bg-gray);
-        border-radius: var(--radius-md);
+        background: var(--bg-white);
+        border-radius: var(--radius-lg);
         border: 1px solid var(--border-light);
         gap: var(--space-xs);
         overflow: hidden;
         min-height: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
       }
 
       .my-info-bottom-section .my-info-key-stats-section > * {
@@ -466,9 +520,15 @@ function getHTML() {
         display: flex;
         flex-direction: column;
         padding: var(--space-sm);
-        background: var(--bg-gray);
+        background: var(--bg-white);
         border-radius: var(--radius-md);
         border: 1px solid var(--border-light);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+
+      .my-info-stats-section .my-info-key-stat-item {
+        max-width: 100%;
+        padding: 6px 8px;
       }
 
       .my-info-bottom-section .my-info-key-stat-item {
@@ -478,10 +538,15 @@ function getHTML() {
       }
 
       .my-info-key-stat-label {
-        font-size: 11px;
+        font-size: 10px;
         color: var(--text-secondary);
-        margin-bottom: 4px;
+        margin-bottom: 2px;
         font-weight: 500;
+      }
+
+      .my-info-stats-section .my-info-key-stat-label {
+        font-size: 9px;
+        margin-bottom: 2px;
       }
 
       .my-info-key-stat-value-wrapper {
@@ -497,12 +562,22 @@ function getHTML() {
         color: var(--text-primary);
       }
 
+      .my-info-stats-section .my-info-key-stat-value {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
       .my-info-key-stat-change {
         font-size: 12px;
         font-weight: 600;
         padding: 2px 6px;
         border-radius: 4px;
         white-space: nowrap;
+      }
+
+      .my-info-stats-section .my-info-key-stat-change {
+        font-size: 10px;
+        padding: 1px 4px;
       }
 
       .my-info-key-stat-registration-list,
@@ -606,12 +681,13 @@ function getHTML() {
       }
 
       .my-info-section-title {
-        font-size: 12px;
-        font-weight: 600;
-        margin-bottom: var(--space-sm);
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: var(--space-md);
         color: var(--text-primary);
-        border-bottom: 1px solid var(--color-primary);
-        padding-bottom: 4px;
+        border-bottom: 2px solid var(--color-primary);
+        padding-bottom: 6px;
+        letter-spacing: 0.3px;
       }
 
       .my-info-save-btn {
@@ -630,6 +706,8 @@ function getHTML() {
         white-space: nowrap;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         gap: 4px;
+        height: 32px;
+        box-sizing: border-box;
       }
 
       .my-info-save-btn:hover {
@@ -676,10 +754,13 @@ function getHTML() {
       .my-info-stats-list {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
-        gap: 6px;
+        gap: 8px;
         margin-top: var(--space-sm);
         width: 100%;
         align-items: start;
+        flex: 1;
+        min-height: 0;
+        overflow: visible;
       }
 
       .my-info-stats-column {
@@ -692,20 +773,23 @@ function getHTML() {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 6px;
+        gap: 8px;
         cursor: pointer;
-        padding: 6px 8px;
+        padding: 8px 12px;
         background-color: var(--bg-white);
         border: 1px solid var(--border-light);
         border-radius: var(--radius-md);
-        transition: var(--transition-normal);
+        transition: all 0.2s ease;
         min-width: 0;
         position: relative;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
       }
 
       .my-info-stat-item:hover {
         background-color: var(--bg-gray);
         border-color: var(--color-primary);
+        transform: translateX(2px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
       }
 
       .my-info-stat-item.editing {
@@ -714,21 +798,21 @@ function getHTML() {
       }
 
       .my-info-stat-name {
-        font-size: 11px;
-        font-weight: 500;
-        color: var(--text-secondary);
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-primary);
         white-space: nowrap;
       }
 
       .my-info-stat-value {
-        font-size: 11px;
-        font-weight: 600;
+        font-size: 12px;
+        font-weight: 700;
         color: var(--text-primary);
-        min-width: 50px;
+        min-width: 60px;
         text-align: right;
         display: flex;
         align-items: center;
-        gap: 3px;
+        gap: 4px;
       }
 
       .my-info-stat-total {
@@ -977,25 +1061,34 @@ function getHTML() {
 
       .my-info-category-card {
         background: var(--bg-white);
-        border-radius: var(--radius-md);
-        padding: 2px;
-        box-shadow: var(--shadow-md);
+        border-radius: var(--radius-lg);
+        padding: var(--space-sm);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         flex: 1;
         min-height: 0;
         max-height: 100%;
         display: flex;
         flex-direction: column;
+        border: 1px solid var(--border-light);
+        transition: all 0.2s ease;
+      }
+
+      .my-info-category-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
       }
 
       .my-info-category-title {
-        font-size: 11px;
-        font-weight: 600;
-        margin-bottom: 1px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: var(--space-xs);
         margin-top: 0;
-        color: var(--text-primary);
-        border-bottom: 1px solid var(--color-primary);
-        padding-bottom: 1px;
-        padding-top: 2px;
+        color: var(--color-primary);
+        border-bottom: 2px solid var(--color-primary);
+        padding-bottom: 4px;
+        padding-top: 4px;
+        text-align: center;
+        letter-spacing: 0.5px;
       }
 
       .my-info-bond-slots {
@@ -1011,20 +1104,20 @@ function getHTML() {
 
       .my-info-bond-slot {
         aspect-ratio: 1;
-        border: 1px dashed var(--border-light);
-        border-radius: 3px;
-        background: var(--bg-gray);
+        border: 2px dashed var(--border-light);
+        border-radius: var(--radius-md);
+        background: linear-gradient(135deg, var(--bg-gray) 0%, rgba(255, 255, 255, 0.5) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: var(--transition-normal);
+        transition: all 0.2s ease;
         position: relative;
         overflow: hidden;
         min-width: 0;
         max-width: 100%;
         max-height: 100%;
-        transform: scale(0.9);
+        transform: scale(0.95);
       }
 
       .my-info-bond-slot.highlight {
@@ -1042,6 +1135,8 @@ function getHTML() {
       .my-info-bond-slot:hover {
         border-color: var(--color-primary);
         background: var(--color-primary-light);
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
       }
 
       .my-info-bond-slot.filled {
@@ -1209,9 +1304,13 @@ function getHTML() {
 
       .my-info-spirit-section {
         background: var(--bg-white);
-        border-radius: var(--radius-md);
+        border-radius: var(--radius-lg);
         padding: var(--space-md);
-        box-shadow: var(--shadow-md);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        border: 1px solid var(--border-light);
+        height: 100%;
+        display: flex;
+        flex-direction: column;
       }
 
       .my-info-spirit-tabs {
@@ -1222,26 +1321,29 @@ function getHTML() {
       }
 
       .my-info-spirit-tab {
-        padding: 6px 12px;
-        font-size: 11px;
+        padding: 8px 16px;
+        font-size: 12px;
         cursor: pointer;
         border: none;
         background: transparent;
-        font-weight: 500;
+        font-weight: 600;
         color: var(--text-secondary);
-        border-bottom: 2px solid transparent;
-        transition: var(--transition-normal);
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s ease;
+        position: relative;
       }
 
       .my-info-spirit-tab:hover {
         color: var(--color-primary);
         background-color: var(--bg-gray);
+        transform: translateY(-1px);
       }
 
       .my-info-spirit-tab.active {
         color: var(--color-primary);
         border-bottom-color: var(--color-primary);
-        font-weight: 600;
+        font-weight: 700;
+        background: linear-gradient(180deg, rgba(33, 150, 243, 0.05) 0%, transparent 100%);
       }
 
       .my-info-spirit-popup {
@@ -1249,22 +1351,30 @@ function getHTML() {
         z-index: 1000;
         background: var(--bg-white);
         border: 2px solid var(--color-primary);
-        border-radius: var(--radius-md);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-radius: var(--radius-lg);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         padding: 0;
-        min-width: 320px;
-        max-width: 500px;
-        width: 90%;
+        width: 95%;
+        max-width: 800px;
+        height: auto;
         max-height: 90vh;
-        overflow-y: auto;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
       }
 
       .my-info-spirit-popup-content {
-        padding: var(--space-md);
-        position: relative;
+        padding: 25px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        min-height: 0;
       }
+      
 
       .kakao-ad-popup-container {
         width: 100%;
@@ -1289,24 +1399,13 @@ function getHTML() {
         margin: 0 auto;
       }
 
-      .my-info-spirit-popup::before {
-        content: '';
-        position: absolute;
-        top: -8px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 0;
-        height: 0;
-        border-left: 8px solid transparent;
-        border-right: 8px solid transparent;
-        border-bottom: 8px solid var(--color-primary);
-      }
 
       .my-info-spirit-popup-header {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: var(--space-sm);
-        margin-bottom: var(--space-sm);
+        margin-bottom: var(--space-md);
         padding-bottom: var(--space-sm);
         border-bottom: 1px solid var(--border-light);
       }
@@ -1330,21 +1429,21 @@ function getHTML() {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        margin: var(--space-md) 0;
-        padding: var(--space-sm);
-        background: var(--bg-gray);
-        border-radius: var(--radius-md);
+        gap: 4px;
+        padding: 0;
+        background: transparent;
+        border: none;
+        box-shadow: none;
       }
 
       .level-btn {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         background: var(--color-primary);
         color: white;
         border: none;
         border-radius: 4px;
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 700;
         cursor: pointer;
         display: flex;
@@ -1363,8 +1462,8 @@ function getHTML() {
       }
 
       .level-input {
-        width: 60px;
-        height: 36px;
+        width: 55px;
+        height: 32px;
         padding: 0;
         border: 2px solid var(--color-primary);
         border-radius: 4px;
@@ -1384,11 +1483,11 @@ function getHTML() {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: var(--space-sm);
+        padding: 2px;
       }
 
       .fixed-level-label {
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 600;
         color: var(--text-secondary);
       }
@@ -1401,7 +1500,7 @@ function getHTML() {
       .my-info-spirit-popup-actions {
         display: flex;
         gap: 4px;
-        margin-top: var(--space-sm);
+        margin: 0;
       }
 
       .my-info-spirit-popup-action-btn {
@@ -1471,15 +1570,15 @@ function getHTML() {
         transform: translate(-50%, -50%);
         background: var(--bg-white);
         border: 2px solid var(--color-primary);
-        border-radius: var(--radius-md);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        border-radius: var(--radius-lg);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         padding: 0;
         z-index: 2000;
-        width: 600px;
-        max-width: 90vw;
+        width: 95%;
+        max-width: 800px;
         height: auto;
-        max-height: 95vh;
-        overflow: visible;
+        max-height: 90vh;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
       }
@@ -1501,30 +1600,31 @@ function getHTML() {
       }
 
       .my-info-engraving-modal-content {
-        padding: var(--space-lg);
+        padding: 25px;
         flex: 1;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
-      }
-
-      .my-info-engraving-tab-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: visible;
+        overflow-y: auto;
         min-height: 0;
       }
 
-      #registrationItemsContainer,
-      #bindItemsContainer {
-        min-height: 300px;
-        overflow: visible;
-        display: flex;
-        flex-direction: column;
+
+      #registrationItemsContainer {
+        flex: 1;
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 8px;
-        max-height: none;
-        flex-wrap: wrap;
+        min-height: 0;
+      }
+      
+      #bindItemsContainer {
+        flex: 1;
+        overflow-y: auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        min-height: 0;
       }
 
       .my-info-engraving-modal-header {
@@ -1591,7 +1691,8 @@ function getHTML() {
         flex: 1;
         flex-direction: column;
         overflow-y: auto;
-        min-height: 0;
+        min-height: 300px;
+        max-height: 300px;
       }
 
       .my-info-engraving-tab-content.active {
@@ -1604,8 +1705,16 @@ function getHTML() {
         gap: var(--space-sm);
         margin-bottom: var(--space-sm);
         padding: var(--space-sm);
-        background: var(--bg-gray);
+        background: var(--bg-white);
         border-radius: var(--radius-md);
+        border: 1px solid var(--border-light);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+      
+      .my-info-engraving-item[data-type="bind"] {
+        border: 1px solid var(--border-light);
+        max-width: 100%;
+        box-sizing: border-box;
       }
 
       .my-info-engraving-stat-select {
@@ -1642,8 +1751,9 @@ function getHTML() {
       }
 
       .my-info-engraving-add-btn {
-        width: 100%;
-        padding: 8px;
+        width: auto;
+        min-width: 150px;
+        padding: 8px 16px;
         background: var(--color-primary);
         color: white;
         border: none;
@@ -1651,7 +1761,8 @@ function getHTML() {
         cursor: pointer;
         font-size: 12px;
         font-weight: 600;
-        margin-top: var(--space-sm);
+        margin: 0;
+        flex: 1;
       }
 
       .my-info-engraving-add-btn:disabled {
@@ -1661,8 +1772,9 @@ function getHTML() {
       }
 
       .my-info-engraving-save-btn {
-        width: 100%;
-        padding: 10px;
+        width: auto;
+        min-width: 150px;
+        padding: 10px 20px;
         background: var(--color-secondary, #4CAF50);
         color: white;
         border: none;
@@ -1670,7 +1782,8 @@ function getHTML() {
         cursor: pointer;
         font-size: 14px;
         font-weight: 600;
-        margin-top: var(--space-md);
+        margin: 0;
+        flex: 1;
       }
 
       .my-info-bottom-section .my-info-section-title {
@@ -1728,30 +1841,33 @@ function getHTML() {
       .my-info-soul-exp-need-item,
       .my-info-soul-exp-baseline-item {
         background: var(--bg-white);
-        padding: 3px;
-        border-radius: var(--radius-sm);
+        padding: var(--space-xs);
+        border-radius: var(--radius-md);
         border: 1px solid var(--border-light);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         text-align: center;
-        gap: 0;
+        gap: 2px;
         min-height: 0;
         min-width: 0;
         width: 100%;
         height: 100%;
         box-sizing: border-box;
         overflow: hidden;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
       }
 
       .my-info-soul-exp-category-item {
-        background: var(--bg-gray);
+        background: var(--bg-white);
+        border-color: var(--border-medium);
       }
 
       .my-info-soul-exp-total-item {
-        background: var(--color-primary-light);
+        background: var(--bg-white);
         border-color: var(--color-primary);
+        border-width: 2px;
       }
 
       .my-info-soul-exp-need-item {
@@ -1759,7 +1875,8 @@ function getHTML() {
       }
 
       .my-info-soul-exp-baseline-item {
-        background: var(--bg-gray);
+        background: var(--bg-white);
+        border-color: var(--border-medium);
       }
 
       .my-info-soul-exp-category-label,
@@ -1988,18 +2105,6 @@ function getHTML() {
     </style>
 
     <div class="my-info-container">
-      <!-- 프로파일 선택 섹션 -->
-      <div class="my-info-profile-section">
-        <label class="my-info-profile-label">프로파일:</label>
-        <select class="my-info-profile-select" id="profileSelect">
-          <option value="">프로파일 없음</option>
-        </select>
-        <div class="my-info-profile-actions">
-          <button class="my-info-profile-btn primary" id="createProfileBtn">새 프로파일</button>
-          <button class="my-info-profile-btn" id="editProfileBtn" disabled>이름 수정</button>
-          <button class="my-info-profile-btn danger" id="deleteProfileBtn" disabled>삭제</button>
-        </div>
-      </div>
     <div class="my-info-top-section">
       <!-- 왼쪽: 환수 섹션 (50%) -->
       <div class="my-info-spirit-section-wrapper">
@@ -2040,8 +2145,19 @@ function getHTML() {
       <!-- 오른쪽: 기본 스탯 섹션 (50%) -->
       <div class="my-info-stats-section-wrapper">
         <div class="my-info-stats-section">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm);">
-            <h2 class="my-info-section-title" style="margin: 0;">나의 스탯</h2>
+          <!-- 프로파일 선택 섹션 (통합) -->
+          <div class="my-info-profile-section" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: var(--space-xs); flex: 1;">
+              <label class="my-info-profile-label">설정:</label>
+              <select class="my-info-profile-select" id="profileSelect">
+                <option value="">설정 없음</option>
+              </select>
+              <div class="my-info-profile-actions">
+                <button class="my-info-profile-btn primary" id="createProfileBtn" title="새 프로파일">+</button>
+                <button class="my-info-profile-btn" id="editProfileBtn" disabled title="이름 수정">✏️</button>
+                <button class="my-info-profile-btn danger" id="deleteProfileBtn" disabled>삭제</button>
+              </div>
+            </div>
             <div style="display: flex; align-items: center; gap: 8px; position: relative;">
               <button id="saveBaselineBtn" class="my-info-save-btn">
                 <span>저장</span>
@@ -2056,16 +2172,60 @@ function getHTML() {
                 background: var(--bg-white, #fff);
                 border: 1px solid var(--border-light, #ddd);
                 border-radius: 6px;
-                padding: 8px 12px;
-                font-size: 11px;
+                padding: 12px 16px;
+                font-size: 12px;
                 color: var(--text-primary, #333);
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
                 z-index: 1000;
-                max-width: 250px;
-                line-height: 1.4;
+                max-width: 400px;
+                line-height: 1.6;
                 white-space: normal;
               ">
-                저장 시 현재 스탯이 기준이 되며, 이후 변경사항을 확인할 수 있습니다.
+                <div style="font-weight: 600; margin-bottom: 8px; color: var(--color-primary);">📋 내정보 페이지 사용 가이드</div>
+                <div style="margin-bottom: 10px;">
+                  <strong>1. 프로파일 관리</strong><br>
+                  • <strong>+ 버튼</strong>: 새로운 프로파일 생성 (예: PvP, PvE 등)<br>
+                  • <strong>✏️ 버튼</strong>: 프로파일 이름 수정<br>
+                  • <strong>삭제 버튼</strong>: 프로파일 삭제<br>
+                  • 각 프로파일은 독립적으로 환수, 스탯, 각인 정보를 저장합니다
+                </div>
+                <div style="margin-bottom: 10px;">
+                  <strong>2. 환수 결속 관리</strong><br>
+                  • 왼쪽 카테고리(수호/탑승/변신)에서 환수 이미지를 클릭하여 결속 슬롯에 추가<br>
+                  • 환수 이미지를 다시 클릭하면 레벨 조정 및 각인 설정 가능<br>
+                  • <strong>사용하기</strong>: 해당 환수를 활성화 (주황색 테두리 표시)<br>
+                  • <strong>결속 제거</strong>: 결속 슬롯에서 환수 제거
+                </div>
+                <div style="margin-bottom: 10px;">
+                  <strong>3. 스탯 입력 및 저장</strong><br>
+                  • <strong>나의 스탯</strong> 섹션에서 기본 스탯을 직접 입력<br>
+                  • <strong>저장 버튼</strong>: 현재 스탯을 기준값으로 저장<br>
+                  • 저장 후 환수 레벨 변경이나 각인 변경 시 <strong>증감값</strong>이 표시됩니다<br>
+                  • 초록색: 증가, 빨간색: 감소, 회색: 변화 없음
+                </div>
+                <div style="margin-bottom: 10px;">
+                  <strong>4. 각인 설정</strong><br>
+                  • 환수 이미지 클릭 → <strong>등록효과</strong> 탭에서 각인 등록 (최대 4개)<br>
+                  • <strong>장착효과</strong> 탭에서 각인 장착 스탯 입력<br>
+                  • ⚠️ 각인 정보는 레벨에 따라 자동 계산되지 않으므로 직접 입력해야 합니다<br>
+                  • 설정 후 <strong>각인 저장</strong> 버튼 클릭
+                </div>
+                <div style="margin-bottom: 0;">
+                  <strong>5. 환수 혼 경험치</strong><br>
+                  • 하단 왼쪽에서 환수 초기화 시 획득 가능한 경험치 확인<br>
+                  • 수호/탑승/변신별 경험치와 총합, 필요 경험치 표시
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-sm); margin-top: var(--space-xs); position: relative;">
+            <h2 class="my-info-section-title" style="margin: 0; flex: 0 0 auto;">나의 스탯</h2>
+            <!-- 환산타채 합 -->
+            <div class="my-info-key-stat-item" style="max-width: 300px; min-width: 250px; margin: 0; flex: 0 0 auto; position: absolute; left: 50%; transform: translateX(-50%);">
+              <div class="my-info-key-stat-label">환산타채 합</div>
+              <div class="my-info-key-stat-value-wrapper">
+                <div class="my-info-key-stat-value" id="keyStatTachae">-</div>
+                <div class="my-info-key-stat-change" id="keyStatTachaeChange">-</div>
               </div>
             </div>
           </div>
@@ -2076,17 +2236,6 @@ function getHTML() {
             <div class="my-info-stats-column" id="statsColumn2"></div>
             <!-- 3컬럼 -->
             <div class="my-info-stats-column" id="statsColumn3"></div>
-          </div>
-          
-          <!-- 환산타채 합 -->
-          <div class="my-info-key-stats-section">
-            <div class="my-info-key-stat-item" style="max-width: 300px;">
-              <div class="my-info-key-stat-label">환산타채 합</div>
-              <div class="my-info-key-stat-value-wrapper">
-                <div class="my-info-key-stat-value" id="keyStatTachae">-</div>
-                <div class="my-info-key-stat-change" id="keyStatTachaeChange">-</div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -2194,9 +2343,10 @@ function createStatItem(stat) {
   // 기본값은 숨김 (더블클릭 편집용으로만 사용)
   const baseValue = createElement("span", "my-info-stat-base");
   // 현재 프로파일의 userStats에서 값을 가져옴
-  const currentUserStatValue = pageState.userStats && pageState.userStats[stat.key] !== undefined 
-    ? pageState.userStats[stat.key] 
-    : 0;
+  const currentUserStatValue =
+    pageState.userStats && pageState.userStats[stat.key] !== undefined
+      ? pageState.userStats[stat.key]
+      : 0;
   baseValue.textContent = currentUserStatValue.toString();
   baseValue.style.display = "none";
 
@@ -2593,7 +2743,9 @@ function setCurrentProfileId(profileId) {
 
 function createProfile(name) {
   const profiles = getProfiles();
-  const profileId = `profile_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const profileId = `profile_${Date.now()}_${Math.random()
+    .toString(36)
+    .substr(2, 9)}`;
   const newProfile = {
     id: profileId,
     name: name || `프로파일 ${profiles.length + 1}`,
@@ -2621,10 +2773,10 @@ function deleteProfile(profileId) {
   const profiles = getProfiles();
   const filtered = profiles.filter((p) => p.id !== profileId);
   saveProfiles(filtered);
-  
+
   // 프로파일 데이터 삭제
   localStorage.removeItem(`myInfo_profile_${profileId}`);
-  
+
   // 현재 프로파일이 삭제된 경우 첫 번째 프로파일 선택
   if (pageState.currentProfileId === profileId) {
     if (filtered.length > 0) {
@@ -2637,7 +2789,11 @@ function deleteProfile(profileId) {
       pageState.bondSpirits = { 수호: [], 탑승: [], 변신: [] };
       pageState.activeSpirits = { 수호: null, 탑승: null, 변신: null };
       pageState.baselineStats = {};
-      pageState.baselineKeyStats = { tachaeTotal: 0, statusEffectResistance: 0, statusEffectAccuracy: 0 };
+      pageState.baselineKeyStats = {
+        tachaeTotal: 0,
+        statusEffectResistance: 0,
+        statusEffectAccuracy: 0,
+      };
       pageState.savedSoulExp = 0;
       pageState.engravingData = { 수호: {}, 탑승: {}, 변신: {} };
       pageState.baselineStatsHash = null;
@@ -2656,8 +2812,11 @@ function saveProfileData(profileId) {
     engravingData: pageState.engravingData,
     baselineStatsHash: pageState.baselineStatsHash,
   };
-  localStorage.setItem(`myInfo_profile_${profileId}`, JSON.stringify(profileData));
-  
+  localStorage.setItem(
+    `myInfo_profile_${profileId}`,
+    JSON.stringify(profileData)
+  );
+
   // 프로파일 업데이트 시간 갱신
   updateProfile(profileId, { updatedAt: new Date().toISOString() });
 }
@@ -2668,51 +2827,69 @@ function loadProfileData(profileId) {
     try {
       const profileData = JSON.parse(saved);
       pageState.userStats = profileData.userStats || {};
-      pageState.bondSpirits = profileData.bondSpirits || { 수호: [], 탑승: [], 변신: [] };
-      pageState.activeSpirits = profileData.activeSpirits || { 수호: null, 탑승: null, 변신: null };
+      pageState.bondSpirits = profileData.bondSpirits || {
+        수호: [],
+        탑승: [],
+        변신: [],
+      };
+      pageState.activeSpirits = profileData.activeSpirits || {
+        수호: null,
+        탑승: null,
+        변신: null,
+      };
       pageState.baselineStats = profileData.baselineStats || {};
-      pageState.baselineKeyStats = profileData.baselineKeyStats || { tachaeTotal: 0, statusEffectResistance: 0, statusEffectAccuracy: 0 };
+      pageState.baselineKeyStats = profileData.baselineKeyStats || {
+        tachaeTotal: 0,
+        statusEffectResistance: 0,
+        statusEffectAccuracy: 0,
+      };
       pageState.savedSoulExp = profileData.savedSoulExp || 0;
-      pageState.engravingData = profileData.engravingData || { 수호: {}, 탑승: {}, 변신: {} };
+      pageState.engravingData = profileData.engravingData || {
+        수호: {},
+        탑승: {},
+        변신: {},
+      };
       pageState.baselineStatsHash = profileData.baselineStatsHash || null;
-      
+
       // 캐시 무효화 (프로파일 전환 시 새로운 데이터로 재계산)
       pageState.lastTotalStatsHash = null;
       pageState.lastTotalStatsCalculation = null;
       pageState.lastSoulExpHash = null;
       pageState.lastSoulExpCalculation = null;
-      
+
       // 프로파일 로드 시 증감 0으로 초기화 (새로고침과 동일하게 처리)
       pageState.isInitialLoad = true;
-      
+
       // 데이터 로드 후 UI 업데이트
-      if (typeof renderBondSlots === 'function') {
+      if (typeof renderBondSlots === "function") {
         renderBondSlots("수호");
         renderBondSlots("탑승");
         renderBondSlots("변신");
       }
-      if (typeof renderActiveSpiritSelect === 'function') {
+      if (typeof renderActiveSpiritSelect === "function") {
         renderActiveSpiritSelect("수호");
         renderActiveSpiritSelect("탑승");
         renderActiveSpiritSelect("변신");
       }
-      if (typeof renderStats === 'function') {
+      if (typeof renderStats === "function") {
         renderStats();
       }
       // 프로파일 로드 시 스탯 업데이트 (증감 0으로 표시)
       // updateTotalStats 완료 후 isInitialLoad를 false로 설정하여 이후 변경사항이 반영되도록 함
-      if (typeof updateTotalStats === 'function') {
-        updateTotalStats().then(() => {
-          // 초기 로딩 완료 - 이후 변경사항은 증감으로 표시
-          pageState.isInitialLoad = false;
-        }).catch(() => {
-          // 에러 발생 시에도 플래그 해제 (무한 루프 방지)
-          pageState.isInitialLoad = false;
-        });
+      if (typeof updateTotalStats === "function") {
+        updateTotalStats()
+          .then(() => {
+            // 초기 로딩 완료 - 이후 변경사항은 증감으로 표시
+            pageState.isInitialLoad = false;
+          })
+          .catch(() => {
+            // 에러 발생 시에도 플래그 해제 (무한 루프 방지)
+            pageState.isInitialLoad = false;
+          });
       } else {
         pageState.isInitialLoad = false;
       }
-      if (typeof updateSoulExp === 'function') {
+      if (typeof updateSoulExp === "function") {
         updateSoulExp();
       }
     } catch (e) {
@@ -2726,7 +2903,7 @@ function loadUserStats() {
   if (pageState.currentProfileId) {
     return;
   }
-  
+
   // 프로파일이 없으면 기존 방식으로 로드 (하위 호환성)
   const saved = localStorage.getItem("myInfo_userStats");
   if (saved) {
@@ -2743,7 +2920,10 @@ function saveUserStats() {
   // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
   // 프로파일이 없으면 기존 방식으로 저장 (하위 호환성)
   if (!pageState.currentProfileId) {
-    localStorage.setItem("myInfo_userStats", JSON.stringify(pageState.userStats));
+    localStorage.setItem(
+      "myInfo_userStats",
+      JSON.stringify(pageState.userStats)
+    );
   }
 }
 
@@ -2751,7 +2931,7 @@ function loadSavedData() {
   // 현재 프로파일 ID 로드
   const currentProfileId = getCurrentProfileId();
   pageState.currentProfileId = currentProfileId;
-  
+
   if (currentProfileId) {
     // 프로파일 데이터 로드
     loadProfileData(currentProfileId);
@@ -2803,7 +2983,9 @@ function loadSavedData() {
       }
     }
 
-    const savedBaselineKeyStats = localStorage.getItem("myInfo_baselineKeyStats");
+    const savedBaselineKeyStats = localStorage.getItem(
+      "myInfo_baselineKeyStats"
+    );
     if (savedBaselineKeyStats) {
       try {
         pageState.baselineKeyStats = JSON.parse(savedBaselineKeyStats);
@@ -2812,7 +2994,9 @@ function loadSavedData() {
       }
     }
 
-    const savedBaselineStatsHash = localStorage.getItem("myInfo_baselineStatsHash");
+    const savedBaselineStatsHash = localStorage.getItem(
+      "myInfo_baselineStatsHash"
+    );
     if (savedBaselineStatsHash) {
       pageState.baselineStatsHash = savedBaselineStatsHash;
     }
@@ -3032,12 +3216,12 @@ function handleSpiritSelect(spirit) {
     // 이미 있으면 제거
     bondSpirits.splice(existingIndex, 1);
     pageState.bondSpirits[category] = bondSpirits;
-    
+
     // 초기 로딩 플래그 해제 (사용자가 환수를 제거했으므로 증감 표시)
     pageState.isInitialLoad = false;
-    
+
     // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
-    
+
     renderBondSlots(category);
     renderSpiritList();
 
@@ -3058,10 +3242,10 @@ function handleSpiritSelect(spirit) {
         level: 25, // 기본값 25
       });
       pageState.bondSpirits[category] = bondSpirits;
-      
+
       // 초기 로딩 플래그 해제 (사용자가 환수를 추가했으므로 증감 표시)
       pageState.isInitialLoad = false;
-      
+
       // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
 
       // 새로 추가된 슬롯 인덱스
@@ -3099,6 +3283,7 @@ function handleSpiritSelect(spirit) {
 }
 
 let currentPopup = null;
+let currentPopupOverlay = null;
 
 // 길게 누르기를 위한 상태 변수들
 let popupLongPressState = {
@@ -3129,39 +3314,50 @@ function showSpiritLevelPopup(category, index, slot, event) {
     currentPopup.remove();
     currentPopup = null;
   }
+  if (currentPopupOverlay) {
+    currentPopupOverlay.remove();
+    currentPopupOverlay = null;
+  }
 
   // 팝업 생성
   const popup = createElement("div", "my-info-spirit-popup");
 
-  // 클릭 위치 기준으로 팝업 위치 설정
-  const rect = slot.getBoundingClientRect();
-  const popupWidth = Math.min(500, window.innerWidth - 40); // 최대 500px, 화면 크기 고려
-  const popupHeight = Math.min(600, window.innerHeight - 40); // 최대 600px, 화면 크기 고려
+  // 오버레이 생성 (배경 어둡게)
+  const overlay = createElement("div", "my-info-spirit-popup-overlay");
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 999;
+  `;
 
-  // 기본 위치: 슬롯 아래 중앙
-  let left = rect.left + rect.width / 2 - popupWidth / 2;
-  let top = rect.bottom + 10;
-
-  // 화면 밖으로 나가지 않도록 조정
-  if (left < 10) {
-    left = 10; // 왼쪽 여백
-  } else if (left + popupWidth > window.innerWidth - 10) {
-    left = window.innerWidth - popupWidth - 10; // 오른쪽 여백
-  }
-
-  if (top + popupHeight > window.innerHeight - 10) {
-    top = rect.top - popupHeight - 10; // 위쪽에 표시
-    if (top < 10) {
-      top = 10; // 최소 여백
+  // 오버레이 클릭 시 팝업 닫기
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) {
+      popup.remove();
+      overlay.remove();
+      currentPopup = null;
+      currentPopupOverlay = null;
     }
-  }
+  });
 
-  popup.style.left = `${left}px`;
-  popup.style.top = `${top}px`;
+  document.body.appendChild(overlay);
+  currentPopupOverlay = overlay;
 
   const active = pageState.activeSpirits[category];
   const isActive = active && active.name === spirit.name;
   const isFixed = isFixedLevelSpirit(spirit.name);
+
+  // 현재 각인 데이터 가져오기
+  const currentEngraving =
+    pageState.engravingData[category]?.[spirit.name] || {};
+  const registrationCount = Array.isArray(currentEngraving.registration)
+    ? currentEngraving.registration.length
+    : 0;
 
   popup.innerHTML = `
     <button class="my-info-spirit-popup-close">×</button>
@@ -3179,32 +3375,58 @@ function showSpiritLevelPopup(category, index, slot, event) {
     </div>
     <div class="my-info-spirit-popup-content">
       <div class="my-info-spirit-popup-header">
-        <img src="${spirit.image}" alt="${spirit.name}">
-        <div class="my-info-spirit-popup-name">${spirit.name}</div>
+        <div style="display: flex; align-items: center; gap: var(--space-sm);">
+          <img src="${spirit.image}" alt="${spirit.name}">
+          <div class="my-info-spirit-popup-name">${spirit.name}</div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: center; flex: 1;">
+          <div class="spirit-level-control">
+            ${
+              isFixed
+                ? `<div class="fixed-level-control">
+                    <span class="fixed-level-label">레벨 25 (고정)</span>
+                  </div>`
+                : `<div style="display: flex; align-items: center; gap: 4px;">
+                    <button class="level-btn minus-btn" data-action="level-down">-</button>
+                    <input type="number" class="level-input" min="0" max="25" value="${
+                      spirit.level || 25
+                    }">
+                    <button class="level-btn plus-btn" data-action="level-up">+</button>
+                  </div>`
+            }
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: var(--space-xs);">
+          <div class="my-info-spirit-popup-actions">
+            <button class="my-info-spirit-popup-action-btn ${
+              isActive ? "active" : ""
+            }" data-action="set-active">
+              ${isActive ? "사용중" : "사용하기"}
+            </button>
+            <button class="my-info-spirit-popup-action-btn remove" data-action="remove">결속 제거</button>
+          </div>
+        </div>
       </div>
-      <div class="spirit-level-control">
-        ${
-          isFixed
-            ? `<div class="fixed-level-control">
-                <span class="fixed-level-label">레벨 25 (고정)</span>
-              </div>`
-            : `<div style="display: flex; align-items: center; gap: 8px; width: 100%; justify-content: center;">
-                <button class="level-btn minus-btn" data-action="level-down">-</button>
-                <input type="number" class="level-input" min="0" max="25" value="${
-                  spirit.level || 25
-                }">
-                <button class="level-btn plus-btn" data-action="level-up">+</button>
-              </div>`
-        }
+      <div class="my-info-engraving-tabs">
+        <button class="my-info-engraving-tab active" data-tab="registration">등록효과</button>
+        <button class="my-info-engraving-tab" data-tab="bind">장착효과</button>
       </div>
-      <div class="my-info-spirit-popup-actions">
-        <button class="my-info-spirit-popup-action-btn ${
-          isActive ? "active" : ""
-        }" data-action="set-active">
-          ${isActive ? "✓ 사용 중" : "사용 중"}
-        </button>
-        <button class="my-info-spirit-popup-action-btn engraving" data-action="engraving">각인추가</button>
-        <button class="my-info-spirit-popup-action-btn remove" data-action="remove">제거</button>
+      <div class="my-info-engraving-tab-content active" id="registrationTab">
+        <div id="registrationItemsContainer"></div>
+        <div style="display: flex; gap: var(--space-sm); margin-top: var(--space-sm);">
+          <button class="my-info-engraving-add-btn" id="addEngravingBtn" ${
+            registrationCount >= 4 ? "disabled" : ""
+          }>
+            + 등록효과 추가 (${registrationCount}/4)
+          </button>
+          <button class="my-info-engraving-save-btn" id="saveEngravingBtn">각인 저장</button>
+        </div>
+      </div>
+      <div class="my-info-engraving-tab-content" id="bindTab">
+        <div id="bindItemsContainer"></div>
+        <div style="display: flex; gap: var(--space-sm); margin-top: var(--space-sm); justify-content: flex-end;">
+          <button class="my-info-engraving-save-btn" id="saveEngravingBtnBind" style="flex: 0 1 50%; max-width: 50%;">각인 저장</button>
+        </div>
       </div>
     </div>
   `;
@@ -3307,19 +3529,19 @@ function showSpiritLevelPopup(category, index, slot, event) {
       }
 
       // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
-      
+
       renderBondSlots(category);
       updatePopupActiveState(popup, category, spirit);
 
       // 초기 로딩 플래그 해제 (사용자가 레벨을 변경했으므로 증감 표시)
       pageState.isInitialLoad = false;
-      
+
       // 캐시 무효화 (레벨 변경 시 재계산 필요)
       pageState.lastTotalStatsHash = null;
       pageState.lastTotalStatsCalculation = null;
       pageState.lastSoulExpHash = null;
       pageState.lastSoulExpCalculation = null;
-      
+
       // 디바운싱된 업데이트 호출
       debouncedUpdateTotalStats();
       debouncedUpdateSoulExp();
@@ -3387,12 +3609,12 @@ function showSpiritLevelPopup(category, index, slot, event) {
             if (levelInput) {
               levelInput.value = level;
             }
-            
+
             // 초기 로딩 플래그 해제 (사용자가 레벨을 변경했으므로 증감 표시)
             pageState.isInitialLoad = false;
-            
+
             // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
-            
+
             renderBondSlots(popupLongPressState.category);
             updatePopupActiveState(
               popup,
@@ -3531,19 +3753,17 @@ function showSpiritLevelPopup(category, index, slot, event) {
     document.removeEventListener("mouseup", handleGlobalMouseUp);
     document.removeEventListener("touchend", handleGlobalTouchEnd);
     popup.remove();
+    if (currentPopupOverlay) {
+      currentPopupOverlay.remove();
+      currentPopupOverlay = null;
+    }
     currentPopup = null;
   };
 
   // closeBtn 클릭 시 cleanup 호출
   closeBtn.addEventListener("click", cleanup);
 
-  // 외부 클릭 시에도 cleanup
-  const closeOnOutsideClick = (e) => {
-    if (!popup.contains(e.target) && !slot.contains(e.target)) {
-      cleanup();
-      document.removeEventListener("click", closeOnOutsideClick);
-    }
-  };
+  // 외부 클릭은 오버레이에서 처리하므로 제거
 
   const setActiveBtn = popup.querySelector("[data-action='set-active']");
   setActiveBtn.addEventListener("click", () => {
@@ -3558,6 +3778,8 @@ function showSpiritLevelPopup(category, index, slot, event) {
       // 같은 환수를 다시 클릭하면 사용중 해제
       pageState.activeSpirits[category] = null;
       console.log(`  → 사용중 해제`);
+      setActiveBtn.textContent = "사용하기";
+      setActiveBtn.classList.remove("active");
     } else {
       const level = isFixed
         ? 25
@@ -3575,6 +3797,10 @@ function showSpiritLevelPopup(category, index, slot, event) {
       pageState.activeSpirits[category] = newActive;
       spirit.level = level;
       console.log(`  → 새 사용중:`, pageState.activeSpirits[category]);
+      setActiveBtn.textContent = "사용중";
+      setActiveBtn.classList.add("active");
+      setActiveBtn.textContent = "사용중";
+      setActiveBtn.classList.add("active");
       console.log(
         `  → 각인 데이터:`,
         pageState.engravingData[category]?.[spirit.name]
@@ -3589,9 +3815,9 @@ function showSpiritLevelPopup(category, index, slot, event) {
 
     // 초기 로딩 플래그 해제 (사용자가 사용중 환수를 변경했으므로 증감 표시)
     pageState.isInitialLoad = false;
-    
+
     // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
-    
+
     renderBondSlots(category);
     updatePopupActiveState(popup, category, spirit);
 
@@ -3611,10 +3837,361 @@ function showSpiritLevelPopup(category, index, slot, event) {
     cleanup();
   });
 
-  const engravingBtn = popup.querySelector("[data-action='engraving']");
-  if (engravingBtn) {
-    engravingBtn.addEventListener("click", () => {
-      showEngravingModal(category, spirit.name, spirit);
+  // 각인 설정 기능 통합
+  const registrationContainer = popup.querySelector(
+    "#registrationItemsContainer"
+  );
+  const bindContainer = popup.querySelector("#bindItemsContainer");
+  const addBtn = popup.querySelector("#addEngravingBtn");
+  const saveBtn = popup.querySelector("#saveEngravingBtn");
+  const saveBtnBind = popup.querySelector("#saveEngravingBtnBind");
+  const engravingTabs = popup.querySelectorAll(".my-info-engraving-tab");
+  const engravingTabContents = popup.querySelectorAll(
+    ".my-info-engraving-tab-content"
+  );
+
+  // 등록효과와 장착효과 데이터 가져오기
+  function getEngravingData() {
+    const currentEngraving =
+      pageState.engravingData[category]?.[spirit.name] || {};
+
+    let registrationItems = [];
+    let bindStats = {};
+
+    if (
+      currentEngraving.registration !== undefined ||
+      currentEngraving.bind !== undefined
+    ) {
+      registrationItems = Array.isArray(currentEngraving.registration)
+        ? currentEngraving.registration
+        : [];
+      bindStats = currentEngraving.bind || {};
+    } else if (Object.keys(currentEngraving).length > 0) {
+      Object.entries(currentEngraving).forEach(([statKey, engravingData]) => {
+        if (typeof engravingData === "object" && engravingData !== null) {
+          if (engravingData.registration !== undefined) {
+            registrationItems.push({
+              statKey: statKey,
+              value: engravingData.registration,
+            });
+          }
+          if (engravingData.bind !== undefined) {
+            bindStats[statKey] = engravingData.bind;
+          }
+        } else {
+          registrationItems.push({
+            statKey: statKey,
+            value: engravingData,
+          });
+        }
+      });
+    }
+
+    return { registrationItems, bindStats };
+  }
+
+  // 등록효과 탭 렌더링
+  function renderRegistrationTab() {
+    if (!registrationContainer) return;
+    registrationContainer.innerHTML = "";
+    const { registrationItems } = getEngravingData();
+
+    registrationItems.forEach((regItem, index) => {
+      const statKey = regItem.statKey || "";
+      const value = regItem.value || "";
+      const item = createEngravingItem(
+        statKey,
+        value,
+        "",
+        "registration",
+        index
+      );
+      registrationContainer.appendChild(item);
+    });
+
+    if (addBtn) {
+      const registrationCount = registrationItems.length;
+      addBtn.disabled = registrationCount >= 4;
+      addBtn.textContent = `+ 등록효과 추가 (${registrationCount}/4)`;
+    }
+  }
+
+  // 장착효과 탭 렌더링
+  function renderBindTab() {
+    if (!bindContainer) return;
+    bindContainer.innerHTML = "";
+
+    const registrationItemsElements = registrationContainer.querySelectorAll(
+      '.my-info-engraving-item[data-type="registration"]'
+    );
+
+    const uniqueStats = new Set();
+    registrationItemsElements.forEach((item) => {
+      const statSelect = item.querySelector(".my-info-engraving-stat-select");
+      const statKey = statSelect?.value || "";
+      if (statKey) {
+        uniqueStats.add(statKey);
+      }
+    });
+
+    const { bindStats } = getEngravingData();
+
+    uniqueStats.forEach((statKey) => {
+      const currentValue = bindStats[statKey] || "";
+      const item = createEngravingItem(statKey, "", currentValue, "bind");
+      bindContainer.appendChild(item);
+    });
+  }
+
+  // 전체 렌더링
+  function renderEngravingItems() {
+    renderRegistrationTab();
+    renderBindTab();
+  }
+
+  // 각인 항목 생성 (showEngravingModal의 함수 재사용)
+  function createEngravingItem(
+    statKey = "",
+    registrationValue = "",
+    bindValue = "",
+    type = "registration",
+    registrationIndex = null
+  ) {
+    const item = createElement("div", "my-info-engraving-item");
+    item.dataset.type = type;
+    if (registrationIndex !== null) {
+      item.dataset.registrationIndex = registrationIndex;
+    }
+
+    const statSelect = createElement("select", "my-info-engraving-stat-select");
+    statSelect.innerHTML = '<option value="">스탯 선택</option>';
+    const statsList =
+      type === "registration" ? ENGRAVING_REGISTRATION_STATS : STATS_CONFIG;
+    statsList.forEach((stat) => {
+      const option = createElement("option");
+      option.value = stat.key;
+      option.textContent = stat.name;
+      if (stat.key === statKey) {
+        option.selected = true;
+      }
+      statSelect.appendChild(option);
+    });
+
+    if (type === "registration") {
+      const registrationLabel = createElement(
+        "span",
+        "my-info-engraving-value-label"
+      );
+      registrationLabel.textContent = "등록:";
+      const registrationInput = createElement(
+        "input",
+        "my-info-engraving-value-input"
+      );
+      registrationInput.type = "number";
+      registrationInput.min = "0";
+      registrationInput.value = registrationValue;
+      registrationInput.placeholder = "등록";
+
+      statSelect.addEventListener("change", () => {
+        renderBindTab();
+      });
+
+      item.appendChild(statSelect);
+      item.appendChild(registrationLabel);
+      item.appendChild(registrationInput);
+    } else {
+      const statName =
+        STATS_CONFIG.find((s) => s.key === statKey)?.name || statKey;
+      const statLabel = createElement("span", "my-info-engraving-value-label");
+      statLabel.textContent = statName;
+      statLabel.style.fontWeight = "600";
+      statLabel.style.minWidth = "100px";
+
+      item.dataset.statKey = statKey;
+
+      const bindLabel = createElement("span", "my-info-engraving-value-label");
+      bindLabel.textContent = "합산:";
+      const bindInput = createElement("input", "my-info-engraving-value-input");
+      bindInput.type = "number";
+      bindInput.min = "0";
+      bindInput.value = bindValue;
+      bindInput.placeholder = "합산값";
+
+      item.appendChild(statLabel);
+      item.appendChild(bindLabel);
+      item.appendChild(bindInput);
+    }
+
+    if (type === "registration") {
+      const removeBtn = createElement("button", "my-info-engraving-remove-btn");
+      removeBtn.textContent = "×";
+      removeBtn.addEventListener("click", () => {
+        item.remove();
+        if (addBtn) {
+          const newCount = registrationContainer.querySelectorAll(
+            '.my-info-engraving-item[data-type="registration"]'
+          ).length;
+          addBtn.disabled = newCount >= 4;
+          addBtn.textContent = `+ 등록효과 추가 (${newCount}/4)`;
+        }
+        renderBindTab();
+      });
+      item.appendChild(removeBtn);
+    }
+
+    return item;
+  }
+
+  // 각인 탭 전환 기능
+  if (engravingTabs && engravingTabContents) {
+    engravingTabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const targetTab = tab.dataset.tab;
+
+        engravingTabs.forEach((t) => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        engravingTabContents.forEach((content) => {
+          content.classList.remove("active");
+          if (content.id === `${targetTab}Tab`) {
+            content.classList.add("active");
+          }
+        });
+      });
+    });
+  }
+
+  // 초기 렌더링
+  renderEngravingItems();
+
+  // 각인 추가 버튼
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      const currentRegistrationItems = registrationContainer.querySelectorAll(
+        '.my-info-engraving-item[data-type="registration"]'
+      );
+      if (currentRegistrationItems.length >= 4) {
+        return;
+      }
+      const item = createEngravingItem("", "", "", "registration");
+      registrationContainer.appendChild(item);
+      renderBindTab();
+      if (addBtn) {
+        const newCount = registrationContainer.querySelectorAll(
+          '.my-info-engraving-item[data-type="registration"]'
+        ).length;
+        addBtn.disabled = newCount >= 4;
+        addBtn.textContent = `+ 등록효과 추가 (${newCount}/4)`;
+      }
+    });
+  }
+
+  // 각인 저장 버튼
+  if (saveBtn) {
+    saveBtn.addEventListener("click", () => {
+      const registrationItems = [];
+      const bindStats = {};
+
+      const registrationItemsElements = registrationContainer.querySelectorAll(
+        '.my-info-engraving-item[data-type="registration"]'
+      );
+      registrationItemsElements.forEach((item) => {
+        const statSelect = item.querySelector(".my-info-engraving-stat-select");
+        const valueInput = item.querySelector(".my-info-engraving-value-input");
+        const statKey = statSelect.value;
+        const value = parseFloat(valueInput.value) || 0;
+
+        if (statKey) {
+          registrationItems.push({
+            statKey: statKey,
+            value: value,
+          });
+        }
+      });
+
+      const bindItemsElements = bindContainer.querySelectorAll(
+        '.my-info-engraving-item[data-type="bind"]'
+      );
+      bindItemsElements.forEach((item) => {
+        const statKey = item.dataset.statKey;
+        if (!statKey) return;
+
+        const valueInput = item.querySelector(".my-info-engraving-value-input");
+        const value = parseFloat(valueInput.value) || 0;
+
+        bindStats[statKey] = value;
+      });
+
+      const engravingData = {
+        registration: registrationItems,
+        bind: bindStats,
+      };
+
+      if (!pageState.engravingData[category]) {
+        pageState.engravingData[category] = {};
+      }
+      pageState.engravingData[category][spirit.name] = engravingData;
+
+      pageState.isInitialLoad = false;
+
+      updateTotalStats();
+      renderBondSlots(category);
+    });
+  }
+
+  // 장착효과 탭 저장 버튼
+  if (saveBtnBind) {
+    saveBtnBind.addEventListener("click", () => {
+      const registrationItems = [];
+      const bindStats = {};
+
+      // 등록효과 항목 수집
+      const registrationItemsElements = registrationContainer.querySelectorAll(
+        '.my-info-engraving-item[data-type="registration"]'
+      );
+      registrationItemsElements.forEach((item) => {
+        const statSelect = item.querySelector(".my-info-engraving-stat-select");
+        const valueInput = item.querySelector(".my-info-engraving-value-input");
+        const statKey = statSelect.value;
+        const value = parseFloat(valueInput.value) || 0;
+
+        if (statKey) {
+          registrationItems.push({
+            statKey: statKey,
+            value: value,
+          });
+        }
+      });
+
+      // 장착효과 항목 수집
+      const bindItemsElements = bindContainer.querySelectorAll(
+        '.my-info-engraving-item[data-type="bind"]'
+      );
+      bindItemsElements.forEach((item) => {
+        const statKey = item.dataset.statKey;
+        if (!statKey) return;
+
+        const valueInput = item.querySelector(".my-info-engraving-value-input");
+        const value = parseFloat(valueInput.value) || 0;
+
+        bindStats[statKey] = value;
+      });
+
+      // 각인 데이터 저장
+      const engravingData = {
+        registration: registrationItems,
+        bind: bindStats,
+      };
+
+      if (!pageState.engravingData[category]) {
+        pageState.engravingData[category] = {};
+      }
+      pageState.engravingData[category][spirit.name] = engravingData;
+
+      pageState.isInitialLoad = false;
+
+      updateTotalStats();
+      renderBondSlots(category);
     });
   }
 }
@@ -3831,7 +4408,9 @@ function showEngravingModal(category, spiritName, spirit) {
     // 스탯 선택 드롭다운
     const statSelect = createElement("select", "my-info-engraving-stat-select");
     statSelect.innerHTML = '<option value="">스탯 선택</option>';
-    STATS_CONFIG.forEach((stat) => {
+    const statsList =
+      type === "registration" ? ENGRAVING_REGISTRATION_STATS : STATS_CONFIG;
+    statsList.forEach((stat) => {
       const option = createElement("option");
       option.value = stat.key;
       option.textContent = stat.name;
@@ -4011,10 +4590,10 @@ function showEngravingModal(category, spiritName, spirit) {
         pageState.engravingData[category] = {};
       }
       pageState.engravingData[category][spiritName] = engravingData;
-      
+
       // 초기 로딩 플래그 해제 (사용자가 각인을 변경했으므로 증감 표시)
       pageState.isInitialLoad = false;
-      
+
       // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
 
       // 스탯 업데이트
@@ -4046,10 +4625,10 @@ function updatePopupActiveState(popup, category, spirit) {
   const setActiveBtn = popup.querySelector("[data-action='set-active']");
   if (setActiveBtn) {
     if (isActive) {
-      setActiveBtn.textContent = "✓ 사용 중";
+      setActiveBtn.textContent = "사용중";
       setActiveBtn.classList.add("active");
     } else {
-      setActiveBtn.textContent = "사용 중";
+      setActiveBtn.textContent = "사용하기";
       setActiveBtn.classList.remove("active");
     }
   }
@@ -4118,7 +4697,7 @@ function startPopupLongPress() {
       }
 
       // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
-      
+
       const levelInput = currentPopup?.querySelector(".level-input");
       if (levelInput) {
         levelInput.value = currentSpirit.level;
@@ -4132,7 +4711,7 @@ function startPopupLongPress() {
 
       // 초기 로딩 플래그 해제 (사용자가 레벨을 변경했으므로 증감 표시)
       pageState.isInitialLoad = false;
-      
+
       // 캐시 무효화 (레벨 변경 시 재계산 필요)
       pageState.lastTotalStatsHash = null;
       pageState.lastTotalStatsCalculation = null;
@@ -4289,7 +4868,7 @@ function createPopupHint() {
         if (popupLongPressState.spirit) {
           // 초기 로딩 플래그 해제 (사용자가 레벨을 변경했으므로 증감 표시)
           pageState.isInitialLoad = false;
-          
+
           popupLongPressState.spirit.level = targetValue;
 
           // 사용중 환수인 경우 activeSpirits의 레벨도 함께 업데이트
@@ -4306,7 +4885,7 @@ function createPopupHint() {
             levelInput.value = targetValue;
           }
           // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
-          
+
           renderBondSlots(popupLongPressState.category);
           updatePopupActiveState(
             currentPopup,
@@ -4677,8 +5256,7 @@ function updateKeyStats(
   categories.forEach((category) => {
     const active = pageState.activeSpirits[category];
     if (active) {
-      const engraving =
-        pageState.engravingData[category]?.[active.name] || {};
+      const engraving = pageState.engravingData[category]?.[active.name] || {};
       if (Array.isArray(engraving.registration)) {
         engraving.registration.forEach((regItem) => {
           const statKey = regItem.statKey;
@@ -4800,7 +5378,8 @@ function updateKeyStats(
       (a, b) => b[1] - a[1]
     );
     if (registrationEntries.length === 0) {
-      registrationListEl.innerHTML = '<div style="color: var(--text-secondary); font-size: 9px; padding: 4px;">등록효과 없음</div>';
+      registrationListEl.innerHTML =
+        '<div style="color: var(--text-secondary); font-size: 9px; padding: 4px;">등록효과 없음</div>';
     } else {
       registrationEntries.forEach(([statKey, value]) => {
         const statName =
@@ -4828,16 +5407,14 @@ function updateKeyStats(
     bindListEl.innerHTML = "";
     const bindEntries = Object.entries(bindStats).sort((a, b) => b[1] - a[1]);
     if (bindEntries.length === 0) {
-      bindListEl.innerHTML = '<div style="color: var(--text-secondary); font-size: 9px; padding: 4px;">장착효과 없음</div>';
+      bindListEl.innerHTML =
+        '<div style="color: var(--text-secondary); font-size: 9px; padding: 4px;">장착효과 없음</div>';
     } else {
       bindEntries.forEach(([statKey, value]) => {
         const statName =
           STATS_CONFIG.find((s) => s.key === statKey)?.name || statKey;
         const item = createElement("div", "my-info-key-stat-bind-item");
-        const nameEl = createElement(
-          "span",
-          "my-info-key-stat-bind-item-name"
-        );
+        const nameEl = createElement("span", "my-info-key-stat-bind-item-name");
         nameEl.textContent = statName;
         const valueEl = createElement(
           "span",
@@ -4864,9 +5441,9 @@ function removeBondSpirit(category, index) {
 
   bondSpirits.splice(index, 1);
   pageState.bondSpirits[category] = bondSpirits;
-  
+
   // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
-  
+
   renderBondSlots(category);
   renderActiveSpiritSelect(category);
   renderSpiritList();
@@ -5271,9 +5848,7 @@ async function updateTotalStats() {
         );
         shouldForceZeroChange = true;
       } else {
-        console.log(
-          "[updateTotalStats] baselineStatsHash 불일치 - 증감 계산"
-        );
+        console.log("[updateTotalStats] baselineStatsHash 불일치 - 증감 계산");
         // 해시가 불일치하면 증감을 계산하여 표시
         shouldForceZeroChange = false;
       }
@@ -5496,7 +6071,7 @@ async function updateSoulExp() {
 
     // 그리드 형식으로 변경 (3열 2행)
     let html = `<div class="my-info-soul-exp-grid">`;
-    
+
     // 첫 번째 행: 수호, 탑승, 변신
     categories.forEach((category) => {
       const exp = categoryExp[category] || 0;
@@ -5581,10 +6156,10 @@ async function updateSoulExp() {
 function renderProfileSelect() {
   const select = elements.profileSelect;
   if (!select) return;
-  
+
   const profiles = getProfiles();
   const currentProfileId = pageState.currentProfileId;
-  
+
   select.innerHTML = '<option value="">프로파일 없음</option>';
   profiles.forEach((profile) => {
     const option = createElement("option");
@@ -5595,22 +6170,31 @@ function renderProfileSelect() {
     }
     select.appendChild(option);
   });
-  
+
   // 버튼 활성화/비활성화
   const hasProfile = currentProfileId !== null;
   if (elements.editProfileBtn) elements.editProfileBtn.disabled = !hasProfile;
-  if (elements.deleteProfileBtn) elements.deleteProfileBtn.disabled = !hasProfile;
+  if (elements.deleteProfileBtn)
+    elements.deleteProfileBtn.disabled = !hasProfile;
 }
 
 function showProfileModal(mode, profileId = null) {
   const modal = createElement("div", "my-info-profile-modal");
-  const profile = profileId ? getProfiles().find((p) => p.id === profileId) : null;
-  
+  const profile = profileId
+    ? getProfiles().find((p) => p.id === profileId)
+    : null;
+
   modal.innerHTML = `
     <div class="my-info-profile-modal-content">
       <div class="my-info-profile-modal-header">
         <div class="my-info-profile-modal-title">
-          ${mode === "create" ? "새 프로파일 생성" : mode === "edit" ? "프로파일 이름 수정" : ""}
+          ${
+            mode === "create"
+              ? "새 프로파일 생성"
+              : mode === "edit"
+              ? "프로파일 이름 수정"
+              : ""
+          }
         </div>
         <button class="my-info-profile-modal-close">×</button>
       </div>
@@ -5628,99 +6212,113 @@ function showProfileModal(mode, profileId = null) {
       </div>
     </div>
   `;
-  
+
   document.body.appendChild(modal);
-  
+
   const closeModal = () => modal.remove();
-  
-  modal.querySelector(".my-info-profile-modal-close").addEventListener("click", closeModal);
-  modal.querySelector("#profileModalCancelBtn").addEventListener("click", closeModal);
+
+  modal
+    .querySelector(".my-info-profile-modal-close")
+    .addEventListener("click", closeModal);
+  modal
+    .querySelector("#profileModalCancelBtn")
+    .addEventListener("click", closeModal);
   modal.addEventListener("click", (e) => {
     if (e.target === modal) closeModal();
   });
-  
+
   modal.querySelector("#profileModalSaveBtn").addEventListener("click", () => {
     const nameInput = modal.querySelector("#profileNameInput");
     const name = nameInput.value.trim();
-    
+
     if (!name) {
       alert("프로파일 이름을 입력해주세요.");
       return;
     }
-    
+
     if (mode === "create") {
       const newProfile = createProfile(name);
-      
+
       // 환수 레벨, 각인, 사용중은 현재 상태에서 복사 (깊은 복사)
-      const currentBondSpirits = JSON.parse(JSON.stringify(pageState.bondSpirits));
-      const currentActiveSpirits = JSON.parse(JSON.stringify(pageState.activeSpirits));
-      const currentEngravingData = JSON.parse(JSON.stringify(pageState.engravingData));
-      
+      const currentBondSpirits = JSON.parse(
+        JSON.stringify(pageState.bondSpirits)
+      );
+      const currentActiveSpirits = JSON.parse(
+        JSON.stringify(pageState.activeSpirits)
+      );
+      const currentEngravingData = JSON.parse(
+        JSON.stringify(pageState.engravingData)
+      );
+
       // 나의 스탯은 새로 시작 (초기화)
       pageState.userStats = {};
       pageState.baselineStats = {};
-      pageState.baselineKeyStats = { tachaeTotal: 0, statusEffectResistance: 0, statusEffectAccuracy: 0 };
+      pageState.baselineKeyStats = {
+        tachaeTotal: 0,
+        statusEffectResistance: 0,
+        statusEffectAccuracy: 0,
+      };
       pageState.savedSoulExp = 0;
       pageState.baselineStatsHash = null;
-      
+
       // 환수 데이터 복사
       pageState.bondSpirits = currentBondSpirits;
       pageState.activeSpirits = currentActiveSpirits;
       pageState.engravingData = currentEngravingData;
-      
+
       // 캐시 무효화
       pageState.lastTotalStatsHash = null;
       pageState.lastTotalStatsCalculation = null;
       pageState.lastSoulExpHash = null;
       pageState.lastSoulExpCalculation = null;
-      
+
       // 초기 로딩 플래그 설정 (증감 0으로 표시)
       pageState.isInitialLoad = true;
-      
+
       setCurrentProfileId(newProfile.id);
-      
+
       // 새 프로파일 데이터 저장
       saveProfileData(newProfile.id);
-      
+
       // UI 업데이트
       renderProfileSelect();
-      if (typeof renderBondSlots === 'function') {
+      if (typeof renderBondSlots === "function") {
         renderBondSlots("수호");
         renderBondSlots("탑승");
         renderBondSlots("변신");
       }
-      if (typeof renderActiveSpiritSelect === 'function') {
+      if (typeof renderActiveSpiritSelect === "function") {
         renderActiveSpiritSelect("수호");
         renderActiveSpiritSelect("탑승");
         renderActiveSpiritSelect("변신");
       }
-      if (typeof renderStats === 'function') {
+      if (typeof renderStats === "function") {
         renderStats();
       }
-      if (typeof updateTotalStats === 'function') {
+      if (typeof updateTotalStats === "function") {
         updateTotalStats();
       }
-      if (typeof updateSoulExp === 'function') {
+      if (typeof updateSoulExp === "function") {
         updateSoulExp();
       }
-      
+
       alert("프로파일이 생성되었습니다. 나의 스탯을 새로 입력해주세요.");
     } else if (mode === "edit" && profileId) {
       updateProfile(profileId, { name });
       renderProfileSelect();
       alert("프로파일 이름이 수정되었습니다.");
     }
-    
+
     closeModal();
   });
-  
+
   // Enter 키로 저장
   modal.querySelector("#profileNameInput").addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       modal.querySelector("#profileModalSaveBtn").click();
     }
   });
-  
+
   // 포커스
   setTimeout(() => {
     modal.querySelector("#profileNameInput").focus();
@@ -5734,7 +6332,7 @@ function setupEventListeners() {
     elements.profileSelect.addEventListener("change", (e) => {
       const profileId = e.target.value || null;
       setCurrentProfileId(profileId);
-      
+
       if (profileId) {
         loadProfileData(profileId);
         // 프로파일 전환 후 스탯 업데이트는 loadProfileData에서 처리됨
@@ -5744,14 +6342,14 @@ function setupEventListeners() {
       }
     });
   }
-  
+
   // 새 프로파일 생성
   if (elements.createProfileBtn) {
     elements.createProfileBtn.addEventListener("click", () => {
       showProfileModal("create");
     });
   }
-  
+
   // 프로파일 이름 수정
   if (elements.editProfileBtn) {
     elements.editProfileBtn.addEventListener("click", () => {
@@ -5760,13 +6358,18 @@ function setupEventListeners() {
       }
     });
   }
-  
+
   // 프로파일 삭제
   if (elements.deleteProfileBtn) {
     elements.deleteProfileBtn.addEventListener("click", () => {
       if (pageState.currentProfileId) {
-        const profile = getProfiles().find((p) => p.id === pageState.currentProfileId);
-        if (profile && confirm(`"${profile.name}" 프로파일을 삭제하시겠습니까?`)) {
+        const profile = getProfiles().find(
+          (p) => p.id === pageState.currentProfileId
+        );
+        if (
+          profile &&
+          confirm(`"${profile.name}" 프로파일을 삭제하시겠습니까?`)
+        ) {
           deleteProfile(pageState.currentProfileId);
           renderProfileSelect();
           alert("프로파일이 삭제되었습니다.");
@@ -5774,7 +6377,7 @@ function setupEventListeners() {
       }
     });
   }
-  
+
   // 환수 카테고리 탭 (오른쪽 그리드)
   elements.spiritTabs.forEach((tab) => {
     tab.addEventListener("click", (e) => {
@@ -6444,14 +7047,63 @@ export function getHelpContentHTML() {
   return `
     <div class="content-block">
       <h2>내정보 페이지 사용 안내</h2>
-      <p>내정보 페이지에서는 사용자의 기본 스탯을 입력하고, 현재 사용 중인 환수를 선택하여 합산 스탯을 확인할 수 있습니다.</p>
+      <p>내정보 페이지에서는 사용자의 기본 스탯을 입력하고, 환수를 결속하여 합산 스탯을 확인할 수 있습니다. 여러 프로파일을 생성하여 PvP, PvE 등 다양한 설정을 관리할 수 있습니다.</p>
       
-      <h3>🔎 페이지 기능 설명</h3>
+      <h3>프로파일 관리</h3>
       <ul>
-        <li><strong>기본 스탯 입력:</strong> 각 스탯 값을 클릭하면 편집할 수 있으며, 자동으로 저장됩니다.</li>
-        <li><strong>사용 중인 환수 선택:</strong> 수호/탑승/변신 탭에서 현재 사용 중인 환수를 선택하고 레벨을 설정할 수 있습니다.</li>
-        <li><strong>합산 스탯:</strong> 기본 스탯과 환수 결속 효과를 합산한 총 스탯을 확인할 수 있습니다.</li>
-        <li><strong>환수 혼 경험치:</strong> 선택한 환수들을 초기화할 경우 획득할 수 있는 환수 혼 경험치를 계산합니다.</li>
+        <li><strong>프로파일 생성:</strong> <strong>+</strong> 버튼을 클릭하여 새로운 프로파일을 생성합니다 (예: PvP, PvE, 보스 등)</li>
+        <li><strong>프로파일 선택:</strong> 드롭다운에서 원하는 프로파일을 선택하면 해당 프로파일의 설정이 로드됩니다</li>
+        <li><strong>프로파일 수정:</strong> <strong>✏️</strong> 버튼으로 프로파일 이름을 변경할 수 있습니다</li>
+        <li><strong>프로파일 삭제:</strong> <strong>삭제</strong> 버튼으로 불필요한 프로파일을 제거할 수 있습니다</li>
+        <li>각 프로파일은 독립적으로 환수 결속, 스탯, 각인 정보를 저장합니다</li>
+      </ul>
+
+      <h3>환수 결속 관리</h3>
+      <ul>
+        <li><strong>환수 추가:</strong> 오른쪽 환수 그리드에서 환수 이미지를 클릭하면 왼쪽 결속 슬롯에 추가됩니다 (카테고리별 최대 6개)</li>
+        <li><strong>환수 레벨 조정:</strong> 결속 슬롯의 환수 이미지를 클릭하면 팝업이 열리며, 레벨 버튼(-/+) 또는 직접 입력으로 레벨을 조정할 수 있습니다</li>
+        <li><strong>사용하기/사용중:</strong> 환수 팝업에서 <strong>사용하기</strong> 버튼을 클릭하면 해당 환수가 활성화됩니다 (주황색 테두리로 표시)</li>
+        <li><strong>결속 제거:</strong> <strong>결속 제거</strong> 버튼으로 결속 슬롯에서 환수를 제거할 수 있습니다</li>
+        <li>각 카테고리(수호/탑승/변신)별로 하나의 환수만 활성화할 수 있습니다</li>
+      </ul>
+
+      <h3>스탯 입력 및 저장</h3>
+      <ul>
+        <li><strong>기본 스탯 입력:</strong> <strong>나의 스탯</strong> 섹션에서 각 스탯 값을 클릭하여 직접 입력합니다</li>
+        <li><strong>저장 버튼:</strong> 현재 입력한 스탯과 환수 설정을 기준값으로 저장합니다</li>
+        <li><strong>증감 표시:</strong> 저장 후 환수 레벨 변경, 각인 변경 등으로 스탯이 변하면 증감값이 표시됩니다
+          <ul>
+            <li>🟢 <strong>초록색</strong>: 스탯 증가</li>
+            <li>🔴 <strong>빨간색</strong>: 스탯 감소</li>
+            <li>⚪ <strong>회색</strong>: 변화 없음</li>
+          </ul>
+        </li>
+        <li><strong>환산타채 합:</strong> 상단 중앙에 표시되며, 저장 후 변경사항에 따른 증감도 함께 표시됩니다</li>
+      </ul>
+
+      <h3>각인 설정</h3>
+      <ul>
+        <li><strong>각인 등록:</strong> 환수 이미지 클릭 → 팝업에서 <strong>등록효과</strong> 탭 선택 → 스탯 선택 및 값 입력 (최대 4개)</li>
+        <li><strong>각인 장착:</strong> <strong>장착효과</strong> 탭에서 각인 장착 스탯을 입력합니다</li>
+        <li><strong>등록효과 가능 스탯:</strong> 체력증가, 마력증가, 치명확률, 치명저항, 체력시약향상, 마력시약향상, 대인방어, 피해흡수, 위력, 치명피해저항, 시전향상, 보스몬스터 추가피해, 일반몬스터 추가피해, 피해저항관통, 상태이상저항, 상태이상적중</li>
+        <li>⚠️ <strong>주의:</strong> 각인 정보는 환수 레벨에 따라 자동으로 계산되지 않으므로 직접 입력해야 합니다</li>
+        <li>설정 후 <strong>각인 저장</strong> 버튼을 클릭하여 저장합니다</li>
+      </ul>
+
+      <h3>환수 혼 경험치</h3>
+      <ul>
+        <li>하단 왼쪽 섹션에서 환수 초기화 시 획득 가능한 경험치를 확인할 수 있습니다</li>
+        <li>수호/탑승/변신 카테고리별 경험치와 총합, 기준 대비 필요 경험치가 표시됩니다</li>
+        <li>결속 슬롯에 추가된 모든 환수의 경험치가 합산되어 표시됩니다</li>
+      </ul>
+
+      <h3>💡 사용 팁</h3>
+      <ul>
+        <li>프로파일을 활용하여 PvP용, PvE용 등 다양한 설정을 따로 관리하세요</li>
+        <li>스탯을 입력한 후 반드시 <strong>저장</strong> 버튼을 클릭해야 증감 기능이 정상 작동합니다</li>
+        <li>환수 레벨을 변경하면 즉시 스탯 증감이 반영됩니다</li>
+        <li>각인 설정은 환수별로 독립적으로 저장되며, 프로파일별로 관리됩니다</li>
+        <li>저장 버튼 옆의 <strong>ℹ️</strong> 아이콘을 클릭하면 간단한 사용 가이드를 확인할 수 있습니다</li>
       </ul>
     </div>
   `;
