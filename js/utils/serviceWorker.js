@@ -121,44 +121,50 @@ function showUpdateNotification() {
         }
       }
       .sw-update-content {
-        padding: 20px;
+        padding: 16px;
         display: flex;
         align-items: flex-start;
-        gap: 15px;
+        gap: 12px;
       }
       .sw-update-icon {
-        font-size: 2rem;
+        font-size: 1.5rem;
         flex-shrink: 0;
+        line-height: 1;
       }
       .sw-update-text {
         flex: 1;
+        min-width: 0;
       }
       .sw-update-text strong {
         display: block;
-        font-size: 1.1rem;
+        font-size: 1rem;
         color: #333;
-        margin-bottom: 5px;
+        margin-bottom: 4px;
+        font-weight: 600;
       }
       .sw-update-text p {
         margin: 0;
-        font-size: 0.9rem;
+        font-size: 0.875rem;
         color: #666;
+        line-height: 1.4;
       }
       .sw-update-actions {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         gap: 8px;
-        margin-top: 10px;
+        margin-top: 12px;
         width: 100%;
       }
       .sw-update-btn {
-        padding: 8px 16px;
+        padding: 10px 16px;
         border: none;
         border-radius: 6px;
         font-size: 0.9rem;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.2s;
+        flex: 1;
+        white-space: nowrap;
       }
       .sw-update-now {
         background: #3498db;
@@ -166,6 +172,11 @@ function showUpdateNotification() {
       }
       .sw-update-now:hover {
         background: #2980b9;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+      }
+      .sw-update-now:active {
+        transform: translateY(0);
       }
       .sw-update-later {
         background: #ecf0f1;
@@ -174,12 +185,70 @@ function showUpdateNotification() {
       .sw-update-later:hover {
         background: #bdc3c7;
       }
+      .sw-update-later:active {
+        transform: translateY(0);
+      }
       @media (max-width: 768px) {
         #sw-update-notification {
           bottom: 10px;
           right: 10px;
           left: 10px;
           max-width: none;
+          border-radius: 10px;
+        }
+        .sw-update-content {
+          padding: 12px;
+          gap: 10px;
+          flex-direction: column;
+        }
+        .sw-update-icon {
+          font-size: 1.25rem;
+          align-self: flex-start;
+        }
+        .sw-update-text {
+          width: 100%;
+        }
+        .sw-update-text strong {
+          font-size: 0.95rem;
+          margin-bottom: 3px;
+        }
+        .sw-update-text p {
+          font-size: 0.8rem;
+        }
+        .sw-update-actions {
+          flex-direction: column;
+          gap: 6px;
+          margin-top: 10px;
+        }
+        .sw-update-btn {
+          padding: 10px 14px;
+          font-size: 0.875rem;
+          width: 100%;
+        }
+      }
+      @media (max-width: 480px) {
+        #sw-update-notification {
+          bottom: 8px;
+          right: 8px;
+          left: 8px;
+          border-radius: 8px;
+        }
+        .sw-update-content {
+          padding: 10px;
+          gap: 8px;
+        }
+        .sw-update-icon {
+          font-size: 1.1rem;
+        }
+        .sw-update-text strong {
+          font-size: 0.9rem;
+        }
+        .sw-update-text p {
+          font-size: 0.75rem;
+        }
+        .sw-update-btn {
+          padding: 8px 12px;
+          font-size: 0.8rem;
         }
       }
     `;

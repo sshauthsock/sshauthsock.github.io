@@ -1,6 +1,6 @@
 // Service Worker for 오프라인 지원 및 PWA 기능
 // 버전: 업데이트 시 이 값을 변경하여 캐시 무효화
-const CACHE_VERSION = 'v1.0.2';
+const CACHE_VERSION = 'v1.0.3';
 const CACHE_NAME = `bayeon-hwayeon-${CACHE_VERSION}`;
 
 // 캐시할 정적 리소스 목록
@@ -147,7 +147,7 @@ async function handleApiRequest(request) {
 
 /**
  * 정적 리소스 처리
- * HTML과 JavaScript는 Network First (최신 버전 보장)
+ * HTML과 JavaScript는 Network Only (항상 최신 버전, 캐시 사용 안 함)
  * CSS와 이미지는 Cache First (성능 최적화)
  */
 async function handleStaticRequest(request) {
@@ -155,17 +155,23 @@ async function handleStaticRequest(request) {
   const isJavaScript = url.pathname.endsWith('.js') || request.destination === 'script';
   const isHTML = request.destination === 'document' || request.mode === 'navigate';
   
-  // HTML과 JavaScript는 Network First 전략 (최신 버전 보장)
+  // HTML과 JavaScript는 Network Only 전략 (항상 네트워크에서 가져오기, 캐시 사용 안 함)
   if (isHTML || isJavaScript) {
     try {
-      const networkResponse = await fetch(request);
+      // 네트워크에서 직접 가져오기 (캐시 우회)
+      const networkResponse = await fetch(request, {
+        cache: 'no-store' // 브라우저 캐시도 우회
+      });
+      
       if (networkResponse && networkResponse.ok) {
+        // 성공한 응답만 캐시에 저장 (오프라인 대비)
         const cache = await caches.open(CACHE_NAME);
         cache.put(request, networkResponse.clone());
       }
+      
       return networkResponse;
     } catch (error) {
-      // 네트워크 실패 시에만 캐시 사용
+      // 네트워크 실패 시에만 캐시 사용 (오프라인 대비)
       const cachedResponse = await caches.match(request);
       if (cachedResponse) {
         return cachedResponse;
