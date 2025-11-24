@@ -45,6 +45,9 @@ const pageState = {
     탑승: {},
     변신: {},
   },
+  imageLoadErrors: new Set(), // 이미지 로드 실패 추적
+  imageLoadErrorShown: false, // 이미지 로드 실패 메시지 표시 여부
+  imageObserver: null, // 이미지 로드 에러 감지용 MutationObserver
 };
 
 const elements = {};
@@ -131,6 +134,80 @@ const MOBILE_STAT_NAME_MAP = {
 // 모바일 감지 함수
 function isMobile() {
   return window.innerWidth <= 768;
+}
+
+// 이미지 로드 실패 메시지 표시
+function showImageLoadError() {
+  if (pageState.imageLoadErrorShown) return;
+
+  pageState.imageLoadErrorShown = true;
+
+  // 메시지 표시
+  const message = createElement("div");
+  message.style.cssText = `
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff6b35;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    font-size: 14px;
+    font-weight: 600;
+    max-width: 90%;
+    text-align: center;
+    animation: slideDown 0.3s ease-out;
+  `;
+  message.textContent =
+    "일부 이미지가 로드되지 않았습니다. Ctrl+Shift+R을 눌러 새로고침해주세요.";
+
+  // 애니메이션 스타일 추가
+  if (!document.getElementById("image-error-animation-style")) {
+    const style = createElement("style");
+    style.id = "image-error-animation-style";
+    style.textContent = `
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateX(-50%) translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  document.body.appendChild(message);
+
+  // 5초 후 자동으로 제거
+  setTimeout(() => {
+    if (message.parentNode) {
+      message.style.animation = "slideDown 0.3s ease-out reverse";
+      setTimeout(() => {
+        if (message.parentNode) {
+          message.remove();
+        }
+      }, 300);
+    }
+  }, 5000);
+
+  // 클릭 시 제거
+  message.addEventListener("click", () => {
+    if (message.parentNode) {
+      message.style.animation = "slideDown 0.3s ease-out reverse";
+      setTimeout(() => {
+        if (message.parentNode) {
+          message.remove();
+        }
+      }, 300);
+    }
+  });
 }
 
 function getHTML() {
@@ -1051,6 +1128,10 @@ function renderBondSlots(category) {
       const img = createElement("img");
       img.src = spirit.image;
       img.alt = spirit.name;
+      img.onerror = () => {
+        pageState.imageLoadErrors.add(spirit.image);
+        showImageLoadError();
+      };
       slot.appendChild(img);
 
       // 레벨 표시
@@ -1415,6 +1496,15 @@ function showSpiritLevelPopup(category, index, slot, event) {
 
   document.body.appendChild(popup);
   currentPopup = popup;
+
+  // 팝업 이미지에 에러 핸들러 추가
+  const popupImg = popup.querySelector("img");
+  if (popupImg) {
+    popupImg.onerror = () => {
+      pageState.imageLoadErrors.add(popupImg.src);
+      showImageLoadError();
+    };
+  }
 
   // 광고 렌더링
   setTimeout(() => {
@@ -4919,6 +5009,48 @@ export function init(container) {
 
   renderSpiritList();
 
+  // 전역 이미지 로드 에러 감지 (spiritGrid 이미지 포함)
+  const handleImageError = (event) => {
+    if (event.target.tagName === "IMG" && event.target.src) {
+      pageState.imageLoadErrors.add(event.target.src);
+      showImageLoadError();
+    }
+  };
+
+  // 기존 이미지들에 에러 핸들러 추가
+  const allImages = container.querySelectorAll("img");
+  allImages.forEach((img) => {
+    if (!img.onerror) {
+      img.addEventListener("error", handleImageError);
+    }
+  });
+
+  // 새로 추가되는 이미지들도 감지하기 위한 MutationObserver
+  pageState.imageObserver = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === 1) {
+          // Element node
+          if (node.tagName === "IMG") {
+            node.addEventListener("error", handleImageError);
+          }
+          // 자식 요소 중 이미지 찾기
+          const images = node.querySelectorAll && node.querySelectorAll("img");
+          if (images) {
+            images.forEach((img) => {
+              img.addEventListener("error", handleImageError);
+            });
+          }
+        }
+      });
+    });
+  });
+
+  pageState.imageObserver.observe(container, {
+    childList: true,
+    subtree: true,
+  });
+
   // 이벤트 리스너 먼저 설정 (페이지가 표시되도록)
   setupEventListeners();
 
@@ -5079,6 +5211,16 @@ export function getHelpContentHTML() {
 }
 
 export function cleanup() {
+  // 이미지 Observer 정리
+  if (pageState.imageObserver) {
+    pageState.imageObserver.disconnect();
+    pageState.imageObserver = null;
+  }
+
+  // 이미지 로드 에러 상태 초기화
+  pageState.imageLoadErrors.clear();
+  pageState.imageLoadErrorShown = false;
+
   // 팝업 및 오버레이 제거
   if (currentPopup) {
     const closeBtn = currentPopup.querySelector(".my-info-spirit-popup-close");
