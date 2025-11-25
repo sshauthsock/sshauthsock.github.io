@@ -39,6 +39,18 @@ class ErrorHandler {
   }
 
   static getUserFriendlyMessage(errorMessage) {
+    // 404 에러 처리 (리소스를 찾을 수 없음)
+    if (
+      errorMessage.includes('404') ||
+      errorMessage.includes('Failed to load resource') ||
+      errorMessage.includes('the server responded with a status of 404') ||
+      errorMessage.includes('Not Found') ||
+      errorMessage.includes('Failed to fetch dynamically imported module') ||
+      errorMessage.includes('Loading chunk') && errorMessage.includes('failed')
+    ) {
+      return '메시지를 로드할수없습니다. Ctrl+Shift+R 을 눌러서 다시 시도해보세요.';
+    }
+
     // 서버 연결 실패 관련 에러 메시지
     const serverConnectionErrors = [
       'Failed to fetch',
@@ -49,8 +61,7 @@ class ErrorHandler {
       'ERR_CONNECTION_REFUSED',
       'ERR_CONNECTION_TIMED_OUT',
       'ERR_CONNECTION_RESET',
-      'Failed to fetch dynamically imported module', // 동적 import 실패
-      'dynamically imported module', // 동적 import 관련
+      'dynamically imported module', // 동적 import 관련 (404가 아닌 경우)
     ];
 
     // 서버 연결 실패인지 확인

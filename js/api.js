@@ -28,9 +28,12 @@ async function handleResponse(response) {
       .json()
       .catch(() => ({ error: "서버 응답을 읽을 수 없습니다." }));
 
-    const error = new Error(
-      errorData.error || `서버 오류: ${response.statusText}`
-    );
+    // 404 에러인 경우 명시적으로 표시
+    const errorMessage = response.status === 404
+      ? `404: ${errorData.error || response.statusText || '리소스를 찾을 수 없습니다'}`
+      : errorData.error || `서버 오류: ${response.statusText}`;
+
+    const error = new Error(errorMessage);
     ErrorHandler.handle(error, `API ${response.status}`);
     throw error;
   }

@@ -5,6 +5,7 @@
 
 import ErrorHandler from "./errorHandler.js";
 import Logger from "./logger.js";
+import { showErrorRecoveryUI } from "../components/errorRecovery.js";
 
 class ErrorBoundary {
   constructor() {
@@ -20,11 +21,44 @@ class ErrorBoundary {
   init() {
     // 전역 에러 핸들러
     window.addEventListener("error", (event) => {
+      // 404 에러인 경우 사용자에게 적절한 메시지 표시
+      const errorMessage = event.message || '';
+      const is404Error = 
+        errorMessage.includes('404') ||
+        errorMessage.includes('Failed to load resource') ||
+        errorMessage.includes('the server responded with a status of 404') ||
+        errorMessage.includes('Not Found') ||
+        (event.target && event.target.tagName && (
+          event.target.tagName === 'SCRIPT' || 
+          event.target.tagName === 'LINK' || 
+          event.target.tagName === 'IMG'
+        ));
+
+      if (is404Error) {
+        // 404 에러는 사용자 친화적인 메시지로 표시
+        const userMessage = ErrorHandler.getUserFriendlyMessage(errorMessage);
+        Logger.error(`[ErrorBoundary] 404 Error detected: ${errorMessage}`);
+        
+        // 앱 컨테이너에 에러 메시지 표시 (이미 표시되지 않은 경우)
+        const appContainer = document.getElementById("app-container");
+        if (appContainer && !appContainer.querySelector(".error-recovery-container")) {
+          showErrorRecoveryUI(appContainer, new Error(errorMessage), {
+            title: "리소스 로드 실패",
+            message: userMessage,
+            onRetry: () => {
+              // Ctrl+Shift+R과 동일한 강제 새로고침
+              window.location.reload(true);
+            },
+          });
+        }
+      }
+
       this.handleError(event.error || new Error(event.message), {
         filename: event.filename,
         lineno: event.lineno,
         colno: event.colno,
         type: "window_error",
+        is404: is404Error,
       });
     });
 
@@ -34,9 +68,40 @@ class ErrorBoundary {
         event.reason instanceof Error
           ? event.reason
           : new Error(String(event.reason));
+      
+      // 404 에러인지 확인
+      const errorMessage = error.message || String(event.reason);
+      const is404Error = 
+        errorMessage.includes('404') ||
+        errorMessage.includes('Failed to load resource') ||
+        errorMessage.includes('the server responded with a status of 404') ||
+        errorMessage.includes('Not Found') ||
+        errorMessage.includes('Failed to fetch dynamically imported module') ||
+        errorMessage.includes('Loading chunk') && errorMessage.includes('failed');
+
+      if (is404Error) {
+        // 404 에러는 사용자 친화적인 메시지로 표시
+        const userMessage = ErrorHandler.getUserFriendlyMessage(errorMessage);
+        Logger.error(`[ErrorBoundary] 404 Error detected in promise rejection: ${errorMessage}`);
+        
+        // 앱 컨테이너에 에러 메시지 표시 (이미 표시되지 않은 경우)
+        const appContainer = document.getElementById("app-container");
+        if (appContainer && !appContainer.querySelector(".error-recovery-container")) {
+          showErrorRecoveryUI(appContainer, error, {
+            title: "리소스 로드 실패",
+            message: userMessage,
+            onRetry: () => {
+              // Ctrl+Shift+R과 동일한 강제 새로고침
+              window.location.reload(true);
+            },
+          });
+        }
+      }
+
       this.handleError(error, {
         type: "unhandled_promise_rejection",
         promise: event.promise,
+        is404: is404Error,
       });
       // 기본 동작 방지 (콘솔 에러 출력 방지)
       event.preventDefault();
