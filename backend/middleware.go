@@ -55,13 +55,21 @@ func (rl *RateLimiter) cleanupVisitors() {
 	for range ticker.C {
 		rl.mu.Lock()
 		now := time.Now()
+		deletedCount := 0
 		for ip, visitor := range rl.visitors {
-			// 1시간 이상 활동이 없으면 삭제
+			// 2시간 이상 활동이 없으면 삭제
 			if now.Sub(visitor.lastSeen) > 2*time.Hour {
 				delete(rl.visitors, ip)
+				deletedCount++
 			}
 		}
 		rl.mu.Unlock()
+		
+		// 정리된 항목 수 로깅 (디버깅용, 필요시 주석 처리)
+		if deletedCount > 0 {
+			// 로깅은 선택사항 (과도한 로그 방지)
+			// log.Printf("Rate limiter: cleaned up %d old visitors", deletedCount)
+		}
 	}
 }
 

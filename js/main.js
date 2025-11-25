@@ -3,7 +3,11 @@ import { setAllSpirits, state as globalState } from "./state.js";
 import { showLoading, hideLoading } from "./loadingIndicator.js";
 import ErrorHandler from "./utils/errorHandler.js";
 import Logger from "./utils/logger.js";
-import { initPerformanceMonitoring, trackPageLoadPerformance, trackUserAction } from "./utils/performanceMonitor.js";
+import {
+  initPerformanceMonitoring,
+  trackPageLoadPerformance,
+  trackUserAction,
+} from "./utils/performanceMonitor.js";
 import errorBoundary from "./utils/errorBoundary.js";
 import { showErrorRecoveryUI } from "./components/errorRecovery.js";
 import { initServiceWorker } from "./utils/serviceWorker.js";
@@ -133,7 +137,7 @@ async function route() {
           page_path: pagePath,
         });
         Logger.log(`[GA4] Page view event sent for: ${pagePath}`);
-        
+
         // 페이지 로드 성능 추적
         const pageLoadStart = performance.now();
         setTimeout(() => {
@@ -153,7 +157,7 @@ async function route() {
       error
     );
     errorBoundary.handleError(error, { type: "page_routing", pageName });
-    
+
     // 에러 복구 UI 표시
     showErrorRecoveryUI(appContainer, error, {
       title: "페이지 로드 실패",
@@ -195,50 +199,75 @@ mainTabs.addEventListener("click", (e) => {
  */
 function setupGlobalImageFallback() {
   // 전역 에러 이벤트 리스너 (capture phase)
-  document.addEventListener('error', function(event) {
-    if (event.target.tagName === 'IMG' && event.target.src) {
-      const img = event.target;
-      // 이미 폴백 시도했거나 원본 경로면 스킵
-      if (img.dataset.fallbackAttempted === 'true' || !img.src.endsWith('.webp')) {
-        return;
+  document.addEventListener(
+    "error",
+    function (event) {
+      if (event.target.tagName === "IMG" && event.target.src) {
+        const img = event.target;
+        // 이미 폴백 시도했거나 원본 경로면 스킵
+        if (
+          img.dataset.fallbackAttempted === "true" ||
+          !img.src.endsWith(".webp")
+        ) {
+          return;
+        }
+
+        // WebP에서 원본으로 폴백
+        const originalPath = img.src.replace(/\.webp$/i, ".jpg");
+        img.dataset.fallbackAttempted = "true";
+        img.src = originalPath;
       }
-      
-      // WebP에서 원본으로 폴백
-      const originalPath = img.src.replace(/\.webp$/i, '.jpg');
-      img.dataset.fallbackAttempted = 'true';
-      img.src = originalPath;
-    }
-  }, true); // capture phase에서 실행
-  
+    },
+    true
+  ); // capture phase에서 실행
+
   // 동적으로 추가되는 이미지들도 감지
   if (document.body) {
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        mutation.addedNodes.forEach(function(node) {
-          if (node.nodeType === 1) { // Element node
+    const observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        mutation.addedNodes.forEach(function (node) {
+          if (node.nodeType === 1) {
+            // Element node
             // 직접 추가된 img 태그
-            if (node.tagName === 'IMG' && node.src && node.src.endsWith('.webp')) {
-              node.addEventListener('error', function() {
-                if (this.dataset.fallbackAttempted !== 'true') {
-                  const originalPath = this.src.replace(/\.webp$/i, '.jpg');
-                  this.dataset.fallbackAttempted = 'true';
-                  this.src = originalPath;
-                }
-              }, { once: true });
+            if (
+              node.tagName === "IMG" &&
+              node.src &&
+              node.src.endsWith(".webp")
+            ) {
+              node.addEventListener(
+                "error",
+                function () {
+                  if (this.dataset.fallbackAttempted !== "true") {
+                    const originalPath = this.src.replace(/\.webp$/i, ".jpg");
+                    this.dataset.fallbackAttempted = "true";
+                    this.src = originalPath;
+                  }
+                },
+                { once: true }
+              );
             }
             // 자식 요소 중 img 태그 찾기
-            const images = node.querySelectorAll && node.querySelectorAll('img[src$=".webp"]');
+            const images =
+              node.querySelectorAll &&
+              node.querySelectorAll('img[src$=".webp"]');
             if (images) {
-              images.forEach(function(img) {
-                if (img.dataset.fallbackHandlerAdded !== 'true') {
-                  img.addEventListener('error', function() {
-                    if (this.dataset.fallbackAttempted !== 'true') {
-                      const originalPath = this.src.replace(/\.webp$/i, '.jpg');
-                      this.dataset.fallbackAttempted = 'true';
-                      this.src = originalPath;
-                    }
-                  }, { once: true });
-                  img.dataset.fallbackHandlerAdded = 'true';
+              images.forEach(function (img) {
+                if (img.dataset.fallbackHandlerAdded !== "true") {
+                  img.addEventListener(
+                    "error",
+                    function () {
+                      if (this.dataset.fallbackAttempted !== "true") {
+                        const originalPath = this.src.replace(
+                          /\.webp$/i,
+                          ".jpg"
+                        );
+                        this.dataset.fallbackAttempted = "true";
+                        this.src = originalPath;
+                      }
+                    },
+                    { once: true }
+                  );
+                  img.dataset.fallbackHandlerAdded = "true";
                 }
               });
             }
@@ -246,10 +275,10 @@ function setupGlobalImageFallback() {
         });
       });
     });
-    
+
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
     });
   }
 }
@@ -257,19 +286,16 @@ function setupGlobalImageFallback() {
 async function initializeApp() {
   // 에러 바운더리 초기화
   errorBoundary.init();
-  
+
   // 성능 모니터링 초기화
   initPerformanceMonitoring();
-  
+
   // Service Worker 초기화 (오프라인 지원)
   initServiceWorker();
-  
+
   // 전역 이미지 폴백 핸들러 설정
   setupGlobalImageFallback();
-  
-  // 전역 이미지 에러 핸들러 (WebP 폴백)
-  setupGlobalImageFallback();
-  
+
   const initStartTime = performance.now();
   showLoading(
     appContainer,
@@ -287,14 +313,14 @@ async function initializeApp() {
     Logger.log("Global state (allSpirits) updated:", globalState.allSpirits);
 
     await route();
-    
+
     // 초기화 성능 추적
     const initDuration = performance.now() - initStartTime;
     trackPageLoadPerformance("app_initialization", initDuration);
   } catch (error) {
     Logger.error("애플리케이션 초기화 실패:", error);
     errorBoundary.handleError(error, { type: "app_initialization" });
-    
+
     // 에러 복구 UI 표시
     showErrorRecoveryUI(appContainer, error, {
       title: "애플리케이션 초기화 실패",

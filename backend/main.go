@@ -307,7 +307,13 @@ func (a *App) loadChakDataFromFirestore(ctx context.Context) error {
 	defer a.dataLoadMutex.Unlock()
 	appLogger.Info("Loading chak data from Firestore...")
 	// chakData still in jsonData
-	doc, err := a.firestoreClient.Collection("jsonData").Doc("data-1745204108850").Get(ctx)
+	// 문서 ID는 환경 변수에서 가져오거나, 최신 문서를 자동으로 찾도록 개선 필요
+	chakDocID := os.Getenv("CHAK_DATA_DOC_ID")
+	if chakDocID == "" {
+		chakDocID = "data-1745204108850" // 기본값 (하위 호환성)
+		appLogger.Warn("CHAK_DATA_DOC_ID environment variable not set, using default: %s", chakDocID)
+	}
+	doc, err := a.firestoreClient.Collection("jsonData").Doc(chakDocID).Get(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get chakData from Firestore: %w", err)
 	}
@@ -316,7 +322,7 @@ func (a *App) loadChakDataFromFirestore(ctx context.Context) error {
 		return fmt.Errorf("failed to unmarshal chakData from Firestore document: %w", err)
 	}
 
-	if a.rawChakData == nil || len(a.rawChakData) == 0 {
+	if len(a.rawChakData) == 0 {
 		return fmt.Errorf("chak data was unmarshalled but is empty. Check Firestore document structure")
 	}
 
@@ -1125,7 +1131,8 @@ func (a *App) getCacheStatus(c *gin.Context) {
 
 // refreshCache: 수동으로 캐시를 갱신하는 엔드포인트
 func (a *App) refreshCache(c *gin.Context) {
-	ctx := context.Background()
+	// 요청 컨텍스트 사용 (타임아웃 및 취소 지원)
+	ctx := c.Request.Context()
 	
 	var refreshType string
 	if refreshType = c.Query("type"); refreshType == "" {
