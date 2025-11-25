@@ -1,4 +1,4 @@
-import { createElement } from "../utils.js";
+import { createElement, debounce } from "../utils.js";
 import { showLoading, hideLoading } from "../loadingIndicator.js";
 import * as api from "../api.js";
 import { showChakResultsModal } from "../components/chakResultsModal.js";
@@ -436,7 +436,58 @@ function updateLevelProgressBar(btn, totalStats) {
     unlockedCount > 0 ? `${unlockedCount}/${totalStats} (${percent}%)` : "";
 }
 
-async function renderSummary(skipCalculation = false) {
+/**
+ * 프론트엔드에서 직접 착 계산을 수행합니다.
+ * API 호출 없이 즉시 계산하여 성능을 최적화합니다.
+ */
+function calculateChakStats() {
+  const summary = {};
+  let consumedGold = 0;
+  let consumedBalls = 0;
+
+  // statState를 순회하면서 능력치 합계 계산
+  Object.values(pageState.statState).forEach((state) => {
+    if (!state.isUnlocked) return;
+
+    // statName에서 숫자 제거 (예: "피해저항관통1" -> "피해저항관통")
+    const displayName = state.statName.replace(/\d+$/, "");
+    summary[displayName] = (summary[displayName] || 0) + state.value;
+
+    // 자원 소모량 계산
+    if (state.isFirst) {
+      // 첫 번째 능력치: level * upgradeFirst 비용
+      consumedBalls += state.level * pageState.chakData.costs.upgradeFirst;
+    } else {
+      // 두 번째 이후 능력치: unlockOther + upgradeOther 비용
+      consumedGold += pageState.chakData.costs.unlockOther;
+      if (state.level >= 1) {
+        consumedBalls += pageState.chakData.costs.upgradeOther0;
+      }
+      if (state.level >= 2) {
+        consumedBalls += pageState.chakData.costs.upgradeOther1;
+      }
+      if (state.level >= 3) {
+        consumedBalls += pageState.chakData.costs.upgradeOther2;
+      }
+    }
+  });
+
+  return {
+    summary,
+    resources: {
+      goldButton: {
+        consumed: consumedGold,
+        remaining: pageState.userResources.goldButton - consumedGold,
+      },
+      colorBall: {
+        consumed: consumedBalls,
+        remaining: pageState.userResources.colorBall - consumedBalls,
+      },
+    },
+  };
+}
+
+function renderSummary(skipCalculation = false) {
   // 초기 로드 시 또는 statState가 비어있을 때는 계산을 건너뛰고 기본 메시지만 표시
   if (skipCalculation || Object.keys(pageState.statState).length === 0) {
     elements.summaryDisplay.innerHTML = "<p>능력치가 개방되면 여기에 합계가 표시됩니다.</p>";
@@ -444,59 +495,46 @@ async function renderSummary(skipCalculation = false) {
     return;
   }
 
-  showLoading(elements.summaryDisplay, "합계 계산 중...");
+  // 프론트엔드에서 직접 계산 (API 호출 없음)
+  const { summary, resources } = calculateChakStats();
 
-  try {
-    const result = await api.calculateChak({
-      statState: pageState.statState,
-      userResources: pageState.userResources,
-    });
-    const { summary, resources } = result;
-
-    let statHtml =
-      Object.keys(summary).length > 0
-        ? `<div class="summary-section"><div class="stat-list">${Object.entries(
-            summary
+  let statHtml =
+    Object.keys(summary).length > 0
+      ? `<div class="summary-section"><div class="stat-list">${Object.entries(
+          summary
+        )
+          .sort((a, b) => b[1] - a[1])
+          .map(
+            ([stat, value]) =>
+              `<div class="stat-item"><span class="stat-name">${stat}</span><span class="stat-value">+${value}</span></div>`
           )
-            .sort((a, b) => b[1] - a[1])
-            .map(
-              ([stat, value]) =>
-                `<div class="stat-item"><span class="stat-name">${stat}</span><span class="stat-value">+${value}</span></div>`
-            )
-            .join("")}</div></div>`
-        : "<p>능력치가 개방되지 않았습니다.</p>";
+          .join("")}</div></div>`
+      : "<p>능력치가 개방되지 않았습니다.</p>";
 
-    elements.summaryDisplay.innerHTML = statHtml;
+  elements.summaryDisplay.innerHTML = statHtml;
 
-    elements.resourceSummary.innerHTML = `
-            <div class="resource-summary-item">
-                <img src="assets/img/gold-button.jpg" class="resource-icon-img-small" loading="lazy">
-                <span class="resource-details">
-                    <span class="${
-                      resources.goldButton.remaining < 0
-                        ? "resource-negative"
-                        : ""
-                    }">${resources.goldButton.remaining.toLocaleString()}</span> 보유 / <span>${resources.goldButton.consumed.toLocaleString()}</span> 소모
-                </span>
-            </div>
-            <div class="resource-summary-item">
-                <img src="assets/img/fivecolored-beads.jpg" class="resource-icon-img-small" loading="lazy">
-                <span class="resource-details">
-                    <span class="${
-                      resources.colorBall.remaining < 0
-                        ? "resource-negative"
-                        : ""
-                    }">${resources.colorBall.remaining.toLocaleString()}</span> 보유 / <span>${resources.colorBall.consumed.toLocaleString()}</span> 소모
-                </span>
-            </div>
-        `;
-  } catch (error) {
-    alert(`합계 계산 오류: ${error.message}`);
-    console.error("Chak summary calculation failed:", error);
-    elements.summaryDisplay.innerHTML = `<p class="error-message">계산 중 오류가 발생했습니다.</p>`;
-  } finally {
-    hideLoading();
-  }
+  elements.resourceSummary.innerHTML = `
+        <div class="resource-summary-item">
+            <img src="assets/img/gold-button.jpg" class="resource-icon-img-small" loading="lazy">
+            <span class="resource-details">
+                <span class="${
+                  resources.goldButton.remaining < 0
+                    ? "resource-negative"
+                    : ""
+                }">${resources.goldButton.remaining.toLocaleString()}</span> 보유 / <span>${resources.goldButton.consumed.toLocaleString()}</span> 소모
+            </span>
+        </div>
+        <div class="resource-summary-item">
+            <img src="assets/img/fivecolored-beads.jpg" class="resource-icon-img-small" loading="lazy">
+            <span class="resource-details">
+                <span class="${
+                  resources.colorBall.remaining < 0
+                    ? "resource-negative"
+                    : ""
+                }">${resources.colorBall.remaining.toLocaleString()}</span> 보유 / <span>${resources.colorBall.consumed.toLocaleString()}</span> 소모
+            </span>
+        </div>
+    `;
 }
 
 /**
@@ -613,13 +651,16 @@ function calculateStatValue(maxValue, level, isUnlocked, isFirst) {
 
 /**
  * 사용자 보유 자원 입력 변경 이벤트를 처리하고 합계를 재렌더링합니다.
+ * Debounce를 적용하여 연속 입력 시 불필요한 계산을 방지합니다.
  */
+const debouncedRenderSummary = debounce(renderSummary, 300);
+
 function handleResourceChange() {
   pageState.userResources = {
     goldButton: parseInt(elements.goldButton.value, 10) || 0,
     colorBall: parseInt(elements.colorBall.value, 10) || 0,
   };
-  renderSummary();
+  debouncedRenderSummary();
 }
 
 /**
