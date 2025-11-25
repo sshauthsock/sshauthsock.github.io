@@ -30,6 +30,29 @@ export default defineConfig(({ mode }) => {
               return "vendor";
             }
 
+            // myInfo 서브모듈 분리 (페이지별 스플리팅보다 먼저 체크)
+            // 큰 모듈들을 별도 청크로 분리하여 초기 로딩 최적화
+            if (id.includes("/js/pages/myInfo/")) {
+              // 큰 모듈들은 별도 청크로 분리
+              if (id.includes("spiritManager.js")) {
+                return "myInfo-spiritManager";
+              }
+              if (id.includes("statCalculator.js")) {
+                return "myInfo-statCalculator";
+              }
+              if (id.includes("eventHandlers.js")) {
+                return "myInfo-eventHandlers";
+              }
+              if (id.includes("statUI.js")) {
+                return "myInfo-statUI";
+              }
+              if (id.includes("engravingManager.js")) {
+                return "myInfo-engravingManager";
+              }
+              // 나머지 작은 모듈들은 공통 청크
+              return "myInfo-common";
+            }
+
             // 페이지별 코드 스플리팅
             if (id.includes("/js/pages/")) {
               const pageName = id.split("/pages/")[1].split(".")[0];
@@ -76,8 +99,7 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       __API_BASE_URL__: JSON.stringify(
-        env.VITE_API_BASE_URL ||
-          "https://bayeon-hwayeon-backend.onrender.com"
+        env.VITE_API_BASE_URL || "https://bayeon-hwayeon-backend.onrender.com"
       ),
     },
     server: {
@@ -90,4 +112,3 @@ export default defineConfig(({ mode }) => {
     },
   };
 });
-

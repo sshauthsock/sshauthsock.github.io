@@ -33,6 +33,15 @@ function createImageWrapper(spirit, getSpiritState) {
     alt: spirit.name,
     loading: "lazy",
   });
+  
+  // 이미지 로드 실패 시 원본으로 폴백
+  img.addEventListener('error', function() {
+    if (img.src.endsWith('.webp')) {
+      const originalPath = spirit.image.replace(/\.webp$/i, '.jpg');
+      img.src = originalPath;
+    }
+  }, { once: true });
+  
   imgBox.appendChild(img);
 
   if (state.level25BindAvailable) {

@@ -222,7 +222,7 @@ function getHTML() {
                 <button class="filter-btn" data-type="stat">능력치 랭킹</button>
             </div>
                     <a href="https://open.kakao.com/o/sUSXtUYe" target="_blank" class="kakao-gift-btn">
-            <img src="assets/img/gift.png" alt="카카오 선물하기 아이콘"
+            <img src="assets/img/gift.png" alt="카카오 선물하기 아이콘" loading="lazy"
                 style="height: 20px; vertical-align: middle; margin-right: 5px;">
             개발자에게 카톡 선물하기
         </a>
@@ -322,7 +322,7 @@ function renderBondRankings(rankings) {
               <td class="spirits-column"><div class="spirits-container">${ranking.spirits
                 .map(
                   (spirit) =>
-                    `<img src="${spirit.image}" alt="${spirit.name}" title="${spirit.name}" class="spirit-image" data-spirit-name="${spirit.name}">`
+                    `<img src="${spirit.image}" alt="${spirit.name}" title="${spirit.name}" class="spirit-image" data-spirit-name="${spirit.name}" loading="lazy">`
                 )
                 .join("")}</div></td>
               <td class="faction-column"><div class="faction-tags">${renderSetInfo(
@@ -385,7 +385,7 @@ function renderStatRankings(rankings) {
         <div class="rank-number">${index + 1}</div>
         <div class="spirit-image-container"><img src="${ranking.image}" alt="${
       ranking.name
-    }" class="spirit-image"></div>
+    }" class="spirit-image" loading="lazy"></div>
         <div class="spirit-name">${ranking.name}</div>
         <div class="spirit-stat">${displayValue}</div>
       </div>
@@ -419,7 +419,7 @@ function renderSetInfo(ranking) {
       .map(([faction, count]) => {
         const iconPath = FACTION_ICONS[faction] || "";
         return `<span class="faction-tag" title="${faction}">
-                    <img src="${iconPath}" class="faction-icon" alt="${faction}">
+                    <img src="${iconPath}" class="faction-icon" alt="${faction}" loading="lazy">
                     ${faction} x${count}
                   </span>`;
       })

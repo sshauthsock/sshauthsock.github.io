@@ -58,17 +58,17 @@ function getHTML() {
           </div>
           <div class="soul-panel">
             <div class="soul-item">
-              <img src="assets/img/high-soul.jpg" alt="최상급">
+              <img src="assets/img/high-soul.jpg" alt="최상급" loading="lazy">
               <label>최상급 (1000)</label>
               <input type="number" id="highSoul" min="0" value="0" class="form-control">
             </div>
             <div class="soul-item">
-              <img src="assets/img/mid-soul.jpg" alt="상급 (100)">
+              <img src="assets/img/mid-soul.jpg" alt="상급 (100)" loading="lazy">
               <label>상급 (100)</label>
               <input type="number" id="midSoul" min="0" value="0" class="form-control">
             </div>
             <div class="soul-item">
-              <img src="assets/img/low-soul.jpg" alt="하급 (10)">
+              <img src="assets/img/low-soul.jpg" alt="하급 (10)" loading="lazy">
               <label>하급 (10)</label>
               <input type="number" id="lowSoul" min="0" value="0" class="form-control">
             </div>
@@ -146,13 +146,13 @@ function createRequiredSoulsSection(required, typeName, formatNumber) {
   if (!required.isSufficient && required.needed) {
     neededHtml = `
             <div class="sub-title">추가 필요 (최적 조합)</div>
-            <div class="data-row"><span><img src="assets/img/high-soul.jpg" class="soul-icon">최상급</span><span class="data-value">${formatNumber(
+            <div class="data-row"><span><img src="assets/img/high-soul.jpg" class="soul-icon" loading="lazy">최상급</span><span class="data-value">${formatNumber(
               required.needed.high
             )}개</span></div>
-            <div class="data-row"><span><img src="assets/img/mid-soul.jpg" class="soul-icon">상급</span><span class="data-value">${formatNumber(
+            <div class="data-row"><span><img src="assets/img/mid-soul.jpg" class="soul-icon" loading="lazy">상급</span><span class="data-value">${formatNumber(
               required.needed.mid
             )}개</span></div>
-            <div class="data-row"><span><img src="assets/img/low-soul.jpg" class="soul-icon">하급</span><span class="data-value">${formatNumber(
+            <div class="data-row"><span><img src="assets/img/low-soul.jpg" class="soul-icon" loading="lazy">하급</span><span class="data-value">${formatNumber(
               required.needed.low
             )}개</span></div>
         `;
@@ -174,13 +174,13 @@ function createRequiredSoulsSection(required, typeName, formatNumber) {
                 </div>
             </div>
             <div class="sub-title">총 필요 환수혼</div>
-            <div class="data-row"><span><img src="assets/img/high-soul.jpg" class="soul-icon">최상급</span><span class="data-value">${formatNumber(
+            <div class="data-row"><span><img src="assets/img/high-soul.jpg" class="soul-icon" loading="lazy">최상급</span><span class="data-value">${formatNumber(
               required.souls.high
             )}개</span></div>
-            <div class="data-row"><span><img src="assets/img/mid-soul.jpg" class="soul-icon">상급</span><span class="data-value">${formatNumber(
+            <div class="data-row"><span><img src="assets/img/mid-soul.jpg" class="soul-icon" loading="lazy">상급</span><span class="data-value">${formatNumber(
               required.souls.mid
             )}개</span></div>
-            <div class="data-row"><span><img src="assets/img/low-soul.jpg" class="soul-icon">하급</span><span class="data-value">${formatNumber(
+            <div class="data-row"><span><img src="assets/img/low-soul.jpg" class="soul-icon" loading="lazy">하급</span><span class="data-value">${formatNumber(
               required.souls.low
             )}개</span></div>
             ${neededHtml}

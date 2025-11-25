@@ -189,6 +189,71 @@ mainTabs.addEventListener("click", (e) => {
   }
 });
 
+/**
+ * 전역 이미지 에러 핸들러 설정 (WebP 폴백)
+ * WebP 이미지 로드 실패 시 자동으로 원본 이미지로 폴백
+ */
+function setupGlobalImageFallback() {
+  // 전역 에러 이벤트 리스너 (capture phase)
+  document.addEventListener('error', function(event) {
+    if (event.target.tagName === 'IMG' && event.target.src) {
+      const img = event.target;
+      // 이미 폴백 시도했거나 원본 경로면 스킵
+      if (img.dataset.fallbackAttempted === 'true' || !img.src.endsWith('.webp')) {
+        return;
+      }
+      
+      // WebP에서 원본으로 폴백
+      const originalPath = img.src.replace(/\.webp$/i, '.jpg');
+      img.dataset.fallbackAttempted = 'true';
+      img.src = originalPath;
+    }
+  }, true); // capture phase에서 실행
+  
+  // 동적으로 추가되는 이미지들도 감지
+  if (document.body) {
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        mutation.addedNodes.forEach(function(node) {
+          if (node.nodeType === 1) { // Element node
+            // 직접 추가된 img 태그
+            if (node.tagName === 'IMG' && node.src && node.src.endsWith('.webp')) {
+              node.addEventListener('error', function() {
+                if (this.dataset.fallbackAttempted !== 'true') {
+                  const originalPath = this.src.replace(/\.webp$/i, '.jpg');
+                  this.dataset.fallbackAttempted = 'true';
+                  this.src = originalPath;
+                }
+              }, { once: true });
+            }
+            // 자식 요소 중 img 태그 찾기
+            const images = node.querySelectorAll && node.querySelectorAll('img[src$=".webp"]');
+            if (images) {
+              images.forEach(function(img) {
+                if (img.dataset.fallbackHandlerAdded !== 'true') {
+                  img.addEventListener('error', function() {
+                    if (this.dataset.fallbackAttempted !== 'true') {
+                      const originalPath = this.src.replace(/\.webp$/i, '.jpg');
+                      this.dataset.fallbackAttempted = 'true';
+                      this.src = originalPath;
+                    }
+                  }, { once: true });
+                  img.dataset.fallbackHandlerAdded = 'true';
+                }
+              });
+            }
+          }
+        });
+      });
+    });
+    
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  }
+}
+
 async function initializeApp() {
   // 에러 바운더리 초기화
   errorBoundary.init();
@@ -198,6 +263,12 @@ async function initializeApp() {
   
   // Service Worker 초기화 (오프라인 지원)
   initServiceWorker();
+  
+  // 전역 이미지 폴백 핸들러 설정
+  setupGlobalImageFallback();
+  
+  // 전역 이미지 에러 핸들러 (WebP 폴백)
+  setupGlobalImageFallback();
   
   const initStartTime = performance.now();
   showLoading(

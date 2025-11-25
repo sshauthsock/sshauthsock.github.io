@@ -100,6 +100,12 @@ export function renderBondSlots(category, setCategoryForSelection, showSpiritLev
       img.src = spirit.image;
       img.alt = spirit.name;
       img.onerror = () => {
+        // WebP 로드 실패 시 원본으로 폴백
+        if (img.src.endsWith('.webp')) {
+          const originalPath = spirit.image.replace(/\.webp$/i, '.jpg');
+          img.src = originalPath;
+          return; // 폴백 시도 중이므로 에러 처리 스킵
+        }
         pageState.imageLoadErrors.add(spirit.image);
         showImageLoadError();
       };
@@ -917,7 +923,7 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
     <div class="my-info-spirit-popup-content">
       <div class="my-info-spirit-popup-header">
         <div style="display: flex; align-items: center; gap: var(--space-sm);">
-          <img src="${spirit.image}" alt="${spirit.name}">
+          <img src="${spirit.image}" alt="${spirit.name}" loading="lazy">
           <div class="my-info-spirit-popup-name">${spirit.name}</div>
         </div>
         <div style="display: flex; align-items: center; justify-content: center; flex: 1;">

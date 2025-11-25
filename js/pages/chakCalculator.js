@@ -57,11 +57,11 @@ function getHTML() {
           <label class="resource-label">보유 수량</label>
           <div class="resource-inputs">
             <div class="resource-input">
-              <img src="assets/img/gold-button.jpg" alt="황금단추" class="resource-icon-img">
+              <img src="assets/img/gold-button.jpg" alt="황금단추" class="resource-icon-img" loading="lazy">
               <input type="number" id="gold-button" value="10000" min="0">
             </div>
             <div class="resource-input">
-              <img src="assets/img/fivecolored-beads.jpg" alt="오색구슬" class="resource-icon-img">
+              <img src="assets/img/fivecolored-beads.jpg" alt="오색구슬" class="resource-icon-img" loading="lazy">
               <input type="number" id="color-ball" value="10000" min="0">
             </div>
           </div>
@@ -338,13 +338,13 @@ function updateButtonState(card, state, hasFirstUnlockedOverride = null) {
         ? "upgradeFirst"
         : `upgradeOther${state.level}`;
       const cost = pageState.chakData.costs[costKey];
-      button.innerHTML = `<img src="assets/img/fivecolored-beads.jpg" class="btn-icon"> <span>강화 ${cost}</span>`;
+      button.innerHTML = `<img src="assets/img/fivecolored-beads.jpg" class="btn-icon" loading="lazy"> <span>강화 ${cost}</span>`;
     }
   } else {
     const costKey = hasFirstUnlocked ? "unlockOther" : "unlockFirst";
     const cost = pageState.chakData.costs[costKey];
     const icon = hasFirstUnlocked ? "gold-button.jpg" : "fivecolored-beads.jpg";
-    button.innerHTML = `<img src="assets/img/${icon}" class="btn-icon"> <span>선택 ${cost}</span>`;
+    button.innerHTML = `<img src="assets/img/${icon}" class="btn-icon" loading="lazy"> <span>선택 ${cost}</span>`;
   }
 }
 
@@ -470,7 +470,7 @@ async function renderSummary(skipCalculation = false) {
 
     elements.resourceSummary.innerHTML = `
             <div class="resource-summary-item">
-                <img src="assets/img/gold-button.jpg" class="resource-icon-img-small">
+                <img src="assets/img/gold-button.jpg" class="resource-icon-img-small" loading="lazy">
                 <span class="resource-details">
                     <span class="${
                       resources.goldButton.remaining < 0
@@ -480,7 +480,7 @@ async function renderSummary(skipCalculation = false) {
                 </span>
             </div>
             <div class="resource-summary-item">
-                <img src="assets/img/fivecolored-beads.jpg" class="resource-icon-img-small">
+                <img src="assets/img/fivecolored-beads.jpg" class="resource-icon-img-small" loading="lazy">
                 <span class="resource-details">
                     <span class="${
                       resources.colorBall.remaining < 0

@@ -11,6 +11,7 @@
     "start:local": "bash start-local.sh"
   },
   "devDependencies": {
+    "sharp": "^0.34.5",
     "vite": "^7.1.2"
   }
 }

@@ -168,7 +168,7 @@ function renderEffects(elementId, title, effects, score, counts = {}) {
       .filter(([, count]) => count >= 2)
       .map(([faction, count]) => {
         const iconPath = FACTION_ICONS[faction] || "";
-        return `<span class="faction-tag" title="${faction}"><img src="${iconPath}" class="faction-icon" alt="${faction}">x${count}</span>`;
+        return `<span class="faction-tag" title="${faction}"><img src="${iconPath}" class="faction-icon" alt="${faction}" loading="lazy">x${count}</span>`;
       })
       .join(" ");
   }
@@ -1095,7 +1095,7 @@ function renderResultContent(result, container, isFromRanking) {
         isSelected ? "selected-used-spirit" : ""
       }" data-spirit-name="${spirit.name}">
           <div class="spirit-image-container">
-              <img src="${spirit.image}" alt="${spirit.name}">
+              <img src="${spirit.image}" alt="${spirit.name}" loading="lazy">
           </div>
           <div class="spirit-info-details">
               <div class="spirit-info-name">${spirit.name}</div>
@@ -1249,7 +1249,7 @@ function updateResultView(result, isFromRanking) {
         isSelected ? "selected-used-spirit" : ""
       }" data-spirit-name="${spirit.name}">
           <div class="spirit-image-container">
-              <img src="${spirit.image}" alt="${spirit.name}">
+              <img src="${spirit.image}" alt="${spirit.name}" loading="lazy">
           </div>
           <div class="spirit-info-details">
               <div class="spirit-info-name">${spirit.name}</div>
@@ -1536,7 +1536,7 @@ function renderSpiritDetailsTable(spirits, gradeEffects = [], factionEffects = [
                         ${spirits
                           .map(
                             (s) =>
-                              `<th><img src="${s.image}" class="spirit-thumbnail" alt="${s.name}" title="${s.name}"><br><span class="spirit-table-name">${s.name}</span></th>`
+                              `<th><img src="${s.image}" class="spirit-thumbnail" alt="${s.name}" title="${s.name}" loading="lazy"><br><span class="spirit-table-name">${s.name}</span></th>`
                           )
                           .join("")}
                         <th class="stat-total-header">결속 합산</th>

@@ -207,7 +207,7 @@ export async function updateSoulExp(getSpiritsForCategory) {
       <div class="my-info-soul-exp-need-item">
         <div class="my-info-soul-exp-need-label">필요경험치</div>
         <div class="my-info-soul-exp-need-value">
-          <img src="assets/img/high-soul.jpg" alt="최상급 환수혼">
+          <img src="assets/img/high-soul.jpg" alt="최상급 환수혼" loading="lazy">
           <span>약 <strong>${soulImageCount.toLocaleString()}</strong>개</span>
         </div>
       </div>

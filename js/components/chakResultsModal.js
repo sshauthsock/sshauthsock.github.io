@@ -244,11 +244,11 @@ function renderDescriptionPanel(
             <div class="resource-req-title">필요 자원 (현재 적용 상태)</div>
             <div class="resource-req-items">
                 <div class="resource-req-item">
-                    <img src="assets/img/gold-button.jpg" class="resource-icon-img-small">
+                    <img src="assets/img/gold-button.jpg" class="resource-icon-img-small" loading="lazy">
                     <span>${summary.goldConsumed.toLocaleString()}</span>
                 </div>
                 <div class="resource-req-item">
-                    <img src="assets/img/fivecolored-beads.jpg" class="resource-icon-img-small">
+                    <img src="assets/img/fivecolored-beads.jpg" class="resource-icon-img-small" loading="lazy">
                     <span>${summary.ballConsumed.toLocaleString()}</span>
                 </div>
             </div>

@@ -235,7 +235,20 @@ export function init(container) {
   // 전역 이미지 로드 에러 감지 (spiritGrid 이미지 포함)
   const handleImageError = (event) => {
     if (event.target.tagName === "IMG" && event.target.src) {
-      pageState.imageLoadErrors.add(event.target.src);
+      const img = event.target;
+
+      // WebP 로드 실패 시 원본으로 폴백
+      if (
+        img.src.endsWith(".webp") &&
+        img.dataset.fallbackAttempted !== "true"
+      ) {
+        const originalPath = img.src.replace(/\.webp$/i, ".jpg");
+        img.dataset.fallbackAttempted = "true";
+        img.src = originalPath;
+        return; // 폴백 시도 중이므로 에러 처리 스킵
+      }
+
+      pageState.imageLoadErrors.add(img.src);
       showImageLoadError();
     }
   };
