@@ -492,23 +492,6 @@ export function setupEventListeners(callbacks) {
           pageState.baselineStats[stat.key] = totalValue;
 
           // 디버깅: 상태이상저항, 상태이상적중, 경험치획득증가만 로그 출력
-          if (
-            stat.key === "statusEffectResistance" ||
-            stat.key === "statusEffectAccuracy" ||
-            stat.key === "experienceGainIncrease"
-          ) {
-            console.log(`[저장] ${stat.name}:`, {
-              oldBaseline,
-              newBaseline: totalValue,
-              baseValue,
-              totalStatsValue,
-              activeSpirits: Object.entries(pageState.activeSpirits)
-                .map(([cat, active]) =>
-                  active ? `${cat}: ${active.name} Lv${active.level}` : null
-                )
-                .filter(Boolean),
-            });
-          }
         });
 
         // 주요 스탯 기준값 저장 (환산타채 합 등)
@@ -586,7 +569,6 @@ export function setupEventListeners(callbacks) {
         // baselineStatsHash 저장 (저장 시점의 해시값)
         const currentHash = generateTotalStatsHash();
         pageState.baselineStatsHash = currentHash;
-        console.log("[저장] baselineStatsHash 업데이트:", currentHash);
 
         saveData();
 

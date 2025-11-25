@@ -356,12 +356,10 @@ export async function updateTotalStats(
 
   // 이미 실행 중이면 중복 호출 방지
   if (pageState.isUpdatingTotalStats) {
-    console.log("[updateTotalStats] 이미 실행 중이므로 중복 호출 방지");
     return Promise.resolve();
   }
 
   pageState.isUpdatingTotalStats = true;
-  console.log("[updateTotalStats] 시작");
 
   // 캐시 확인
   const currentHash = generateTotalStatsHash();
@@ -666,13 +664,6 @@ export async function updateTotalStats(
         const engraving =
           pageState.engravingData[category]?.[active.name] || {};
 
-        // 디버깅: 각인 등록효과 계산 확인
-        if (engraving && Object.keys(engraving).length > 0) {
-          console.log(
-            `[각인 등록효과] 카테고리: ${category}, 환수: ${active.name}, 레벨: ${active.level}`,
-            engraving
-          );
-        }
 
         // 새로운 데이터 구조: { registration: [...], bind: {...} }
         if (Array.isArray(engraving.registration)) {
@@ -682,11 +673,7 @@ export async function updateTotalStats(
             const numValue =
               typeof value === "number" ? value : parseFloat(value) || 0;
             if (numValue > 0 && statKey) {
-              const beforeValue = allTotalStats[statKey] || 0;
               allTotalStats[statKey] = (allTotalStats[statKey] || 0) + numValue;
-              console.log(
-                `[각인 등록효과 추가] ${statKey}: ${beforeValue} + ${numValue} = ${allTotalStats[statKey]}`
-              );
             }
           });
         }
@@ -701,18 +688,11 @@ export async function updateTotalStats(
               registrationValue = engravingData || 0;
             }
             if (registrationValue > 0) {
-              const beforeValue = allTotalStats[statKey] || 0;
               allTotalStats[statKey] =
                 (allTotalStats[statKey] || 0) + registrationValue;
-              console.log(
-                `[각인 등록효과 추가 (하위호환)] ${statKey}: ${beforeValue} + ${registrationValue} = ${allTotalStats[statKey]}`
-              );
             }
           });
         }
-      } else {
-        // 디버깅: 사용중 환수가 없는 경우
-        console.log(`[각인 등록효과] 카테고리: ${category}, 사용중 환수 없음`);
       }
     }
 
@@ -720,31 +700,19 @@ export async function updateTotalStats(
     // (사용중 환수 변경 등으로 저장된 상태로 돌아온 경우)
     let shouldForceZeroChange = pageState.isInitialLoad;
 
-    console.log("[updateTotalStats] 해시 비교:", {
-      baselineStatsHash: pageState.baselineStatsHash,
-      currentHash: currentHash,
-      일치: pageState.baselineStatsHash === currentHash,
-      isInitialLoad: pageState.isInitialLoad,
-    });
-
     // baselineStatsHash는 저장 버튼을 눌렀을 때만 업데이트되므로
     // 여기서는 해시 비교만 하고 baselineStats는 변경하지 않음
     // 증감 계산은 항상 저장된 baselineStats와 현재 계산값을 비교하여 수행
     if (pageState.baselineStatsHash) {
       if (currentHash === pageState.baselineStatsHash) {
         // 현재 상태가 저장된 baseline과 일치하면 증감을 0으로 표시
-        console.log(
-          "[updateTotalStats] baselineStatsHash 일치 - 증감 0으로 표시"
-        );
         shouldForceZeroChange = true;
       } else {
-        console.log("[updateTotalStats] baselineStatsHash 불일치 - 증감 계산");
         // 해시가 불일치하면 증감을 계산하여 표시
         shouldForceZeroChange = false;
       }
     } else {
       // baselineStatsHash가 없으면 초기화 (저장 버튼을 누르기 전까지는 해시 설정 안 함)
-      console.log("[updateTotalStats] baselineStatsHash 없음");
       shouldForceZeroChange = pageState.isInitialLoad;
     }
 
@@ -770,7 +738,6 @@ export async function updateTotalStats(
       allActiveStats,
       allTotalStats, // 새로운 전체 스탯 변수
     };
-    console.log("[updateTotalStats] 완료");
   } catch (error) {
     Logger.error("Error updating total stats:", error);
     // 에러가 발생해도 페이지는 표시되도록 (컨테이너를 덮어쓰지 않음)

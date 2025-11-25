@@ -1352,14 +1352,9 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
     const previousActive = pageState.activeSpirits[category];
     const active = pageState.activeSpirits[category];
 
-    console.log(`[사용중 환수 변경] 카테고리: ${category}`);
-    console.log(`  이전 사용중:`, previousActive);
-    console.log(`  현재 클릭한 환수:`, spirit.name);
-
     if (active && active.name === spirit.name) {
       // 같은 환수를 다시 클릭하면 사용중 해제
       pageState.activeSpirits[category] = null;
-      console.log(`  → 사용중 해제`);
       setActiveBtn.textContent = "사용하기";
       setActiveBtn.classList.remove("active");
     } else {
@@ -1378,21 +1373,10 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
       newActive.level = level;
       pageState.activeSpirits[category] = newActive;
       spirit.level = level;
-      console.log(`  → 새 사용중:`, pageState.activeSpirits[category]);
       setActiveBtn.textContent = "사용중";
       setActiveBtn.classList.add("active");
       setActiveBtn.textContent = "사용중";
       setActiveBtn.classList.add("active");
-      console.log(
-        `  → 각인 데이터:`,
-        pageState.engravingData[category]?.[spirit.name]
-      );
-      console.log(`  → 각인 데이터 확인:`, {
-        category,
-        spiritName: spirit.name,
-        engravingData: pageState.engravingData[category],
-        targetEngraving: pageState.engravingData[category]?.[spirit.name],
-      });
     }
 
     // 초기 로딩 플래그 해제 (사용자가 사용중 환수를 변경했으므로 증감 표시)

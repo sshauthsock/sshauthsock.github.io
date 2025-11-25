@@ -357,15 +357,6 @@ export function handleStatEdit(
       totalValueSpan.dataset.lastEditedTime = editTimestamp.toString();
       totalValueSpan.dataset.isManuallyEdited = "true";
 
-      // 디버깅 로그
-      console.log(`[${statKey}] finishEdit - 값 업데이트:`, {
-        입력한_총합값: inputTotalValue,
-        계산된_기본값: newBaseValue,
-        totalStatsValue,
-        totalValue,
-        formattedValue,
-        실제_DOM_값: totalValueSpan.textContent,
-      });
     }
 
     // 스탯 업데이트 (합산합 재계산)
@@ -504,29 +495,6 @@ export function updateStatItemsWithValues(
       ? 0
       : Math.round(calculatedTotalValue - baselineValue);
 
-    // 디버깅: 상태이상저항, 상태이상적중, 경험치획득증가만 로그 출력
-    if (
-      !forceZeroChange &&
-      (stat.key === "statusEffectResistance" ||
-        stat.key === "statusEffectAccuracy" ||
-        stat.key === "experienceGainIncrease")
-    ) {
-      console.log(`[스탯 증감] ${stat.name}:`, {
-        statKey: stat.key,
-        baseValue,
-        totalStatsValue,
-        calculatedTotalValue,
-        baselineValue,
-        changeValue,
-        hasBaseline,
-        isInitialLoad: pageState.isInitialLoad,
-        activeSpirits: Object.entries(pageState.activeSpirits)
-          .map(([cat, active]) =>
-            active ? `${cat}: ${active.name} Lv${active.level}` : null
-          )
-          .filter(Boolean),
-      });
-    }
 
     // 해당 스탯 아이템 찾기
     const statItem = elements.container.querySelector(
