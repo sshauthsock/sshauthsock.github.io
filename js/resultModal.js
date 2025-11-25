@@ -206,9 +206,10 @@ function renderEffects(elementId, title, effects, score, counts = {}) {
     effectsListHtml = `<ul class="effects-list">${sortedEffects
       .map((stat) => {
         const isPercent = PERCENT_STATS.includes(stat.key);
+        const numericValue = Math.round(ensureNumber(stat.value));
         const displayValue = isPercent
-          ? `${ensureNumber(stat.value)}%`
-          : ensureNumber(stat.value).toLocaleString();
+          ? `${numericValue}%`
+          : numericValue.toLocaleString();
 
         const highlightClass = SPECIAL_STAT_CLASSES[stat.key] || "";
 
@@ -297,9 +298,10 @@ function renderRegistrationEffectInResults() {
   const visibleStatsHtml = `<ul class="effects-list">${visibleStats
     .map((stat) => {
       const isPercent = PERCENT_STATS.includes(stat.key);
+      const numericValue = Math.round(ensureNumber(stat.value));
       const displayValue = isPercent
-        ? `${stat.value}%`
-        : stat.value.toLocaleString();
+        ? `${numericValue}%`
+        : numericValue.toLocaleString();
 
       // SPECIAL_STAT_CLASSES를 사용하여 다른 섹션과 동일한 스타일 적용
       const highlightClass = SPECIAL_STAT_CLASSES[stat.key] || "";
@@ -1569,9 +1571,10 @@ function renderSpiritDetailsTable(spirits, gradeEffects = [], factionEffects = [
       bindTotalValue += value;
       spiritValues.push({ name: spirit.name, level: actualLevel, value });
 
+      // 모든 값은 정수로 표시
       const displayValue = PERCENT_STATS.includes(statKey)
-        ? `${value}%`
-        : value.toLocaleString();
+        ? `${Math.round(value)}%`
+        : Math.round(value).toLocaleString();
 
       cellsHtml += `<td>${value > 0 ? displayValue : "-"}</td>`;
     });
@@ -1601,28 +1604,28 @@ function renderSpiritDetailsTable(spirits, gradeEffects = [], factionEffects = [
     //   }
     // );
 
-    // 결속 합산 표시 값 계산
+    // 결속 합산 표시 값 계산 (모든 값은 정수로 표시)
     let bindDisplayValue;
     if (statKey === "pvpDamagePercent" || statKey === "pvpDefensePercent") {
       bindDisplayValue =
         bindTotalValue > 0
-          ? `${(bindTotalValue * 10).toLocaleString()}`
+          ? `${Math.round(bindTotalValue * 10).toLocaleString()}`
           : "-";
     } else if (PERCENT_STATS.includes(statKey)) {
-      bindDisplayValue = `${bindTotalValue.toFixed(2)}%`;
+      bindDisplayValue = `${Math.round(bindTotalValue)}%`;
     } else {
-      bindDisplayValue = bindTotalValue.toLocaleString();
+      bindDisplayValue = Math.round(bindTotalValue).toLocaleString();
     }
 
-    // 총 합산 표시 값 계산
+    // 총 합산 표시 값 계산 (모든 값은 정수로 표시)
     let totalDisplayValue;
     if (statKey === "pvpDamagePercent" || statKey === "pvpDefensePercent") {
       totalDisplayValue =
-        totalValue > 0 ? `${(totalValue * 10).toLocaleString()}` : "-";
+        totalValue > 0 ? `${Math.round(totalValue * 10).toLocaleString()}` : "-";
     } else if (PERCENT_STATS.includes(statKey)) {
-      totalDisplayValue = `${totalValue.toFixed(2)}%`;
+      totalDisplayValue = `${Math.round(totalValue)}%`;
     } else {
-      totalDisplayValue = totalValue.toLocaleString();
+      totalDisplayValue = Math.round(totalValue).toLocaleString();
     }
 
     tableHtml += `

@@ -570,9 +570,10 @@ function updateStatsList(listElement, sumElement, stats, highlightStat) {
 
       const displayKey = STATS_MAPPING[key] || key;
       const isPercent = PERCENT_STATS.includes(key);
+      const roundedValue = Math.round(numericValue);
       const displayValue = isPercent
-        ? `${numericValue}%`
-        : numericValue.toLocaleString();
+        ? `${roundedValue}%`
+        : roundedValue.toLocaleString();
 
       let highlightClass = "";
 
@@ -999,9 +1000,10 @@ function displayStatDetails(listElement, stats, highlightStat) {
 
       const displayKey = STATS_MAPPING[key] || key;
       const isPercent = PERCENT_STATS.includes(key);
+      const roundedValue = Math.round(numericValue);
       const displayValue = isPercent
-        ? `${numericValue}%`
-        : numericValue.toLocaleString();
+        ? `${roundedValue}%`
+        : roundedValue.toLocaleString();
 
       let highlightClass = "";
 
