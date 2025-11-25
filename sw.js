@@ -1,6 +1,6 @@
 // Service Worker for 오프라인 지원 및 PWA 기능
 // 버전: 업데이트 시 이 값을 변경하여 캐시 무효화
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v1.0.3';
 const CACHE_NAME = `bayeon-hwayeon-${CACHE_VERSION}`;
 
 // 캐시할 정적 리소스 목록
@@ -147,42 +147,47 @@ async function handleApiRequest(request) {
 
 /**
  * 정적 리소스 처리
- * Cache First 전략 사용 (오프라인 지원)
+ * HTML과 JavaScript는 Network Only (항상 최신 버전, 캐시 사용 안 함)
+ * CSS와 이미지는 Cache First (성능 최적화)
  */
 async function handleStaticRequest(request) {
-  // 캐시에서 먼저 확인
-  const cachedResponse = await caches.match(request);
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-
-  // 캐시에 없으면 네트워크에서 가져오기
-  try {
-    const networkResponse = await fetch(request);
-    
-    // 성공한 응답만 캐시에 저장
-    if (networkResponse && networkResponse.ok) {
-      const cache = await caches.open(CACHE_NAME);
-      // clone()을 사용하여 응답을 캐시와 반환에 모두 사용
-      cache.put(request, networkResponse.clone());
-    }
-
-    return networkResponse;
-  } catch (error) {
-    // 네트워크 실패 시 처리
-    console.warn('[Service Worker] Failed to fetch static resource:', request.url, error);
-    
-    // HTML 문서 요청인 경우 오프라인 페이지 반환
-    if (request.destination === 'document' || request.mode === 'navigate') {
-      // 캐시된 index.html이 있으면 사용
-      const cachedIndex = await caches.match('/index.html') || await caches.match('/');
-      if (cachedIndex) {
-        return cachedIndex;
+  const url = new URL(request.url);
+  const isJavaScript = url.pathname.endsWith('.js') || request.destination === 'script';
+  const isHTML = request.destination === 'document' || request.mode === 'navigate';
+  
+  // HTML과 JavaScript는 Network Only 전략 (항상 네트워크에서 가져오기, 캐시 사용 안 함)
+  if (isHTML || isJavaScript) {
+    try {
+      // 네트워크에서 직접 가져오기 (캐시 우회)
+      const networkResponse = await fetch(request, {
+        cache: 'no-store' // 브라우저 캐시도 우회
+      });
+      
+      if (networkResponse && networkResponse.ok) {
+        // 성공한 응답만 캐시에 저장 (오프라인 대비)
+        const cache = await caches.open(CACHE_NAME);
+        cache.put(request, networkResponse.clone());
       }
       
-      // 없으면 간단한 오프라인 페이지
-      return new Response(
-        `<!DOCTYPE html>
+      return networkResponse;
+    } catch (error) {
+      // 네트워크 실패 시에만 캐시 사용 (오프라인 대비)
+      const cachedResponse = await caches.match(request);
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      
+      // HTML 문서 요청인 경우 오프라인 페이지 반환
+      if (isHTML) {
+        // 캐시된 index.html이 있으면 사용
+        const cachedIndex = await caches.match('/index.html') || await caches.match('/');
+        if (cachedIndex) {
+          return cachedIndex;
+        }
+        
+        // 없으면 간단한 오프라인 페이지
+        return new Response(
+          `<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
@@ -244,16 +249,38 @@ async function handleStaticRequest(request) {
   </div>
 </body>
 </html>`,
-        {
-          headers: { 'Content-Type': 'text/html' },
-          status: 200,
-          statusText: 'OK',
-        }
-      );
+          {
+            headers: { 'Content-Type': 'text/html' },
+            status: 200,
+            statusText: 'OK',
+          }
+        );
+      }
+      
+      throw error;
+    }
+  }
+  
+  // CSS, 이미지 등 기타 리소스는 Cache First (성능 최적화)
+  const cachedResponse = await caches.match(request);
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+
+  // 캐시에 없으면 네트워크에서 가져오기
+  try {
+    const networkResponse = await fetch(request);
+    
+    // 성공한 응답만 캐시에 저장
+    if (networkResponse && networkResponse.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, networkResponse.clone());
     }
 
-    // HTML이 아닌 리소스는 에러를 throw하지 않고 null 반환
-    // 브라우저가 기본 동작을 수행하도록
+    return networkResponse;
+  } catch (error) {
+    // 네트워크 실패 시 처리
+    console.warn('[Service Worker] Failed to fetch static resource:', request.url, error);
     return new Response(null, { status: 408, statusText: 'Request Timeout' });
   }
 }

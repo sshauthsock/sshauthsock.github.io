@@ -42,6 +42,8 @@
   height: 100%;
   margin-right: var(--space-lg);
   background-color: transparent;
+  overflow: visible;
+  flex-wrap: wrap;
 }
 
 .tab {
@@ -56,11 +58,15 @@
   text-align: center;
   white-space: nowrap;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--border-color);
   background: var(--bg-secondary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .tab:hover {
@@ -159,4 +165,35 @@
 
 .sub-tabs .tab:after {
   content: none;
+}
+
+/* Tab Badge */
+.tab-badge {
+  display: inline-block;
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  background: #ffc107;
+  color: #333;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 3px;
+  border-radius: 6px;
+  line-height: 1.2;
+  box-shadow: 0 1px 3px rgba(255, 193, 7, 0.4);
+  animation: pulse-badge 2s ease-in-out infinite;
+  z-index: 10;
+  white-space: nowrap;
+  text-align: center;
+}
+
+@keyframes pulse-badge {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.9;
+  }
 }
