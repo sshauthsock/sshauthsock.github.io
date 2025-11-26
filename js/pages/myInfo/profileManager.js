@@ -126,6 +126,7 @@ export function deleteProfile(profileId, callbacks = {}) {
       pageState.savedSoulExp = 0;
       pageState.engravingData = { 수호: {}, 탑승: {}, 변신: {} };
       pageState.baselineStatsHash = null;
+      pageState.baselineSoulExpHash = null;
     }
   }
 }
@@ -144,6 +145,7 @@ export function saveProfileData(profileId) {
     savedSoulExp: pageState.savedSoulExp,
     engravingData: pageState.engravingData,
     baselineStatsHash: pageState.baselineStatsHash,
+    baselineSoulExpHash: pageState.baselineSoulExpHash,
   };
   localStorage.setItem(
     `myInfo_profile_${profileId}`,
@@ -188,6 +190,7 @@ export function loadProfileData(profileId, callbacks = {}) {
         변신: {},
       };
       pageState.baselineStatsHash = profileData.baselineStatsHash || null;
+      pageState.baselineSoulExpHash = profileData.baselineSoulExpHash || null;
 
       // 캐시 무효화 (프로파일 전환 시 새로운 데이터로 재계산)
       pageState.lastTotalStatsHash = null;
@@ -357,6 +360,7 @@ export function showProfileModal(mode, profileId = null, callbacks = {}) {
       };
       pageState.savedSoulExp = 0;
       pageState.baselineStatsHash = null;
+      pageState.baselineSoulExpHash = null;
 
       // 환수 데이터 복사
       pageState.bondSpirits = currentBondSpirits;

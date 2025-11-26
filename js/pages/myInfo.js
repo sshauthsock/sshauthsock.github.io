@@ -114,6 +114,7 @@ function renderBondSlotsWrapper(category) {
         debouncedUpdateSoulExp,
         updateStatItemsWithValues,
         removeBondSpirit: removeBondSpiritWrapper,
+        getSpiritsForCategory,
       });
     }
   );
@@ -144,7 +145,10 @@ function handleSpiritSelectWrapper(spirit) {
     renderBondSlotsWrapper,
     renderSpiritListWrapper,
     debouncedUpdateTotalStats,
-    debouncedUpdateSoulExp
+    debouncedUpdateSoulExp,
+    updateTotalStats,
+    updateStatItemsWithValues,
+    getSpiritsForCategory
   );
 }
 
@@ -172,7 +176,10 @@ function removeBondSpiritWrapper(category, index) {
     renderActiveSpiritSelect,
     renderSpiritListWrapper,
     debouncedUpdateTotalStats,
-    debouncedUpdateSoulExp
+    debouncedUpdateSoulExp,
+    updateTotalStats,
+    updateStatItemsWithValues,
+    getSpiritsForCategory
   );
 }
 
@@ -294,6 +301,8 @@ export function init(container) {
     renderSpiritListWrapper,
     handleStatEditWrapper,
     debouncedUpdateTotalStats,
+    getSpiritsForCategory,
+    updateStatItemsWithValues,
   });
 
   // 경험치 테이블 미리 로드 (localStorage 캐싱 사용)

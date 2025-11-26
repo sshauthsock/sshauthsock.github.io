@@ -36,11 +36,13 @@ export const pageState = {
   lastTotalStatsCalculation: null, // 마지막 합산 스탯 계산 결과 (캐시)
   lastTotalStatsHash: null, // 마지막 합산 스탯 계산 시 사용된 데이터 해시
   savedSoulExp: 0, // 저장된 기준 총 환수혼 경험치
+  baselineSoulExpHash: null, // baselineSoulExp 저장 시점의 해시값
   recentlyEditedStats: new Set(), // 방금 편집한 스탯 목록 (updateTotalStats에서 업데이트하지 않도록)
   isSavingBaseline: false, // 기준값 저장 중 플래그
   isInitialLoad: true, // 초기 로딩 플래그 (저장된 값 표시용)
   isUpdatingTotalStats: false, // updateTotalStats 실행 중 플래그 (중복 호출 방지)
   baselineStatsHash: null, // baselineStats 저장 시점의 해시값
+  removedSpiritLevels: {}, // 제거된 환수의 레벨 정보 {category: {spiritName: level}}
   engravingData: {
     // 각인 데이터: { 카테고리: { 환수이름: { 스탯키: 각인점수 } } }
     수호: {},

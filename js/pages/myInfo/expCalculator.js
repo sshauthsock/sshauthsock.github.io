@@ -60,7 +60,13 @@ export function generateSoulExpHash() {
   const hashData = categories
     .map((category) => {
       const bondSpirits = pageState.bondSpirits[category] || [];
-      return bondSpirits.map((s) => `${s.name}:${s.level || 25}`).join(",");
+      // 정렬하여 일관된 해시 생성
+      const sortedBondSpirits = [...bondSpirits].sort((a, b) => {
+        const nameCompare = (a.name || "").localeCompare(b.name || "");
+        if (nameCompare !== 0) return nameCompare;
+        return (a.level || 25) - (b.level || 25);
+      });
+      return sortedBondSpirits.map((s) => `${s.name}:${s.level || 25}`).join(",");
     })
     .join("|");
   return hashData;
@@ -76,9 +82,13 @@ export async function updateSoulExp(getSpiritsForCategory) {
 
   // 캐시 확인
   const currentHash = generateSoulExpHash();
+  // baselineSoulExpHash와 비교하여 해시가 같으면 캐시 무효화 (증감 0으로 재계산 필요)
+  const shouldForceZeroExpDiff = pageState.baselineSoulExpHash && currentHash === pageState.baselineSoulExpHash;
+  
   if (
     pageState.lastSoulExpHash === currentHash &&
-    pageState.lastSoulExpCalculation
+    pageState.lastSoulExpCalculation &&
+    !shouldForceZeroExpDiff // baseline과 일치하면 재계산하여 증감 0 표시
   ) {
     container.innerHTML = pageState.lastSoulExpCalculation;
     return;
@@ -165,8 +175,27 @@ export async function updateSoulExp(getSpiritsForCategory) {
     `;
 
     // 기준 대비 정보
+    // baselineSoulExpHash와 비교하여 해시가 같으면 증감 0으로 표시
+    let shouldForceZeroExpDiff = false;
+    if (pageState.baselineSoulExpHash) {
+      if (currentHash === pageState.baselineSoulExpHash) {
+        shouldForceZeroExpDiff = true;
+        console.log('[환수혼 해시 비교] 일치 - 증감 0으로 설정');
+      } else {
+        console.log('[환수혼 해시 비교] 불일치:', {
+          currentHash,
+          baselineHash: pageState.baselineSoulExpHash,
+        });
+      }
+    }
+    
     if (pageState.savedSoulExp > 0) {
-      const diff = totalExp - pageState.savedSoulExp;
+      let diff = totalExp - pageState.savedSoulExp;
+      // 해시가 같으면 증감 0으로 강제 설정
+      if (shouldForceZeroExpDiff) {
+        diff = 0;
+      }
+      
       let diffText = "";
       let diffColor = "";
 

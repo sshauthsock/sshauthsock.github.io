@@ -262,7 +262,10 @@ export function handleSpiritSelect(
   renderBondSlots,
   renderSpiritList,
   debouncedUpdateTotalStats,
-  debouncedUpdateSoulExp
+  debouncedUpdateSoulExp,
+  updateTotalStats = null,
+  updateStatItemsWithValues = null,
+  getSpiritsForCategory = null
 ) {
   if (!spirit) return;
 
@@ -274,11 +277,31 @@ export function handleSpiritSelect(
 
   if (existingIndex !== -1) {
     // 이미 있으면 제거
+    const removedSpirit = bondSpirits[existingIndex];
     bondSpirits.splice(existingIndex, 1);
     pageState.bondSpirits[category] = bondSpirits;
 
+    // 제거된 환수의 레벨 정보 저장 (다시 추가할 때 사용)
+    if (!pageState.removedSpiritLevels[category]) {
+      pageState.removedSpiritLevels[category] = {};
+    }
+    pageState.removedSpiritLevels[category][removedSpirit.name] = removedSpirit.level || 25;
+
+    // 각인 데이터는 제거하지 않음 (결속에서 제거해도 각인 정보는 유지)
+
     // 초기 로딩 플래그 해제 (사용자가 환수를 제거했으므로 증감 표시)
     pageState.isInitialLoad = false;
+
+    // 로그 출력: 환수 제거
+    console.log(`[결속 환수 제거]`, {
+      category: category,
+      spiritName: removedSpirit.name,
+      spiritLevel: removedSpirit.level,
+      bondSpirits: bondSpirits.map(s => ({
+        name: s.name,
+        level: s.level
+      }))
+    });
 
     if (renderBondSlots) renderBondSlots(category);
     if (renderSpiritList) renderSpiritList();
@@ -289,20 +312,43 @@ export function handleSpiritSelect(
     pageState.lastSoulExpHash = null;
     pageState.lastSoulExpCalculation = null;
 
-    // 디바운스된 업데이트
-    if (debouncedUpdateTotalStats) debouncedUpdateTotalStats();
+    // 즉시 업데이트 (환수 제거 시 즉시 반영되어야 함)
+    if (updateTotalStats && updateStatItemsWithValues && getSpiritsForCategory) {
+      updateTotalStats(getSpiritsForCategory, updateStatItemsWithValues);
+    } else if (debouncedUpdateTotalStats) {
+      debouncedUpdateTotalStats();
+    }
     if (debouncedUpdateSoulExp) debouncedUpdateSoulExp();
   } else {
     // 없으면 추가 (최대 6개)
     if (bondSpirits.length < 6) {
-      bondSpirits.push({
+      // 이전에 제거된 환수인 경우 저장된 레벨 사용, 아니면 기본값 25
+      const savedLevel = pageState.removedSpiritLevels[category]?.[spirit.name];
+      const newSpirit = {
         ...spirit,
-        level: 25, // 기본값 25
-      });
+        level: savedLevel !== undefined ? savedLevel : 25,
+      };
+      bondSpirits.push(newSpirit);
+      
+      // 레벨 정보 사용 후 제거 (다시 제거하면 새로운 레벨로 저장됨)
+      if (pageState.removedSpiritLevels[category]?.[spirit.name] !== undefined) {
+        delete pageState.removedSpiritLevels[category][spirit.name];
+      }
       pageState.bondSpirits[category] = bondSpirits;
 
       // 초기 로딩 플래그 해제 (사용자가 환수를 추가했으므로 증감 표시)
       pageState.isInitialLoad = false;
+
+      // 로그 출력: 환수 추가
+      console.log(`[결속 환수 추가]`, {
+        category: category,
+        spiritName: newSpirit.name,
+        spiritLevel: newSpirit.level,
+        bondSpirits: bondSpirits.map(s => ({
+          name: s.name,
+          level: s.level
+        }))
+      });
 
       // 새로 추가된 슬롯 인덱스
       const newIndex = bondSpirits.length - 1;
@@ -355,7 +401,10 @@ export function removeBondSpirit(
   renderActiveSpiritSelect,
   renderSpiritList,
   debouncedUpdateTotalStats,
-  debouncedUpdateSoulExp
+  debouncedUpdateSoulExp,
+  updateTotalStats = null,
+  updateStatItemsWithValues = null,
+  getSpiritsForCategory = null
 ) {
   const bondSpirits = pageState.bondSpirits[category] || [];
   const spirit = bondSpirits[index];
@@ -369,19 +418,42 @@ export function removeBondSpirit(
   bondSpirits.splice(index, 1);
   pageState.bondSpirits[category] = bondSpirits;
 
+  // 제거된 환수의 레벨 정보 저장 (다시 추가할 때 사용)
+  if (!pageState.removedSpiritLevels[category]) {
+    pageState.removedSpiritLevels[category] = {};
+  }
+  pageState.removedSpiritLevels[category][spirit.name] = spirit.level || 25;
+
+  // 각인 데이터는 제거하지 않음 (결속에서 제거해도 각인 정보는 유지)
+
+  // 로그 출력: 환수 제거
+  console.log(`[결속 환수 제거]`, {
+    category: category,
+    spiritName: spirit.name,
+    spiritLevel: spirit.level,
+    bondSpirits: bondSpirits.map(s => ({
+      name: s.name,
+      level: s.level
+    }))
+  });
+
   if (renderBondSlots) renderBondSlots(category);
   if (renderActiveSpiritSelect) renderActiveSpiritSelect(category);
   if (renderSpiritList) renderSpiritList();
 
-  // 캐시 무효화
-  pageState.lastTotalStatsHash = null;
-  pageState.lastTotalStatsCalculation = null;
-  pageState.lastSoulExpHash = null;
-  pageState.lastSoulExpCalculation = null;
+    // 캐시 무효화
+    pageState.lastTotalStatsHash = null;
+    pageState.lastTotalStatsCalculation = null;
+    pageState.lastSoulExpHash = null;
+    pageState.lastSoulExpCalculation = null;
 
-  // 디바운스된 업데이트
-  if (debouncedUpdateTotalStats) debouncedUpdateTotalStats();
-  if (debouncedUpdateSoulExp) debouncedUpdateSoulExp();
+    // 즉시 업데이트 (환수 제거 시 즉시 반영되어야 함)
+    if (updateTotalStats && updateStatItemsWithValues && getSpiritsForCategory) {
+      updateTotalStats(getSpiritsForCategory, updateStatItemsWithValues);
+    } else if (debouncedUpdateTotalStats) {
+      debouncedUpdateTotalStats();
+    }
+    if (debouncedUpdateSoulExp) debouncedUpdateSoulExp();
 }
 
 /**
@@ -501,8 +573,10 @@ function startPopupLongPress(callbacks) {
       pageState.lastSoulExpHash = null;
       pageState.lastSoulExpCalculation = null;
 
-      // 디바운싱된 업데이트 호출
-      if (callbacks?.debouncedUpdateTotalStats) {
+      // 즉시 업데이트 (레벨 변경 시 즉시 반영되어야 함)
+      if (callbacks?.updateTotalStats && callbacks?.updateStatItemsWithValues && callbacks?.getSpiritsForCategory) {
+        callbacks.updateTotalStats(callbacks.getSpiritsForCategory, callbacks.updateStatItemsWithValues);
+      } else if (callbacks?.debouncedUpdateTotalStats) {
         callbacks.debouncedUpdateTotalStats();
       }
       if (callbacks?.debouncedUpdateSoulExp) {
@@ -695,10 +769,19 @@ function createPopupHint(callbacks) {
             );
           }
 
+          // 초기 로딩 플래그 해제 (사용자가 레벨을 변경했으므로 증감 표시)
+          pageState.isInitialLoad = false;
+
           // 캐시 무효화
           pageState.lastTotalStatsHash = null;
+          pageState.lastTotalStatsCalculation = null;
           pageState.lastSoulExpHash = null;
-          if (callbacks?.debouncedUpdateTotalStats) {
+          pageState.lastSoulExpCalculation = null;
+
+          // 즉시 업데이트 (레벨 변경 시 즉시 반영되어야 함)
+          if (callbacks?.updateTotalStats && callbacks?.updateStatItemsWithValues && callbacks?.getSpiritsForCategory) {
+            callbacks.updateTotalStats(callbacks.getSpiritsForCategory, callbacks.updateStatItemsWithValues);
+          } else if (callbacks?.debouncedUpdateTotalStats) {
             callbacks.debouncedUpdateTotalStats();
           }
           if (callbacks?.debouncedUpdateSoulExp) {
@@ -1108,8 +1191,10 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
       pageState.lastSoulExpHash = null;
       pageState.lastSoulExpCalculation = null;
 
-      // 디바운싱된 업데이트 호출
-      if (callbacks?.debouncedUpdateTotalStats) {
+      // 즉시 업데이트 (레벨 변경 시 즉시 반영되어야 함)
+      if (callbacks?.updateTotalStats && callbacks?.updateStatItemsWithValues && callbacks?.getSpiritsForCategory) {
+        callbacks.updateTotalStats(callbacks.getSpiritsForCategory, callbacks.updateStatItemsWithValues);
+      } else if (callbacks?.debouncedUpdateTotalStats) {
         callbacks.debouncedUpdateTotalStats();
       }
       if (callbacks?.debouncedUpdateSoulExp) {
@@ -1163,6 +1248,7 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
           }
 
           if (changed) {
+            const oldLevel = currentSpirit.level;
             currentSpirit.level = level;
 
             // 사용중 환수인 경우 activeSpirits의 레벨도 함께 업데이트
@@ -1182,6 +1268,18 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
 
             // 초기 로딩 플래그 해제 (사용자가 레벨을 변경했으므로 증감 표시)
             pageState.isInitialLoad = false;
+
+            // 로그 출력: 레벨 변경
+            console.log(`[결속 환수 레벨 변경]`, {
+              category: popupLongPressState.category,
+              spiritName: currentSpirit.name,
+              oldLevel: oldLevel,
+              newLevel: level,
+              bondSpirits: pageState.bondSpirits[popupLongPressState.category]?.map(s => ({
+                name: s.name,
+                level: s.level
+              })) || []
+            });
 
             // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
 
@@ -1608,15 +1706,43 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
       if (!pageState.engravingData[category]) {
         pageState.engravingData[category] = {};
       }
+      const oldEngravingData = pageState.engravingData[category][spirit.name];
       pageState.engravingData[category][spirit.name] = engravingData;
 
       pageState.isInitialLoad = false;
 
+      // 로그 출력: 각인 저장 (등록효과)
+      console.log(`[각인 저장 - 등록효과]`, {
+        category: category,
+        spiritName: spirit.name,
+        oldEngravingData: oldEngravingData,
+        newEngravingData: engravingData,
+        bondSpirits: pageState.bondSpirits[category]?.map(s => ({
+          name: s.name,
+          level: s.level
+        })) || []
+      });
+
+      // 캐시 무효화 (각인 변경 시 재계산 필요)
+      pageState.lastTotalStatsHash = null;
+      pageState.lastTotalStatsCalculation = null;
+
+      // 즉시 업데이트 (각인 저장 후 바로 반영되어야 함)
       if (callbacks?.updateTotalStats) {
         callbacks.updateTotalStats(getSpiritsForCategory, callbacks.updateStatItemsWithValues);
       }
       if (callbacks?.renderBondSlots) {
         callbacks.renderBondSlots(category);
+      }
+      
+      // 팝업 닫기 (저장 완료 후)
+      if (popup && popup.parentNode) {
+        popup.remove();
+        if (currentPopupOverlay) {
+          currentPopupOverlay.remove();
+          currentPopupOverlay = null;
+        }
+        currentPopup = null;
       }
     });
   }
@@ -1668,15 +1794,43 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
       if (!pageState.engravingData[category]) {
         pageState.engravingData[category] = {};
       }
+      const oldEngravingData = pageState.engravingData[category][spirit.name];
       pageState.engravingData[category][spirit.name] = engravingData;
 
       pageState.isInitialLoad = false;
 
+      // 로그 출력: 각인 저장 (장착효과)
+      console.log(`[각인 저장 - 장착효과]`, {
+        category: category,
+        spiritName: spirit.name,
+        oldEngravingData: oldEngravingData,
+        newEngravingData: engravingData,
+        bondSpirits: pageState.bondSpirits[category]?.map(s => ({
+          name: s.name,
+          level: s.level
+        })) || []
+      });
+
+      // 캐시 무효화 (각인 변경 시 재계산 필요)
+      pageState.lastTotalStatsHash = null;
+      pageState.lastTotalStatsCalculation = null;
+
+      // 즉시 업데이트 (각인 저장 후 바로 반영되어야 함)
       if (callbacks?.updateTotalStats) {
         callbacks.updateTotalStats(getSpiritsForCategory, callbacks.updateStatItemsWithValues);
       }
       if (callbacks?.renderBondSlots) {
         callbacks.renderBondSlots(category);
+      }
+      
+      // 팝업 닫기 (저장 완료 후)
+      if (popup && popup.parentNode) {
+        popup.remove();
+        if (currentPopupOverlay) {
+          currentPopupOverlay.remove();
+          currentPopupOverlay = null;
+        }
+        currentPopup = null;
       }
     });
   }

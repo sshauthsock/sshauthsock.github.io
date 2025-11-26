@@ -5,6 +5,7 @@
 
 import { pageState, elements } from "./state.js";
 import { STATS_CONFIG, MOBILE_STAT_NAME_MAP } from "./constants.js";
+import { GRADE_SET_EFFECTS, FACTION_SET_EFFECTS } from "../../constants.js";
 import { createElement } from "../../utils.js";
 import { isMobile } from "./ui/renderer.js";
 import Logger from "../../utils/logger.js";
@@ -13,18 +14,85 @@ import Logger from "../../utils/logger.js";
  * 합산 스탯 데이터 해시 생성
  * @returns {string} 해시 문자열
  */
-export function generateTotalStatsHash() {
+export function generateTotalStatsHash(getSpiritsForCategory) {
   const categories = ["수호", "탑승", "변신"];
   const hashParts = [];
 
-  // 결속 환수 해시
+  // 결속 환수 해시 (정렬하여 순서에 무관하게 동일한 해시 생성)
+  // updateTotalStats와 동일한 로직으로 등급/세력 집계
   categories.forEach((category) => {
     const bondSpirits = pageState.bondSpirits[category] || [];
+
+    // 등급/세력 집계를 해시에 포함 (등급/세력 효과 계산을 위해)
+    const gradeCounts = {};
+    const factionCounts = {};
+
+    // 결속 환수의 등급/세력 집계
+    if (bondSpirits.length > 0 && getSpiritsForCategory) {
+      bondSpirits.forEach((bondSpirit) => {
+        const spirit = getSpiritsForCategory(category).find(
+          (s) => s.name === bondSpirit.name
+        );
+        if (spirit) {
+          if (spirit.grade) {
+            gradeCounts[spirit.grade] = (gradeCounts[spirit.grade] || 0) + 1;
+          }
+          if (spirit.influence) {
+            factionCounts[spirit.influence] =
+              (factionCounts[spirit.influence] || 0) + 1;
+          }
+        }
+      });
+    }
+
+    // active 환수도 등급/세력 집계에 포함 (결속 슬롯에 없을 경우)
+    const active = pageState.activeSpirits[category];
+    if (active && active.name && getSpiritsForCategory) {
+      const isInBond = bondSpirits.some((s) => s.name === active.name);
+      if (!isInBond) {
+        const activeSpirit = getSpiritsForCategory(category).find(
+          (s) => s.name === active.name
+        );
+        if (activeSpirit) {
+          if (activeSpirit.grade) {
+            gradeCounts[activeSpirit.grade] =
+              (gradeCounts[activeSpirit.grade] || 0) + 1;
+          }
+          if (activeSpirit.influence) {
+            factionCounts[activeSpirit.influence] =
+              (factionCounts[activeSpirit.influence] || 0) + 1;
+          }
+        }
+      }
+    }
+
+    // 등급/세력 집계를 해시에 포함
+    const gradeStr = Object.entries(gradeCounts)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([grade, count]) => `${grade}:${count}`)
+      .join(",");
+    const factionStr = Object.entries(factionCounts)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([faction, count]) => `${faction}:${count}`)
+      .join(",");
+
     if (bondSpirits.length > 0) {
+      // 환수 이름과 레벨로 정렬하여 일관된 해시 생성
+      const sortedBondSpirits = [...bondSpirits].sort((a, b) => {
+        const nameCompare = (a.name || "").localeCompare(b.name || "");
+        if (nameCompare !== 0) return nameCompare;
+        return (a.level || 25) - (b.level || 25);
+      });
+
       hashParts.push(
-        `${category}_bond:${bondSpirits
+        `${category}_bond:${sortedBondSpirits
           .map((s) => `${s.name}:${s.level || 25}`)
-          .join(",")}`
+          .join(",")}|grades:${gradeStr}|factions:${factionStr}`
+      );
+    } else if (gradeStr || factionStr) {
+      // bondSpirits가 없어도 active 환수로 인해 등급/세력 집계가 있을 수 있음
+      hashParts.push(
+        `${category}_bond:|grades:${gradeStr}|factions:${factionStr}`
       );
     }
   });
@@ -37,20 +105,18 @@ export function generateTotalStatsHash() {
     }
   });
 
-  // 각인 데이터 해시
+  // 각인 데이터 해시 (JSON.stringify로 정확한 직렬화)
   categories.forEach((category) => {
     const engravingData = pageState.engravingData[category] || {};
     if (Object.keys(engravingData).length > 0) {
-      const engravingStr = Object.entries(engravingData)
+      // 각인 데이터를 정렬하여 일관된 해시 생성
+      const sortedEngraving = Object.entries(engravingData)
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([spiritName, stats]) => {
-          const statsStr = Object.entries(stats)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([k, v]) => `${k}:${v}`)
-            .join(",");
-          return `${spiritName}:{${statsStr}}`;
-        })
-        .join("|");
+        .reduce((acc, [spiritName, stats]) => {
+          acc[spiritName] = stats;
+          return acc;
+        }, {});
+      const engravingStr = JSON.stringify(sortedEngraving);
       hashParts.push(`${category}_engraving:${engravingStr}`);
     }
   });
@@ -61,6 +127,10 @@ export function generateTotalStatsHash() {
     .map(([k, v]) => `${k}:${v}`)
     .join(",");
   hashParts.push(`userStats:${userStatsStr}`);
+
+  // 각인 데이터 해시 추가 (각인 변경 시 캐시 무효화를 위해)
+  const engravingStr = JSON.stringify(pageState.engravingData);
+  hashParts.push(`engravingData:${engravingStr}`);
 
   return hashParts.join("|");
 }
@@ -152,18 +222,48 @@ export function updateKeyStats(
   }
 
   // 각인 등록효과 계산 (모든 카테고리의 사용 중인 환수)
+  // 각인 등록효과는 사용 중인 환수(activeSpirits)에만 적용됨
   const registrationStats = {};
   const categories = ["수호", "탑승", "변신"];
   categories.forEach((category) => {
     const active = pageState.activeSpirits[category];
-    if (active) {
-      const engraving = pageState.engravingData[category]?.[active.name] || {};
+    if (active && active.name) {
+      // engravingData에서 해당 환수의 각인 데이터 가져오기
+      const categoryEngravingData = pageState.engravingData[category] || {};
+      const engraving = categoryEngravingData[active.name] || {};
+
+      // 새로운 데이터 구조: { registration: [...], bind: {...} }
       if (Array.isArray(engraving.registration)) {
         engraving.registration.forEach((regItem) => {
           const statKey = regItem.statKey;
           const value = regItem.value || 0;
           const numValue =
             typeof value === "number" ? value : parseFloat(value) || 0;
+          if (numValue > 0 && statKey) {
+            registrationStats[statKey] =
+              (registrationStats[statKey] || 0) + numValue;
+          }
+        });
+      }
+
+      // 기존 데이터 구조 호환성 (하위 호환)
+      // registration과 bind 속성이 없으면 기존 구조로 간주
+      if (
+        !engraving.registration &&
+        !engraving.bind &&
+        Object.keys(engraving).length > 0
+      ) {
+        Object.entries(engraving).forEach(([statKey, engravingData]) => {
+          let registrationValue = 0;
+          if (typeof engravingData === "object" && engravingData !== null) {
+            registrationValue = engravingData.registration || 0;
+          } else {
+            registrationValue = engravingData || 0;
+          }
+          const numValue =
+            typeof registrationValue === "number"
+              ? registrationValue
+              : parseFloat(registrationValue) || 0;
           if (numValue > 0 && statKey) {
             registrationStats[statKey] =
               (registrationStats[statKey] || 0) + numValue;
@@ -181,10 +281,36 @@ export function updateKeyStats(
     bondSpirits.forEach((bondSpirit) => {
       const engraving =
         pageState.engravingData[category]?.[bondSpirit.name] || {};
+
+      // 새로운 데이터 구조: { registration: [...], bind: {...} }
       if (engraving.bind) {
         Object.entries(engraving.bind).forEach(([statKey, value]) => {
           const numValue =
             typeof value === "number" ? value : parseFloat(value) || 0;
+          if (numValue > 0) {
+            bindStats[statKey] = (bindStats[statKey] || 0) + numValue;
+          }
+        });
+      }
+
+      // 기존 데이터 구조 호환성 (하위 호환)
+      // registration과 bind 속성이 없으면 기존 구조로 간주
+      if (
+        !engraving.registration &&
+        !engraving.bind &&
+        Object.keys(engraving).length > 0
+      ) {
+        Object.entries(engraving).forEach(([statKey, engravingData]) => {
+          let bindValue = 0;
+          if (typeof engravingData === "object" && engravingData !== null) {
+            bindValue = engravingData.bind || 0;
+          } else {
+            bindValue = engravingData || 0;
+          }
+          const numValue =
+            typeof bindValue === "number"
+              ? bindValue
+              : parseFloat(bindValue) || 0;
           if (numValue > 0) {
             bindStats[statKey] = (bindStats[statKey] || 0) + numValue;
           }
@@ -195,25 +321,14 @@ export function updateKeyStats(
 
   // 변화값 계산
   // 디버깅: 환산타채 합 계산 값 확인
-  if (Math.abs(tachaeTotal - baselineTachaeTotal) > 1000) {
-    console.error("[환산타채 합 계산] 이상값 감지:", {
-      tachaeTotal,
-      baselineTachaeTotal,
-      change: tachaeTotal - baselineTachaeTotal,
-      damageResistancePenetration,
-      damageResistance,
-      pvpDamagePercent,
-      pvpDefensePercent,
-      baselineDamageResistancePenetration,
-      baselineDamageResistance,
-      baselinePvpDamagePercent,
-      baselinePvpDefensePercent,
-      savedTachaeTotal: pageState.baselineKeyStats.tachaeTotal,
-      baselineStats_pvpDamagePercent: pageState.baselineStats.pvpDamagePercent,
-      baselineStats_pvpDefensePercent:
-        pageState.baselineStats.pvpDefensePercent,
-    });
+  // baseline이 설정되지 않은 경우 (기준값 저장 버튼을 누르지 않은 경우)는 이상값 감지하지 않음
+  const hasBaseline =
+    pageState.baselineKeyStats.tachaeTotal !== undefined &&
+    pageState.baselineKeyStats.tachaeTotal !== null &&
+    pageState.baselineKeyStats.tachaeTotal !== 0;
 
+  // baseline이 설정되어 있고, 차이가 1000 이상일 때만 이상값 감지
+  if (hasBaseline && Math.abs(tachaeTotal - baselineTachaeTotal) > 1000) {
     // 문제 해결: baselineKeyStats.tachaeTotal이 잘못 저장되었을 수 있으므로 재계산
     // 개별 스탯 기준값으로 재계산 (정수로 반올림)
     // pvpDamagePercent * 10 계산 전에 먼저 정수화
@@ -229,14 +344,9 @@ export function updateKeyStats(
       Math.abs(recalculatedBaseline - tachaeTotal) <
       Math.abs(baselineTachaeTotal - tachaeTotal)
     ) {
-      console.warn("[환산타채 합 계산] 기준값 재계산:", {
-        old: baselineTachaeTotal,
-        new: recalculatedBaseline,
-      });
       baselineTachaeTotal = recalculatedBaseline;
       // 재계산된 값을 저장 (저장 버튼을 눌러야 실제로 저장됨)
       pageState.baselineKeyStats.tachaeTotal = recalculatedBaseline;
-      // saveData() 제거: 저장 버튼을 눌러야 저장됨
     }
   }
 
@@ -341,6 +451,263 @@ export function updateKeyStats(
 }
 
 /**
+ * 전체 스탯 계산 (baseline 저장과 현재 계산에서 공통으로 사용)
+ * @param {Function} getSpiritsForCategory - 카테고리별 환수 가져오기 함수
+ * @returns {Object} { allTotalStats, allBondStats, allActiveStats }
+ */
+export function calculateTotalStats(getSpiritsForCategory) {
+  // 각 카테고리별 결속 계산
+  const categories = ["수호", "탑승", "변신"];
+  const allBondStats = {};
+  const allActiveStats = {};
+  const allTotalStats = {}; // 새로운 전체 스탯 변수
+
+  // 각 카테고리별로 계산
+  for (const category of categories) {
+    const bondSpirits = pageState.bondSpirits[category] || [];
+    if (bondSpirits.length === 0) continue;
+
+    // 등급별 개수 집계
+    const gradeCounts = {};
+    const factionCounts = {};
+
+    // 결속 환수의 장착효과 합산 및 등급/세력 집계
+    for (const bondSpirit of bondSpirits) {
+      const spirit = getSpiritsForCategory(category).find(
+        (s) => s.name === bondSpirit.name
+      );
+      if (spirit) {
+        // 등급 집계
+        if (spirit.grade) {
+          gradeCounts[spirit.grade] = (gradeCounts[spirit.grade] || 0) + 1;
+        }
+        // 세력 집계
+        if (spirit.influence) {
+          factionCounts[spirit.influence] =
+            (factionCounts[spirit.influence] || 0) + 1;
+        }
+
+        const level =
+          bondSpirit.level !== undefined && bondSpirit.level !== null
+            ? bondSpirit.level
+            : 25;
+        const levelStat = spirit.stats?.find((s) => s.level === level);
+        if (levelStat?.bindStat) {
+          Object.entries(levelStat.bindStat).forEach(([key, value]) => {
+            // 모든 스탯은 정수로 반올림
+            const numValue =
+              typeof value === "number" ? value : parseFloat(value) || 0;
+            const roundedValue = Math.round(numValue);
+            allBondStats[key] = (allBondStats[key] || 0) + roundedValue;
+            allTotalStats[key] = (allTotalStats[key] || 0) + roundedValue;
+          });
+        }
+      }
+    }
+
+    // 사용 중인 환수가 결속 슬롯에 없을 경우를 대비해 등급/세력 집계에 추가
+    const active = pageState.activeSpirits[category];
+    if (active && active.name) {
+      // 사용 중인 환수가 결속 슬롯에 있는지 확인
+      const isInBond = bondSpirits.some((s) => s.name === active.name);
+      if (!isInBond) {
+        // 결속 슬롯에 없으면 등급/세력 집계에 추가
+        const activeSpirit = getSpiritsForCategory(category).find(
+          (s) => s.name === active.name
+        );
+        if (activeSpirit) {
+          if (activeSpirit.grade) {
+            gradeCounts[activeSpirit.grade] =
+              (gradeCounts[activeSpirit.grade] || 0) + 1;
+          }
+          if (activeSpirit.influence) {
+            factionCounts[activeSpirit.influence] =
+              (factionCounts[activeSpirit.influence] || 0) + 1;
+          }
+        }
+      }
+    }
+
+    // 등급효과 계산
+    const categoryGradeEffects = GRADE_SET_EFFECTS[category];
+    const gradeEffectsApplied = {};
+    if (categoryGradeEffects) {
+      Object.entries(gradeCounts).forEach(([grade, count]) => {
+        const gradeRules = categoryGradeEffects[grade];
+        if (!gradeRules) return;
+
+        let highestStep = 0;
+        for (let step = 2; step <= count; step++) {
+          if (gradeRules[step.toString()]) {
+            highestStep = step;
+          }
+        }
+
+        if (highestStep > 0) {
+          const stepEffects = gradeRules[highestStep.toString()];
+          Object.entries(stepEffects).forEach(([statKey, value]) => {
+            // 모든 스탯은 정수로 반올림
+            const roundedValue = Math.round(value);
+            allTotalStats[statKey] =
+              (allTotalStats[statKey] || 0) + roundedValue;
+            // 로그를 위한 등급효과 기록
+            if (!gradeEffectsApplied[statKey]) gradeEffectsApplied[statKey] = 0;
+            gradeEffectsApplied[statKey] += roundedValue;
+          });
+        }
+      });
+    }
+
+    // 세력효과 계산
+    const factionEffectsApplied = {};
+    const categoryFactionEffects = FACTION_SET_EFFECTS[category];
+    if (categoryFactionEffects) {
+      Object.entries(factionCounts).forEach(([faction, count]) => {
+        const factionRules = categoryFactionEffects[faction];
+        if (!factionRules) return;
+
+        let highestStep = 0;
+        for (let step = 2; step <= count; step++) {
+          if (factionRules[step.toString()]) {
+            highestStep = step;
+          }
+        }
+
+        if (highestStep > 0) {
+          const stepEffects = factionRules[highestStep.toString()];
+          Object.entries(stepEffects).forEach(([statKey, value]) => {
+            // 모든 스탯은 정수로 반올림
+            const roundedValue = Math.round(value);
+            allTotalStats[statKey] =
+              (allTotalStats[statKey] || 0) + roundedValue;
+            // 로그를 위한 세력효과 기록
+            if (!factionEffectsApplied[statKey])
+              factionEffectsApplied[statKey] = 0;
+            factionEffectsApplied[statKey] += roundedValue;
+          });
+        }
+      });
+    }
+
+    // 등급/세력 효과 로그 출력
+    if (
+      Object.keys(gradeEffectsApplied).length > 0 ||
+      Object.keys(factionEffectsApplied).length > 0
+    ) {
+      console.log(`[등급/세력 효과 - ${category}]`, {
+        gradeCounts: gradeCounts,
+        factionCounts: factionCounts,
+        gradeEffects: gradeEffectsApplied,
+        factionEffects: factionEffectsApplied,
+      });
+    }
+
+    // 사용 중인 환수의 등록효과 추가
+    if (active) {
+      const spirit = getSpiritsForCategory(category).find(
+        (s) => s.name === active.name
+      );
+      if (spirit) {
+        const levelStat = spirit.stats?.find((s) => s.level === active.level);
+        if (levelStat?.registrationStat) {
+          Object.entries(levelStat.registrationStat).forEach(([key, value]) => {
+            // 모든 스탯은 정수로 반올림
+            const numValue =
+              typeof value === "number" ? value : parseFloat(value) || 0;
+            const roundedValue = Math.round(numValue);
+            allActiveStats[key] = (allActiveStats[key] || 0) + roundedValue;
+            allTotalStats[key] = (allTotalStats[key] || 0) + roundedValue;
+          });
+        }
+      }
+    }
+
+    // 각인 점수 계산
+    // 모든 결속 환수의 각인 장착효과 (합산값)
+    for (const bondSpirit of bondSpirits) {
+      const engraving =
+        pageState.engravingData[category]?.[bondSpirit.name] || {};
+
+      // 새로운 데이터 구조: { registration: [...], bind: {...} }
+      if (engraving.bind) {
+        Object.entries(engraving.bind).forEach(([statKey, value]) => {
+          // 모든 스탯은 정수로 반올림
+          const numValue =
+            typeof value === "number" ? value : parseFloat(value) || 0;
+          const roundedValue = Math.round(numValue);
+          if (roundedValue > 0) {
+            allTotalStats[statKey] =
+              (allTotalStats[statKey] || 0) + roundedValue;
+          }
+        });
+      }
+
+      // 기존 데이터 구조 호환성 (하위 호환)
+      if (
+        !engraving.registration &&
+        !engraving.bind &&
+        Object.keys(engraving).length > 0
+      ) {
+        Object.entries(engraving).forEach(([statKey, engravingData]) => {
+          let bindValue = 0;
+          if (typeof engravingData === "object" && engravingData !== null) {
+            bindValue = engravingData.bind || 0;
+          } else {
+            bindValue = engravingData || 0;
+          }
+          const numValue =
+            typeof bindValue === "number"
+              ? bindValue
+              : parseFloat(bindValue) || 0;
+          if (numValue > 0) {
+            allTotalStats[statKey] = (allTotalStats[statKey] || 0) + numValue;
+          }
+        });
+      }
+    }
+
+    // 사용 중인 환수의 각인 등록효과 (배열의 모든 항목 합산)
+    if (active) {
+      const engraving = pageState.engravingData[category]?.[active.name] || {};
+
+      // 새로운 데이터 구조: { registration: [...], bind: {...} }
+      if (Array.isArray(engraving.registration)) {
+        engraving.registration.forEach((regItem) => {
+          const statKey = regItem.statKey;
+          const value = regItem.value || 0;
+          // 모든 스탯은 정수로 반올림
+          const numValue =
+            typeof value === "number" ? value : parseFloat(value) || 0;
+          const roundedValue = Math.round(numValue);
+          if (roundedValue > 0 && statKey) {
+            allTotalStats[statKey] =
+              (allTotalStats[statKey] || 0) + roundedValue;
+          }
+        });
+      }
+
+      // 기존 데이터 구조 호환성 (하위 호환)
+      if (!engraving.registration && !engraving.bind) {
+        Object.entries(engraving).forEach(([statKey, engravingData]) => {
+          let registrationValue = 0;
+          if (typeof engravingData === "object" && engravingData !== null) {
+            registrationValue = engravingData.registration || 0;
+          } else {
+            registrationValue = engravingData || 0;
+          }
+          if (registrationValue > 0) {
+            allTotalStats[statKey] =
+              (allTotalStats[statKey] || 0) + registrationValue;
+          }
+        });
+      }
+    }
+  }
+
+  return { allTotalStats, allBondStats, allActiveStats };
+}
+
+/**
  * 전체 스탯 업데이트
  * @param {Function} getSpiritsForCategory - 카테고리별 환수 가져오기 함수
  * @param {Function} updateStatItemsWithValues - 스탯 아이템 업데이트 함수
@@ -362,15 +729,64 @@ export async function updateTotalStats(
   pageState.isUpdatingTotalStats = true;
 
   // 캐시 확인
-  const currentHash = generateTotalStatsHash();
+  const currentHash = generateTotalStatsHash(getSpiritsForCategory);
   if (
     pageState.lastTotalStatsHash === currentHash &&
     pageState.lastTotalStatsCalculation
   ) {
     // 이미 계산된 경우 저장된 계산 결과로 스탯 아이템만 업데이트
     const calc = pageState.lastTotalStatsCalculation;
-    // 초기 로딩 시에는 증감을 0으로 표시
-    const shouldForceZeroChange = pageState.isInitialLoad;
+
+    // baseline 비교 수행 (캐시된 결과를 사용할 때도 baseline 비교 필요)
+    let shouldForceZeroChange = pageState.isInitialLoad;
+    if (pageState.baselineStatsHash) {
+      if (currentHash === pageState.baselineStatsHash) {
+        shouldForceZeroChange = true;
+      } else {
+        // 해시가 불일치하더라도 실제 계산값이 baseline과 동일한지 확인
+        const allStatsForCheck = [...STATS_CONFIG];
+        let isActuallySame = true;
+
+        for (const stat of allStatsForCheck) {
+          const baseValue = pageState.userStats[stat.key] || 0;
+          const totalStatsValue =
+            (calc.allTotalStats || calc.allBondStats)[stat.key] || 0;
+          const currentValue = Math.round(baseValue + totalStatsValue);
+          const baselineValue = pageState.baselineStats.hasOwnProperty(stat.key)
+            ? pageState.baselineStats[stat.key]
+            : currentValue;
+
+          if (Math.abs(currentValue - baselineValue) > 0.5) {
+            isActuallySame = false;
+            break;
+          }
+        }
+
+        if (isActuallySame) {
+          const getTotalValue = (key) => {
+            const baseValue = pageState.userStats[key] || 0;
+            const totalStatsValue =
+              (calc.allTotalStats || calc.allBondStats)[key] || 0;
+            return Math.round(baseValue + totalStatsValue);
+          };
+
+          const currentTachae = Math.round(
+            getTotalValue("damageResistancePenetration") +
+              getTotalValue("damageResistance") +
+              Math.round(Math.round(getTotalValue("pvpDamagePercent")) * 10) +
+              Math.round(Math.round(getTotalValue("pvpDefensePercent")) * 10)
+          );
+
+          const baselineTachae = pageState.baselineKeyStats.tachaeTotal || 0;
+          if (Math.abs(currentTachae - baselineTachae) > 0.5) {
+            isActuallySame = false;
+          }
+        }
+
+        shouldForceZeroChange = isActuallySame;
+      }
+    }
+
     updateStatItemsWithValues(
       calc.allStats,
       calc.allTotalStats || calc.allBondStats, // allTotalStats 우선 사용
@@ -389,312 +805,10 @@ export async function updateTotalStats(
   }
 
   try {
-    // 각 카테고리별 결속 계산
-    const categories = ["수호", "탑승", "변신"];
-    const allBondStats = {};
-    const allActiveStats = {};
-    const allTotalStats = {}; // 새로운 전체 스탯 변수
-
-    // 등급효과와 세력효과 계산을 위한 상수 (spiritRanking.js에서 가져옴)
-    const GRADE_SET_EFFECTS = {
-      수호: {
-        전설: {
-          2: { damageResistance: 100, pvpDefensePercent: 1 },
-          3: { damageResistance: 200, pvpDefensePercent: 2 },
-          4: { damageResistance: 350, pvpDefensePercent: 3.5 },
-          5: { damageResistance: 550, pvpDefensePercent: 5.5 },
-        },
-        불멸: {
-          2: { damageResistance: 150, pvpDefensePercent: 1.5 },
-          3: { damageResistance: 300, pvpDefensePercent: 3 },
-          4: { damageResistance: 525, pvpDefensePercent: 5.25 },
-          5: { damageResistance: 825, pvpDefensePercent: 8.25 },
-        },
-      },
-      탑승: {
-        전설: {
-          2: { damageResistancePenetration: 100, pvpDamagePercent: 1 },
-          3: { damageResistancePenetration: 200, pvpDamagePercent: 2 },
-          4: { damageResistancePenetration: 350, pvpDamagePercent: 3.5 },
-          5: { damageResistancePenetration: 550, pvpDamagePercent: 5.5 },
-        },
-        불멸: {
-          2: { damageResistancePenetration: 150, pvpDamagePercent: 1.5 },
-          3: { damageResistancePenetration: 300, pvpDamagePercent: 3 },
-          4: { damageResistancePenetration: 525, pvpDamagePercent: 5.25 },
-          5: { damageResistancePenetration: 825, pvpDamagePercent: 8.25 },
-        },
-      },
-      변신: {
-        전설: {
-          2: {
-            damageResistance: 50,
-            damageResistancePenetration: 50,
-            pvpDefensePercent: 0.5,
-            pvpDamagePercent: 0.5,
-          },
-          3: {
-            damageResistance: 100,
-            damageResistancePenetration: 100,
-            pvpDefensePercent: 1,
-            pvpDamagePercent: 1,
-          },
-          4: {
-            damageResistance: 175,
-            damageResistancePenetration: 175,
-            pvpDefensePercent: 1.75,
-            pvpDamagePercent: 1.75,
-          },
-          5: {
-            damageResistance: 275,
-            damageResistancePenetration: 275,
-            pvpDefensePercent: 2.75,
-            pvpDamagePercent: 2.75,
-          },
-        },
-        불멸: {
-          2: {
-            damageResistance: 75,
-            damageResistancePenetration: 75,
-            pvpDefensePercent: 0.75,
-            pvpDamagePercent: 0.75,
-          },
-          3: {
-            damageResistance: 150,
-            damageResistancePenetration: 150,
-            pvpDefensePercent: 1.5,
-            pvpDamagePercent: 1.5,
-          },
-          4: {
-            damageResistance: 262,
-            damageResistancePenetration: 262,
-            pvpDefensePercent: 2.62,
-            pvpDamagePercent: 2.62,
-          },
-          5: {
-            damageResistance: 412,
-            damageResistancePenetration: 412,
-            pvpDefensePercent: 4.12,
-            pvpDamagePercent: 4.12,
-          },
-        },
-      },
-    };
-
-    const FACTION_SET_EFFECTS = {
-      결의: {
-        2: { damageResistance: 200 },
-        3: { damageResistance: 400 },
-        4: { damageResistance: 600 },
-        5: { damageResistance: 800 },
-      },
-      고요: {
-        2: { damageResistancePenetration: 200 },
-        3: { damageResistancePenetration: 400 },
-        4: { damageResistancePenetration: 600 },
-        5: { damageResistancePenetration: 800 },
-      },
-      의지: {
-        2: { pvpDamagePercent: 2 },
-        3: { pvpDamagePercent: 4 },
-        4: { pvpDamagePercent: 6 },
-        5: { pvpDamagePercent: 8 },
-      },
-      침착: {
-        2: { pvpDefensePercent: 2 },
-        3: { pvpDefensePercent: 4 },
-        4: { pvpDefensePercent: 6 },
-        5: { pvpDefensePercent: 8 },
-      },
-      냉정: {
-        2: { damageResistance: 100, damageResistancePenetration: 100 },
-        3: { damageResistance: 200, damageResistancePenetration: 200 },
-        4: { damageResistance: 300, damageResistancePenetration: 300 },
-        5: { damageResistance: 400, damageResistancePenetration: 400 },
-      },
-      활력: {
-        2: { pvpDamagePercent: 1, pvpDefensePercent: 1 },
-        3: { pvpDamagePercent: 2, pvpDefensePercent: 2 },
-        4: { pvpDamagePercent: 3, pvpDefensePercent: 3 },
-        5: { pvpDamagePercent: 4, pvpDefensePercent: 4 },
-      },
-    };
-
-    // 각 카테고리별로 계산
-    for (const category of categories) {
-      const bondSpirits = pageState.bondSpirits[category] || [];
-      if (bondSpirits.length === 0) continue;
-
-      // 등급별 개수 집계
-      const gradeCounts = {};
-      const factionCounts = {};
-
-      // 결속 환수의 장착효과 합산
-      for (const bondSpirit of bondSpirits) {
-        const spirit = getSpiritsForCategory(category).find(
-          (s) => s.name === bondSpirit.name
-        );
-        if (spirit) {
-          // 등급 집계
-          if (spirit.grade) {
-            gradeCounts[spirit.grade] = (gradeCounts[spirit.grade] || 0) + 1;
-          }
-          // 세력 집계
-          if (spirit.influence) {
-            factionCounts[spirit.influence] =
-              (factionCounts[spirit.influence] || 0) + 1;
-          }
-
-          const level =
-            bondSpirit.level !== undefined && bondSpirit.level !== null
-              ? bondSpirit.level
-              : 25;
-          const levelStat = spirit.stats?.find((s) => s.level === level);
-          if (levelStat?.bindStat) {
-            Object.entries(levelStat.bindStat).forEach(([key, value]) => {
-              const numValue =
-                typeof value === "number" ? value : parseFloat(value) || 0;
-              allBondStats[key] = (allBondStats[key] || 0) + numValue;
-              allTotalStats[key] = (allTotalStats[key] || 0) + numValue;
-            });
-          }
-        }
-      }
-
-      // 등급효과 계산
-      const categoryGradeEffects = GRADE_SET_EFFECTS[category];
-      if (categoryGradeEffects) {
-        Object.entries(gradeCounts).forEach(([grade, count]) => {
-          const gradeRules = categoryGradeEffects[grade];
-          if (!gradeRules) return;
-
-          let highestStep = 0;
-          for (let step = 2; step <= count; step++) {
-            if (gradeRules[step.toString()]) {
-              highestStep = step;
-            }
-          }
-
-          if (highestStep > 0) {
-            const stepEffects = gradeRules[highestStep.toString()];
-            Object.entries(stepEffects).forEach(([statKey, value]) => {
-              allTotalStats[statKey] = (allTotalStats[statKey] || 0) + value;
-            });
-          }
-        });
-      }
-
-      // 세력효과 계산
-      Object.entries(factionCounts).forEach(([faction, count]) => {
-        const factionRules = FACTION_SET_EFFECTS[faction];
-        if (!factionRules) return;
-
-        let highestStep = 0;
-        for (let step = 2; step <= count; step++) {
-          if (factionRules[step.toString()]) {
-            highestStep = step;
-          }
-        }
-
-        if (highestStep > 0) {
-          const stepEffects = factionRules[highestStep.toString()];
-          Object.entries(stepEffects).forEach(([statKey, value]) => {
-            allTotalStats[statKey] = (allTotalStats[statKey] || 0) + value;
-          });
-        }
-      });
-
-      // 사용 중인 환수의 등록효과 추가
-      const active = pageState.activeSpirits[category];
-      if (active) {
-        const spirit = getSpiritsForCategory(category).find(
-          (s) => s.name === active.name
-        );
-        if (spirit) {
-          const levelStat = spirit.stats?.find((s) => s.level === active.level);
-          if (levelStat?.registrationStat) {
-            Object.entries(levelStat.registrationStat).forEach(
-              ([key, value]) => {
-                const numValue =
-                  typeof value === "number" ? value : parseFloat(value) || 0;
-                allActiveStats[key] = (allActiveStats[key] || 0) + numValue;
-                allTotalStats[key] = (allTotalStats[key] || 0) + numValue;
-              }
-            );
-          }
-        }
-      }
-
-      // 각인 점수 계산
-      // 모든 결속 환수의 각인 장착효과 (합산값)
-      for (const bondSpirit of bondSpirits) {
-        const engraving =
-          pageState.engravingData[category]?.[bondSpirit.name] || {};
-
-        // 새로운 데이터 구조: { registration: [...], bind: {...} }
-        if (engraving.bind) {
-          Object.entries(engraving.bind).forEach(([statKey, value]) => {
-            const numValue =
-              typeof value === "number" ? value : parseFloat(value) || 0;
-            if (numValue > 0) {
-              allTotalStats[statKey] = (allTotalStats[statKey] || 0) + numValue;
-            }
-          });
-        }
-
-        // 기존 데이터 구조 호환성 (하위 호환)
-        if (!engraving.registration && !engraving.bind) {
-          Object.entries(engraving).forEach(([statKey, engravingData]) => {
-            let bindValue = 0;
-            if (typeof engravingData === "object" && engravingData !== null) {
-              bindValue = engravingData.bind || 0;
-            } else {
-              bindValue = engravingData || 0;
-            }
-            if (bindValue > 0) {
-              allTotalStats[statKey] =
-                (allTotalStats[statKey] || 0) + bindValue;
-            }
-          });
-        }
-      }
-
-      // 사용 중인 환수의 각인 등록효과 (배열의 모든 항목 합산)
-      if (active) {
-        const engraving =
-          pageState.engravingData[category]?.[active.name] || {};
-
-
-        // 새로운 데이터 구조: { registration: [...], bind: {...} }
-        if (Array.isArray(engraving.registration)) {
-          engraving.registration.forEach((regItem) => {
-            const statKey = regItem.statKey;
-            const value = regItem.value || 0;
-            const numValue =
-              typeof value === "number" ? value : parseFloat(value) || 0;
-            if (numValue > 0 && statKey) {
-              allTotalStats[statKey] = (allTotalStats[statKey] || 0) + numValue;
-            }
-          });
-        }
-
-        // 기존 데이터 구조 호환성 (하위 호환)
-        if (!engraving.registration && !engraving.bind) {
-          Object.entries(engraving).forEach(([statKey, engravingData]) => {
-            let registrationValue = 0;
-            if (typeof engravingData === "object" && engravingData !== null) {
-              registrationValue = engravingData.registration || 0;
-            } else {
-              registrationValue = engravingData || 0;
-            }
-            if (registrationValue > 0) {
-              allTotalStats[statKey] =
-                (allTotalStats[statKey] || 0) + registrationValue;
-            }
-          });
-        }
-      }
-    }
+    // 공통 계산 함수 사용
+    const { allTotalStats, allBondStats, allActiveStats } = calculateTotalStats(
+      getSpiritsForCategory
+    );
 
     // baselineStatsHash와 currentHash 비교하여 baselineStats 자동 업데이트
     // (사용중 환수 변경 등으로 저장된 상태로 돌아온 경우)
@@ -704,12 +818,92 @@ export async function updateTotalStats(
     // 여기서는 해시 비교만 하고 baselineStats는 변경하지 않음
     // 증감 계산은 항상 저장된 baselineStats와 현재 계산값을 비교하여 수행
     if (pageState.baselineStatsHash) {
+      // 디버깅: 해시 비교 로그
+      if (currentHash !== pageState.baselineStatsHash) {
+        console.log("[스탯 해시 비교] 불일치:", {
+          currentHash: currentHash.substring(0, 100) + "...",
+          baselineHash: pageState.baselineStatsHash.substring(0, 100) + "...",
+        });
+      }
+
       if (currentHash === pageState.baselineStatsHash) {
         // 현재 상태가 저장된 baseline과 일치하면 증감을 0으로 표시
         shouldForceZeroChange = true;
+        console.log("[스탯 해시 비교] 일치 - 증감 0으로 설정");
       } else {
-        // 해시가 불일치하면 증감을 계산하여 표시
-        shouldForceZeroChange = false;
+        // 해시가 불일치하더라도 실제 계산값이 baseline과 동일한지 확인
+        // (해시 생성 로직 변경 등으로 해시가 달라졌을 수 있음)
+        const allStatsForCheck = [...STATS_CONFIG];
+        let isActuallySame = true;
+        let diffCount = 0;
+        const differences = [];
+
+        for (const stat of allStatsForCheck) {
+          const baseValue = pageState.userStats[stat.key] || 0;
+          const totalStatsValue = allTotalStats[stat.key] || 0;
+          const currentValue = Math.round(baseValue + totalStatsValue);
+          // baseline이 없으면 현재 값을 baseline으로 사용 (증감 0)
+          // baseline이 있으면 저장된 값과 비교
+          const baselineValue = pageState.baselineStats.hasOwnProperty(stat.key)
+            ? pageState.baselineStats[stat.key]
+            : currentValue;
+
+          // 정수 비교이므로 0.5 사용 (반올림 오차 고려)
+          const diff = Math.abs(currentValue - baselineValue);
+          if (diff > 0.5) {
+            isActuallySame = false;
+            diffCount++;
+            differences.push({
+              stat: stat.key,
+              current: currentValue,
+              baseline: baselineValue,
+              diff: currentValue - baselineValue,
+            });
+            // 처음 몇 개만 로그 출력
+            if (diffCount <= 5) {
+              console.log(`[스탯 값 비교] 불일치: ${stat.key}`, {
+                current: currentValue,
+                baseline: baselineValue,
+                diff: currentValue - baselineValue,
+              });
+            }
+          }
+        }
+
+        // 주요 스탯도 확인 (환산타채 합 등)
+        if (isActuallySame) {
+          const getTotalValue = (key) => {
+            const baseValue = pageState.userStats[key] || 0;
+            const totalStatsValue = allTotalStats[key] || 0;
+            return Math.round(baseValue + totalStatsValue);
+          };
+
+          const currentTachae = Math.round(
+            getTotalValue("damageResistancePenetration") +
+              getTotalValue("damageResistance") +
+              Math.round(Math.round(getTotalValue("pvpDamagePercent")) * 10) +
+              Math.round(Math.round(getTotalValue("pvpDefensePercent")) * 10)
+          );
+
+          const baselineTachae = pageState.baselineKeyStats.tachaeTotal || 0;
+          // 정수 비교이므로 0.5 사용 (반올림 오차 고려)
+          if (Math.abs(currentTachae - baselineTachae) > 0.5) {
+            isActuallySame = false;
+            console.log("[스탯 값 비교] 환산타채 합 불일치:", {
+              current: currentTachae,
+              baseline: baselineTachae,
+              diff: currentTachae - baselineTachae,
+            });
+          }
+        }
+
+        if (isActuallySame) {
+          console.log("[스탯 값 비교] 모든 값 일치 - 증감 0으로 설정");
+        } else {
+          console.log(`[스탯 값 비교] 총 ${diffCount}개 스탯 불일치`);
+        }
+
+        shouldForceZeroChange = isActuallySame;
       }
     } else {
       // baselineStatsHash가 없으면 초기화 (저장 버튼을 누르기 전까지는 해시 설정 안 함)
@@ -728,7 +922,92 @@ export async function updateTotalStats(
       {},
       shouldForceZeroChange
     );
-    updateKeyStats(allStats, allTotalStats, {}, shouldForceZeroChange, updateStatItemsWithValues);
+    updateKeyStats(
+      allStats,
+      allTotalStats,
+      {},
+      shouldForceZeroChange,
+      updateStatItemsWithValues
+    );
+
+    // 로그 출력: 스탯 계산 결과
+    const statsSummary = {};
+    const categoriesForLog = ["수호", "탑승", "변신"];
+    categoriesForLog.forEach((category) => {
+      const bondSpirits = pageState.bondSpirits[category] || [];
+      statsSummary[category] = {
+        bondSpirits: bondSpirits.map((s) => ({
+          name: s.name,
+          level: s.level || 25,
+        })),
+        activeSpirit: pageState.activeSpirits[category]
+          ? {
+              name: pageState.activeSpirits[category].name,
+              level: pageState.activeSpirits[category].level || 25,
+            }
+          : null,
+        engravingData: Object.keys(pageState.engravingData[category] || {}).map(
+          (spiritName) => ({
+            spiritName: spiritName,
+            data: pageState.engravingData[category][spiritName],
+          })
+        ),
+      };
+    });
+
+    // 주요 스탯만 출력 (변화가 있는 스탯 위주)
+    const keyStats = {
+      damageResistancePenetration: Math.round(
+        (pageState.userStats.damageResistancePenetration || 0) +
+          (allTotalStats.damageResistancePenetration || 0)
+      ),
+      damageResistance: Math.round(
+        (pageState.userStats.damageResistance || 0) +
+          (allTotalStats.damageResistance || 0)
+      ),
+      pvpDamagePercent: Math.round(
+        (pageState.userStats.pvpDamagePercent || 0) +
+          (allTotalStats.pvpDamagePercent || 0)
+      ),
+      pvpDefensePercent: Math.round(
+        (pageState.userStats.pvpDefensePercent || 0) +
+          (allTotalStats.pvpDefensePercent || 0)
+      ),
+      statusEffectResistance: Math.round(
+        (pageState.userStats.statusEffectResistance || 0) +
+          (allTotalStats.statusEffectResistance || 0)
+      ),
+      statusEffectAccuracy: Math.round(
+        (pageState.userStats.statusEffectAccuracy || 0) +
+          (allTotalStats.statusEffectAccuracy || 0)
+      ),
+    };
+
+    // baseline과 비교하여 증감 계산
+    const statsChange = {};
+    Object.keys(keyStats).forEach((key) => {
+      const current = keyStats[key];
+      const baseline = pageState.baselineStats.hasOwnProperty(key)
+        ? pageState.baselineStats[key]
+        : current;
+      const change = shouldForceZeroChange ? 0 : current - baseline;
+      statsChange[key] = {
+        current: current,
+        baseline: baseline,
+        change: change,
+      };
+    });
+
+    console.log(`[나의 스탯 계산 결과]`, {
+      statsSummary: statsSummary,
+      keyStats: keyStats,
+      statsChange: statsChange,
+      allTotalStats: Object.fromEntries(
+        Object.entries(allTotalStats)
+          .filter(([key, value]) => Math.abs(value) > 0.01)
+          .sort(([a], [b]) => a.localeCompare(b))
+      ),
+    });
 
     // 결과 캐싱
     pageState.lastTotalStatsHash = currentHash;
@@ -746,4 +1025,3 @@ export async function updateTotalStats(
     pageState.isUpdatingTotalStats = false;
   }
 }
-

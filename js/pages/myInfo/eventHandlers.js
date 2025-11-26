@@ -13,26 +13,25 @@ import {
   showProfileModal,
   deleteProfile,
 } from "./profileManager.js";
-import {
-  saveUserStats,
-  saveData,
-} from "./dataManager.js";
+import { saveUserStats, saveData } from "./dataManager.js";
 import {
   calculateExpFromTable,
   updateSoulExp,
+  generateSoulExpHash,
 } from "./expCalculator.js";
 import {
   updateTotalStats,
   updateKeyStats,
   generateTotalStatsHash,
+  calculateTotalStats,
 } from "./statCalculator.js";
-import {
-  renderStats,
-  updateStatItemsWithValues,
-} from "./statUI.js";
-import {
-  getSpiritsForCategory,
-} from "./spiritManager.js";
+import { renderStats, updateStatItemsWithValues } from "./statUI.js";
+import { getSpiritsForCategory } from "./spiritManager.js";
+
+// updateTotalStats와 updateStatItemsWithValues를 직접 사용하기 위해 전역으로 접근 가능하도록
+let globalGetSpiritsForCategory = null;
+let globalUpdateStatItemsWithValues = null;
+import { GRADE_SET_EFFECTS, FACTION_SET_EFFECTS } from "../../constants.js";
 import Logger from "../../utils/logger.js";
 
 /**
@@ -163,322 +162,9 @@ export function setupEventListeners(callbacks) {
       pageState.isSavingBaseline = true;
 
       try {
-        // updateTotalStats와 동일한 로직으로 allTotalStats 계산
+        // updateTotalStats와 완전히 동일한 로직으로 allTotalStats 계산
         const allStats = [...STATS_CONFIG];
-        const allTotalStats = {}; // updateTotalStats와 동일한 변수 사용
-
-        // 등급효과와 세력효과 계산을 위한 상수
-        const GRADE_SET_EFFECTS = {
-          수호: {
-            전설: {
-              2: { damageResistance: 100, pvpDefensePercent: 1 },
-              3: { damageResistance: 200, pvpDefensePercent: 2 },
-              4: { damageResistance: 350, pvpDefensePercent: 3.5 },
-              5: { damageResistance: 550, pvpDefensePercent: 5.5 },
-            },
-            불멸: {
-              2: { damageResistance: 150, pvpDefensePercent: 1.5 },
-              3: { damageResistance: 300, pvpDefensePercent: 3 },
-              4: { damageResistance: 525, pvpDefensePercent: 5.25 },
-              5: { damageResistance: 825, pvpDefensePercent: 8.25 },
-            },
-          },
-          탑승: {
-            전설: {
-              2: { damageResistancePenetration: 100, pvpDamagePercent: 1 },
-              3: { damageResistancePenetration: 200, pvpDamagePercent: 2 },
-              4: { damageResistancePenetration: 350, pvpDamagePercent: 3.5 },
-              5: { damageResistancePenetration: 550, pvpDamagePercent: 5.5 },
-            },
-            불멸: {
-              2: { damageResistancePenetration: 150, pvpDamagePercent: 1.5 },
-              3: { damageResistancePenetration: 300, pvpDamagePercent: 3 },
-              4: { damageResistancePenetration: 525, pvpDamagePercent: 5.25 },
-              5: { damageResistancePenetration: 825, pvpDamagePercent: 8.25 },
-            },
-          },
-          변신: {
-            전설: {
-              2: {
-                damageResistance: 50,
-                damageResistancePenetration: 50,
-                pvpDefensePercent: 0.5,
-                pvpDamagePercent: 0.5,
-              },
-              3: {
-                damageResistance: 100,
-                damageResistancePenetration: 100,
-                pvpDefensePercent: 1,
-                pvpDamagePercent: 1,
-              },
-              4: {
-                damageResistance: 175,
-                damageResistancePenetration: 175,
-                pvpDefensePercent: 1.75,
-                pvpDamagePercent: 1.75,
-              },
-              5: {
-                damageResistance: 275,
-                damageResistancePenetration: 275,
-                pvpDefensePercent: 2.75,
-                pvpDamagePercent: 2.75,
-              },
-            },
-            불멸: {
-              2: {
-                damageResistance: 75,
-                damageResistancePenetration: 75,
-                pvpDefensePercent: 0.75,
-                pvpDamagePercent: 0.75,
-              },
-              3: {
-                damageResistance: 150,
-                damageResistancePenetration: 150,
-                pvpDefensePercent: 1.5,
-                pvpDamagePercent: 1.5,
-              },
-              4: {
-                damageResistance: 262,
-                damageResistancePenetration: 262,
-                pvpDefensePercent: 2.62,
-                pvpDamagePercent: 2.62,
-              },
-              5: {
-                damageResistance: 412,
-                damageResistancePenetration: 412,
-                pvpDefensePercent: 4.12,
-                pvpDamagePercent: 4.12,
-              },
-            },
-          },
-        };
-
-        const FACTION_SET_EFFECTS = {
-          결의: {
-            2: { damageResistance: 200 },
-            3: { damageResistance: 400 },
-            4: { damageResistance: 600 },
-            5: { damageResistance: 800 },
-          },
-          고요: {
-            2: { damageResistancePenetration: 200 },
-            3: { damageResistancePenetration: 400 },
-            4: { damageResistancePenetration: 600 },
-            5: { damageResistancePenetration: 800 },
-          },
-          의지: {
-            2: { pvpDamagePercent: 2 },
-            3: { pvpDamagePercent: 4 },
-            4: { pvpDamagePercent: 6 },
-            5: { pvpDamagePercent: 8 },
-          },
-          침착: {
-            2: { pvpDefensePercent: 2 },
-            3: { pvpDefensePercent: 4 },
-            4: { pvpDefensePercent: 6 },
-            5: { pvpDefensePercent: 8 },
-          },
-          냉정: {
-            2: { damageResistance: 100, damageResistancePenetration: 100 },
-            3: { damageResistance: 200, damageResistancePenetration: 200 },
-            4: { damageResistance: 300, damageResistancePenetration: 300 },
-            5: { damageResistance: 400, damageResistancePenetration: 400 },
-          },
-          활력: {
-            2: { pvpDamagePercent: 1, pvpDefensePercent: 1 },
-            3: { pvpDamagePercent: 2, pvpDefensePercent: 2 },
-            4: { pvpDamagePercent: 3, pvpDefensePercent: 3 },
-            5: { pvpDamagePercent: 4, pvpDefensePercent: 4 },
-          },
-        };
-
-        // 각 카테고리별로 계산 (updateTotalStats와 동일한 로직)
-        const categories = ["수호", "탑승", "변신"];
-        for (const category of categories) {
-          const bondSpirits = pageState.bondSpirits[category] || [];
-          if (bondSpirits.length === 0) continue;
-
-          // 등급별 개수 집계
-          const gradeCounts = {};
-          const factionCounts = {};
-
-          // 결속 환수의 장착효과 합산
-          for (const bondSpirit of bondSpirits) {
-            const spirit = getSpiritsForCategory(category).find(
-              (s) => s.name === bondSpirit.name
-            );
-            if (spirit) {
-              // 등급 집계
-              if (spirit.grade) {
-                gradeCounts[spirit.grade] =
-                  (gradeCounts[spirit.grade] || 0) + 1;
-              }
-              // 세력 집계
-              if (spirit.influence) {
-                factionCounts[spirit.influence] =
-                  (factionCounts[spirit.influence] || 0) + 1;
-              }
-
-              const level =
-                bondSpirit.level !== undefined && bondSpirit.level !== null
-                  ? bondSpirit.level
-                  : 25;
-              const levelStat = spirit.stats?.find((s) => s.level === level);
-              if (levelStat?.bindStat) {
-                Object.entries(levelStat.bindStat).forEach(([key, value]) => {
-                  const numValue =
-                    typeof value === "number" ? value : parseFloat(value) || 0;
-                  allTotalStats[key] = (allTotalStats[key] || 0) + numValue;
-                });
-              }
-            }
-          }
-
-          // 등급효과 계산
-          const categoryGradeEffects = GRADE_SET_EFFECTS[category];
-          if (categoryGradeEffects) {
-            Object.entries(gradeCounts).forEach(([grade, count]) => {
-              const gradeRules = categoryGradeEffects[grade];
-              if (!gradeRules) return;
-
-              let highestStep = 0;
-              for (let step = 2; step <= count; step++) {
-                if (gradeRules[step.toString()]) {
-                  highestStep = step;
-                }
-              }
-
-              if (highestStep > 0) {
-                const stepEffects = gradeRules[highestStep.toString()];
-                Object.entries(stepEffects).forEach(([statKey, value]) => {
-                  allTotalStats[statKey] =
-                    (allTotalStats[statKey] || 0) + value;
-                });
-              }
-            });
-          }
-
-          // 세력효과 계산
-          Object.entries(factionCounts).forEach(([faction, count]) => {
-            const factionRules = FACTION_SET_EFFECTS[faction];
-            if (!factionRules) return;
-
-            let highestStep = 0;
-            for (let step = 2; step <= count; step++) {
-              if (factionRules[step.toString()]) {
-                highestStep = step;
-              }
-            }
-
-            if (highestStep > 0) {
-              const stepEffects = factionRules[highestStep.toString()];
-              Object.entries(stepEffects).forEach(([statKey, value]) => {
-                allTotalStats[statKey] = (allTotalStats[statKey] || 0) + value;
-              });
-            }
-          });
-
-          // 사용 중인 환수의 등록효과 추가
-          const active = pageState.activeSpirits[category];
-          if (active) {
-            const spirit = getSpiritsForCategory(category).find(
-              (s) => s.name === active.name
-            );
-            if (spirit) {
-              const levelStat = spirit.stats?.find(
-                (s) => s.level === active.level
-              );
-              if (levelStat?.registrationStat) {
-                Object.entries(levelStat.registrationStat).forEach(
-                  ([key, value]) => {
-                    const numValue =
-                      typeof value === "number"
-                        ? value
-                        : parseFloat(value) || 0;
-                    allTotalStats[key] = (allTotalStats[key] || 0) + numValue;
-                  }
-                );
-              }
-            }
-          }
-
-          // 각인 점수 계산
-          // 모든 결속 환수의 각인 장착효과
-          for (const bondSpirit of bondSpirits) {
-            const engraving =
-              pageState.engravingData[category]?.[bondSpirit.name] || {};
-
-            // 새로운 데이터 구조: { registration: [...], bind: {...} }
-            if (engraving.bind) {
-              Object.entries(engraving.bind).forEach(([statKey, value]) => {
-                const numValue =
-                  typeof value === "number" ? value : parseFloat(value) || 0;
-                if (numValue > 0) {
-                  allTotalStats[statKey] =
-                    (allTotalStats[statKey] || 0) + numValue;
-                }
-              });
-            }
-
-            // 기존 데이터 구조 호환성 (하위 호환)
-            if (!engraving.registration && !engraving.bind) {
-              Object.entries(engraving).forEach(([statKey, engravingData]) => {
-                let bindValue = 0;
-                if (
-                  typeof engravingData === "object" &&
-                  engravingData !== null
-                ) {
-                  bindValue = engravingData.bind || 0;
-                } else {
-                  bindValue = engravingData || 0;
-                }
-                if (bindValue > 0) {
-                  allTotalStats[statKey] =
-                    (allTotalStats[statKey] || 0) + bindValue;
-                }
-              });
-            }
-          }
-
-          // 사용 중인 환수의 각인 등록효과
-          if (active) {
-            const engraving =
-              pageState.engravingData[category]?.[active.name] || {};
-
-            // 새로운 데이터 구조: { registration: [...], bind: {...} }
-            if (Array.isArray(engraving.registration)) {
-              engraving.registration.forEach((regItem) => {
-                const statKey = regItem.statKey;
-                const value = regItem.value || 0;
-                const numValue =
-                  typeof value === "number" ? value : parseFloat(value) || 0;
-                if (numValue > 0 && statKey) {
-                  allTotalStats[statKey] =
-                    (allTotalStats[statKey] || 0) + numValue;
-                }
-              });
-            }
-
-            // 기존 데이터 구조 호환성 (하위 호환)
-            if (!engraving.registration && !engraving.bind) {
-              Object.entries(engraving).forEach(([statKey, engravingData]) => {
-                let registrationValue = 0;
-                if (
-                  typeof engravingData === "object" &&
-                  engravingData !== null
-                ) {
-                  registrationValue = engravingData.registration || 0;
-                } else {
-                  registrationValue = engravingData || 0;
-                }
-                if (registrationValue > 0) {
-                  allTotalStats[statKey] =
-                    (allTotalStats[statKey] || 0) + registrationValue;
-                }
-              });
-            }
-          }
-        }
+        const { allTotalStats } = calculateTotalStats(getSpiritsForCategory);
 
         // 스탯 기준값 저장 - 항상 계산된 값을 사용 (저장 시점의 정확한 계산값)
         // 화면 표시값이 아닌 실제 계산값을 저장하여 일관성 보장
@@ -541,6 +227,7 @@ export function setupEventListeners(callbacks) {
         const expTable = pageState.expTable;
         if (expTable) {
           let totalExp = 0;
+          const categories = ["수호", "탑승", "변신"];
           for (const category of categories) {
             const bondSpirits = pageState.bondSpirits[category] || [];
             for (const spirit of bondSpirits) {
@@ -567,8 +254,12 @@ export function setupEventListeners(callbacks) {
         saveUserStats();
 
         // baselineStatsHash 저장 (저장 시점의 해시값)
-        const currentHash = generateTotalStatsHash();
+        const currentHash = generateTotalStatsHash(getSpiritsForCategory);
         pageState.baselineStatsHash = currentHash;
+
+        // baselineSoulExpHash 저장 (저장 시점의 해시값)
+        const currentSoulExpHash = generateSoulExpHash();
+        pageState.baselineSoulExpHash = currentSoulExpHash;
 
         saveData();
 
@@ -608,17 +299,16 @@ export function setupEventListeners(callbacks) {
         pageState.lastTotalStatsHash = null;
         pageState.lastTotalStatsCalculation = null;
 
-        // 주요 스탯 변화 업데이트 (증감은 0으로)
-        // updateTotalStats를 호출하여 allTotalStats를 다시 계산
-        // 저장 후에는 환산합 증감도 0으로 설정
-        updateKeyStats(
-          allStats,
-          allTotalStats,
-          {},
-          true,
-          updateStatItemsWithValues
-        ); // forceZeroChange = true
-        debouncedUpdateTotalStats();
+        // 저장 완료 후 즉시 업데이트 (isSavingBaseline 플래그 해제 후)
+        pageState.isSavingBaseline = false;
+
+        // 즉시 updateTotalStats 호출하여 증감 반영 (저장된 baseline 기준)
+        if (globalGetSpiritsForCategory && globalUpdateStatItemsWithValues) {
+          updateTotalStats(
+            globalGetSpiritsForCategory,
+            globalUpdateStatItemsWithValues
+          );
+        }
 
         // 저장 피드백
         const originalText = saveBtn.innerHTML;
@@ -631,12 +321,8 @@ export function setupEventListeners(callbacks) {
         }, 1500);
       } catch (error) {
         Logger.error("Error saving baseline:", error);
-      } finally {
-        setTimeout(() => {
-          pageState.isSavingBaseline = false;
-        }, 500);
+        pageState.isSavingBaseline = false;
       }
     });
   }
 }
-

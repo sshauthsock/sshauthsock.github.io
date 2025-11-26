@@ -4,8 +4,17 @@ import { state as globalState } from "../state.js";
 import { createElement } from "../utils.js";
 import * as api from "../api.js";
 import { showInfo as showSpiritInfoModal } from "../modalHandler.js";
-import { showLoading, hideLoading, createSkeletons } from "../loadingIndicator.js";
-import { STATS_MAPPING, FACTION_ICONS } from "../constants.js";
+import {
+  showLoading,
+  hideLoading,
+  createSkeletons,
+} from "../loadingIndicator.js";
+import {
+  STATS_MAPPING,
+  FACTION_ICONS,
+  GRADE_SET_EFFECTS,
+  FACTION_SET_EFFECTS,
+} from "../constants.js";
 import { showResultModal as showOptimalResultModal } from "../resultModal.js";
 import ErrorHandler from "../utils/errorHandler.js";
 
@@ -16,132 +25,6 @@ const pageState = {
   currentLoadedRankings: [],
 };
 const elements = {};
-
-// 등급 세트 효과 정의
-const GRADE_SET_EFFECTS = {
-  수호: {
-    전설: {
-      2: { damageResistance: 100, pvpDefensePercent: 1 },
-      3: { damageResistance: 200, pvpDefensePercent: 2 },
-      4: { damageResistance: 350, pvpDefensePercent: 3.5 },
-      5: { damageResistance: 550, pvpDefensePercent: 5.5 },
-    },
-    불멸: {
-      2: { damageResistance: 150, pvpDefensePercent: 1.5 },
-      3: { damageResistance: 300, pvpDefensePercent: 3 },
-      4: { damageResistance: 525, pvpDefensePercent: 5.25 },
-      5: { damageResistance: 825, pvpDefensePercent: 8.25 },
-    },
-  },
-  탑승: {
-    전설: {
-      2: { damageResistancePenetration: 100, pvpDamagePercent: 1 },
-      3: { damageResistancePenetration: 200, pvpDamagePercent: 2 },
-      4: { damageResistancePenetration: 350, pvpDamagePercent: 3.5 },
-      5: { damageResistancePenetration: 550, pvpDamagePercent: 5.5 },
-    },
-    불멸: {
-      2: { damageResistancePenetration: 150, pvpDamagePercent: 1.5 },
-      3: { damageResistancePenetration: 300, pvpDamagePercent: 3 },
-      4: { damageResistancePenetration: 525, pvpDamagePercent: 5.25 },
-      5: { damageResistancePenetration: 825, pvpDamagePercent: 8.25 },
-    },
-  },
-  변신: {
-    전설: {
-      2: {
-        damageResistance: 50,
-        damageResistancePenetration: 50,
-        pvpDefensePercent: 0.5,
-        pvpDamagePercent: 0.5,
-      },
-      3: {
-        damageResistance: 100,
-        damageResistancePenetration: 100,
-        pvpDefensePercent: 1,
-        pvpDamagePercent: 1,
-      },
-      4: {
-        damageResistance: 175,
-        damageResistancePenetration: 175,
-        pvpDefensePercent: 1.75,
-        pvpDamagePercent: 1.75,
-      },
-      5: {
-        damageResistance: 275,
-        damageResistancePenetration: 275,
-        pvpDefensePercent: 2.75,
-        pvpDamagePercent: 2.75,
-      },
-    },
-    불멸: {
-      2: {
-        damageResistance: 75,
-        damageResistancePenetration: 75,
-        pvpDefensePercent: 0.75,
-        pvpDamagePercent: 0.75,
-      },
-      3: {
-        damageResistance: 150,
-        damageResistancePenetration: 150,
-        pvpDefensePercent: 1.5,
-        pvpDamagePercent: 1.5,
-      },
-      4: {
-        damageResistance: 262,
-        damageResistancePenetration: 262,
-        pvpDefensePercent: 2.62,
-        pvpDamagePercent: 2.62,
-      },
-      5: {
-        damageResistance: 412,
-        damageResistancePenetration: 412,
-        pvpDefensePercent: 4.12,
-        pvpDamagePercent: 4.12,
-      },
-    },
-  },
-};
-
-// 세력 세트 효과 정의 (모든 카테고리 동일)
-const FACTION_SET_EFFECTS = {
-  결의: {
-    2: { damageResistance: 200 },
-    3: { damageResistance: 400 },
-    4: { damageResistance: 600 },
-    5: { damageResistance: 800 },
-  },
-  고요: {
-    2: { damageResistancePenetration: 200 },
-    3: { damageResistancePenetration: 400 },
-    4: { damageResistancePenetration: 600 },
-    5: { damageResistancePenetration: 800 },
-  },
-  의지: {
-    2: { pvpDamagePercent: 2 },
-    3: { pvpDamagePercent: 4 },
-    4: { pvpDamagePercent: 6 },
-    5: { pvpDamagePercent: 8 },
-  },
-  침착: {
-    2: { pvpDefensePercent: 2 },
-    3: { pvpDefensePercent: 4 },
-    4: { pvpDefensePercent: 6 },
-    5: { pvpDefensePercent: 8 },
-  },
-  냉정: {
-    2: { damageResistance: 100, damageResistancePenetration: 100 },
-    3: { damageResistance: 200, damageResistancePenetration: 200 },
-    4: { damageResistance: 300, damageResistancePenetration: 300 },
-    5: { damageResistance: 400, damageResistancePenetration: 400 },
-  },
-  활력: {
-    2: { pvpDamagePercent: 1, pvpDefensePercent: 1 },
-    3: { pvpDamagePercent: 2, pvpDefensePercent: 2 },
-    4: { pvpDamagePercent: 3, pvpDefensePercent: 3 },
-    5: { pvpDamagePercent: 4, pvpDefensePercent: 4 },
-  },
-};
 
 // 등급 효과 계산 함수
 function calculateGradeEffects(gradeCounts, category) {
@@ -179,9 +62,11 @@ function calculateGradeEffects(gradeCounts, category) {
 // 세력 효과 계산 함수
 function calculateFactionEffects(factionCounts, category) {
   const effects = [];
+  const categoryFactionEffects = FACTION_SET_EFFECTS[category];
+  if (!categoryFactionEffects) return effects;
 
   Object.entries(factionCounts).forEach(([faction, count]) => {
-    const factionRules = FACTION_SET_EFFECTS[faction];
+    const factionRules = categoryFactionEffects[faction];
     if (!factionRules) return;
 
     // 가장 높은 세트 효과 단계 찾기
@@ -269,7 +154,7 @@ async function loadAndRenderRankings() {
  */
 function showSkeletonRankings() {
   elements.rankingsContainer.innerHTML = "";
-  
+
   // 스켈레톤 카드 10개 생성
   for (let i = 0; i < 10; i++) {
     const skeletonCard = document.createElement("div");
@@ -278,12 +163,12 @@ function showSkeletonRankings() {
     skeletonCard.style.marginBottom = "16px";
     skeletonCard.style.borderRadius = "8px";
     skeletonCard.style.backgroundColor = "#fff";
-    
+
     const skeletons = createSkeletons(3, "text", { width: "100%" });
     skeletons[0].style.width = "60%";
     skeletons[1].style.width = "80%";
     skeletons[2].style.width = "40%";
-    
+
     skeletonCard.append(...skeletons);
     elements.rankingsContainer.appendChild(skeletonCard);
   }
@@ -622,7 +507,6 @@ export async function init(container) {
   setupEventListeners();
 
   await loadAndRenderRankings();
-
 }
 
 /**

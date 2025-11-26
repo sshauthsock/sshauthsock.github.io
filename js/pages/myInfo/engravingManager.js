@@ -457,6 +457,10 @@ export function showEngravingModal(category, spiritName, spirit, onSave) {
       // 초기 로딩 플래그 해제 (사용자가 각인을 변경했으므로 증감 표시)
       pageState.isInitialLoad = false;
 
+      // 캐시 무효화 (각인 변경 시 재계산 필요)
+      pageState.lastTotalStatsHash = null;
+      pageState.lastTotalStatsCalculation = null;
+
       // 모달 닫기
       modal.remove();
 

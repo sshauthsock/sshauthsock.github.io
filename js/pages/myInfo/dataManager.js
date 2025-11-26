@@ -123,6 +123,13 @@ export function loadSavedData(callbacks = {}) {
     if (savedBaselineStatsHash) {
       pageState.baselineStatsHash = savedBaselineStatsHash;
     }
+
+    const savedBaselineSoulExpHash = localStorage.getItem(
+      "myInfo_baselineSoulExpHash"
+    );
+    if (savedBaselineSoulExpHash) {
+      pageState.baselineSoulExpHash = savedBaselineSoulExpHash;
+    }
   }
 }
 
@@ -163,6 +170,12 @@ export function saveData() {
       localStorage.setItem(
         "myInfo_baselineStatsHash",
         pageState.baselineStatsHash
+      );
+    }
+    if (pageState.baselineSoulExpHash) {
+      localStorage.setItem(
+        "myInfo_baselineSoulExpHash",
+        pageState.baselineSoulExpHash
       );
     }
     // userStats는 saveUserStats에서 별도로 저장됨
