@@ -1,4 +1,4 @@
-import{s as x}from"./components-C2RsvHY9.js";class w{static handle(e,r=""){const n={message:e.message||"알 수 없는 오류가 발생했습니다.",context:r,timestamp:new Date().toISOString()};return typeof gtag=="function"&&gtag("event","exception",{description:n.message,fatal:!1}),n}static showUserFriendlyMessage(e,r){const n=this.handle(e),o=this.getUserFriendlyMessage(n.message);r&&(r.innerHTML=`
+import{s as x}from"./components-KK9vAy1z.js";class w{static handle(e,r=""){const n={message:e.message||"알 수 없는 오류가 발생했습니다.",context:r,timestamp:new Date().toISOString()};return typeof gtag=="function"&&gtag("event","exception",{description:n.message,fatal:!1}),n}static showUserFriendlyMessage(e,r){const n=this.handle(e),o=this.getUserFriendlyMessage(n.message);r&&(r.innerHTML=`
         <div class="error-message">
           <h3>오류가 발생했습니다</h3>
           <p>${o}</p>
