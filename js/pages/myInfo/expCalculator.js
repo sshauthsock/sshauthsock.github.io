@@ -177,16 +177,8 @@ export async function updateSoulExp(getSpiritsForCategory) {
     // 기준 대비 정보
     // baselineSoulExpHash와 비교하여 해시가 같으면 증감 0으로 표시
     let shouldForceZeroExpDiff = false;
-    if (pageState.baselineSoulExpHash) {
-      if (currentHash === pageState.baselineSoulExpHash) {
-        shouldForceZeroExpDiff = true;
-        console.log('[환수혼 해시 비교] 일치 - 증감 0으로 설정');
-      } else {
-        console.log('[환수혼 해시 비교] 불일치:', {
-          currentHash,
-          baselineHash: pageState.baselineSoulExpHash,
-        });
-      }
+    if (pageState.baselineSoulExpHash && currentHash === pageState.baselineSoulExpHash) {
+      shouldForceZeroExpDiff = true;
     }
     
     if (pageState.savedSoulExp > 0) {

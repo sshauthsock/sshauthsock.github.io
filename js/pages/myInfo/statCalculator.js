@@ -594,12 +594,6 @@ export function calculateTotalStats(getSpiritsForCategory) {
       Object.keys(gradeEffectsApplied).length > 0 ||
       Object.keys(factionEffectsApplied).length > 0
     ) {
-      console.log(`[등급/세력 효과 - ${category}]`, {
-        gradeCounts: gradeCounts,
-        factionCounts: factionCounts,
-        gradeEffects: gradeEffectsApplied,
-        factionEffects: factionEffectsApplied,
-      });
     }
 
     // 사용 중인 환수의 등록효과 추가
@@ -818,25 +812,14 @@ export async function updateTotalStats(
     // 여기서는 해시 비교만 하고 baselineStats는 변경하지 않음
     // 증감 계산은 항상 저장된 baselineStats와 현재 계산값을 비교하여 수행
     if (pageState.baselineStatsHash) {
-      // 디버깅: 해시 비교 로그
-      if (currentHash !== pageState.baselineStatsHash) {
-        console.log("[스탯 해시 비교] 불일치:", {
-          currentHash: currentHash.substring(0, 100) + "...",
-          baselineHash: pageState.baselineStatsHash.substring(0, 100) + "...",
-        });
-      }
-
       if (currentHash === pageState.baselineStatsHash) {
         // 현재 상태가 저장된 baseline과 일치하면 증감을 0으로 표시
         shouldForceZeroChange = true;
-        console.log("[스탯 해시 비교] 일치 - 증감 0으로 설정");
       } else {
         // 해시가 불일치하더라도 실제 계산값이 baseline과 동일한지 확인
         // (해시 생성 로직 변경 등으로 해시가 달라졌을 수 있음)
         const allStatsForCheck = [...STATS_CONFIG];
         let isActuallySame = true;
-        let diffCount = 0;
-        const differences = [];
 
         for (const stat of allStatsForCheck) {
           const baseValue = pageState.userStats[stat.key] || 0;
@@ -849,24 +832,9 @@ export async function updateTotalStats(
             : currentValue;
 
           // 정수 비교이므로 0.5 사용 (반올림 오차 고려)
-          const diff = Math.abs(currentValue - baselineValue);
-          if (diff > 0.5) {
+          if (Math.abs(currentValue - baselineValue) > 0.5) {
             isActuallySame = false;
-            diffCount++;
-            differences.push({
-              stat: stat.key,
-              current: currentValue,
-              baseline: baselineValue,
-              diff: currentValue - baselineValue,
-            });
-            // 처음 몇 개만 로그 출력
-            if (diffCount <= 5) {
-              console.log(`[스탯 값 비교] 불일치: ${stat.key}`, {
-                current: currentValue,
-                baseline: baselineValue,
-                diff: currentValue - baselineValue,
-              });
-            }
+            break;
           }
         }
 
@@ -889,18 +857,7 @@ export async function updateTotalStats(
           // 정수 비교이므로 0.5 사용 (반올림 오차 고려)
           if (Math.abs(currentTachae - baselineTachae) > 0.5) {
             isActuallySame = false;
-            console.log("[스탯 값 비교] 환산타채 합 불일치:", {
-              current: currentTachae,
-              baseline: baselineTachae,
-              diff: currentTachae - baselineTachae,
-            });
           }
-        }
-
-        if (isActuallySame) {
-          console.log("[스탯 값 비교] 모든 값 일치 - 증감 0으로 설정");
-        } else {
-          console.log(`[스탯 값 비교] 총 ${diffCount}개 스탯 불일치`);
         }
 
         shouldForceZeroChange = isActuallySame;
@@ -929,85 +886,6 @@ export async function updateTotalStats(
       shouldForceZeroChange,
       updateStatItemsWithValues
     );
-
-    // 로그 출력: 스탯 계산 결과
-    const statsSummary = {};
-    const categoriesForLog = ["수호", "탑승", "변신"];
-    categoriesForLog.forEach((category) => {
-      const bondSpirits = pageState.bondSpirits[category] || [];
-      statsSummary[category] = {
-        bondSpirits: bondSpirits.map((s) => ({
-          name: s.name,
-          level: s.level || 25,
-        })),
-        activeSpirit: pageState.activeSpirits[category]
-          ? {
-              name: pageState.activeSpirits[category].name,
-              level: pageState.activeSpirits[category].level || 25,
-            }
-          : null,
-        engravingData: Object.keys(pageState.engravingData[category] || {}).map(
-          (spiritName) => ({
-            spiritName: spiritName,
-            data: pageState.engravingData[category][spiritName],
-          })
-        ),
-      };
-    });
-
-    // 주요 스탯만 출력 (변화가 있는 스탯 위주)
-    const keyStats = {
-      damageResistancePenetration: Math.round(
-        (pageState.userStats.damageResistancePenetration || 0) +
-          (allTotalStats.damageResistancePenetration || 0)
-      ),
-      damageResistance: Math.round(
-        (pageState.userStats.damageResistance || 0) +
-          (allTotalStats.damageResistance || 0)
-      ),
-      pvpDamagePercent: Math.round(
-        (pageState.userStats.pvpDamagePercent || 0) +
-          (allTotalStats.pvpDamagePercent || 0)
-      ),
-      pvpDefensePercent: Math.round(
-        (pageState.userStats.pvpDefensePercent || 0) +
-          (allTotalStats.pvpDefensePercent || 0)
-      ),
-      statusEffectResistance: Math.round(
-        (pageState.userStats.statusEffectResistance || 0) +
-          (allTotalStats.statusEffectResistance || 0)
-      ),
-      statusEffectAccuracy: Math.round(
-        (pageState.userStats.statusEffectAccuracy || 0) +
-          (allTotalStats.statusEffectAccuracy || 0)
-      ),
-    };
-
-    // baseline과 비교하여 증감 계산
-    const statsChange = {};
-    Object.keys(keyStats).forEach((key) => {
-      const current = keyStats[key];
-      const baseline = pageState.baselineStats.hasOwnProperty(key)
-        ? pageState.baselineStats[key]
-        : current;
-      const change = shouldForceZeroChange ? 0 : current - baseline;
-      statsChange[key] = {
-        current: current,
-        baseline: baseline,
-        change: change,
-      };
-    });
-
-    console.log(`[나의 스탯 계산 결과]`, {
-      statsSummary: statsSummary,
-      keyStats: keyStats,
-      statsChange: statsChange,
-      allTotalStats: Object.fromEntries(
-        Object.entries(allTotalStats)
-          .filter(([key, value]) => Math.abs(value) > 0.01)
-          .sort(([a], [b]) => a.localeCompare(b))
-      ),
-    });
 
     // 결과 캐싱
     pageState.lastTotalStatsHash = currentHash;

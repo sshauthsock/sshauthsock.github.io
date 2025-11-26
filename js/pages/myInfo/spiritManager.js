@@ -292,16 +292,6 @@ export function handleSpiritSelect(
     // 초기 로딩 플래그 해제 (사용자가 환수를 제거했으므로 증감 표시)
     pageState.isInitialLoad = false;
 
-    // 로그 출력: 환수 제거
-    console.log(`[결속 환수 제거]`, {
-      category: category,
-      spiritName: removedSpirit.name,
-      spiritLevel: removedSpirit.level,
-      bondSpirits: bondSpirits.map(s => ({
-        name: s.name,
-        level: s.level
-      }))
-    });
 
     if (renderBondSlots) renderBondSlots(category);
     if (renderSpiritList) renderSpiritList();
@@ -339,16 +329,6 @@ export function handleSpiritSelect(
       // 초기 로딩 플래그 해제 (사용자가 환수를 추가했으므로 증감 표시)
       pageState.isInitialLoad = false;
 
-      // 로그 출력: 환수 추가
-      console.log(`[결속 환수 추가]`, {
-        category: category,
-        spiritName: newSpirit.name,
-        spiritLevel: newSpirit.level,
-        bondSpirits: bondSpirits.map(s => ({
-          name: s.name,
-          level: s.level
-        }))
-      });
 
       // 새로 추가된 슬롯 인덱스
       const newIndex = bondSpirits.length - 1;
@@ -426,16 +406,6 @@ export function removeBondSpirit(
 
   // 각인 데이터는 제거하지 않음 (결속에서 제거해도 각인 정보는 유지)
 
-  // 로그 출력: 환수 제거
-  console.log(`[결속 환수 제거]`, {
-    category: category,
-    spiritName: spirit.name,
-    spiritLevel: spirit.level,
-    bondSpirits: bondSpirits.map(s => ({
-      name: s.name,
-      level: s.level
-    }))
-  });
 
   if (renderBondSlots) renderBondSlots(category);
   if (renderActiveSpiritSelect) renderActiveSpiritSelect(category);
@@ -1270,16 +1240,6 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
             pageState.isInitialLoad = false;
 
             // 로그 출력: 레벨 변경
-            console.log(`[결속 환수 레벨 변경]`, {
-              category: popupLongPressState.category,
-              spiritName: currentSpirit.name,
-              oldLevel: oldLevel,
-              newLevel: level,
-              bondSpirits: pageState.bondSpirits[popupLongPressState.category]?.map(s => ({
-                name: s.name,
-                level: s.level
-              })) || []
-            });
 
             // 저장 버튼을 눌러야 저장됨 (자동 저장 제거)
 
@@ -1711,17 +1671,6 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
 
       pageState.isInitialLoad = false;
 
-      // 로그 출력: 각인 저장 (등록효과)
-      console.log(`[각인 저장 - 등록효과]`, {
-        category: category,
-        spiritName: spirit.name,
-        oldEngravingData: oldEngravingData,
-        newEngravingData: engravingData,
-        bondSpirits: pageState.bondSpirits[category]?.map(s => ({
-          name: s.name,
-          level: s.level
-        })) || []
-      });
 
       // 캐시 무효화 (각인 변경 시 재계산 필요)
       pageState.lastTotalStatsHash = null;
@@ -1799,17 +1748,6 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
 
       pageState.isInitialLoad = false;
 
-      // 로그 출력: 각인 저장 (장착효과)
-      console.log(`[각인 저장 - 장착효과]`, {
-        category: category,
-        spiritName: spirit.name,
-        oldEngravingData: oldEngravingData,
-        newEngravingData: engravingData,
-        bondSpirits: pageState.bondSpirits[category]?.map(s => ({
-          name: s.name,
-          level: s.level
-        })) || []
-      });
 
       // 캐시 무효화 (각인 변경 시 재계산 필요)
       pageState.lastTotalStatsHash = null;
