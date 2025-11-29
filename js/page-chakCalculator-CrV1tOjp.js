@@ -1,4 +1,4 @@
-import{c as p,g as T,h as P}from"./components-KK9vAy1z.js";import{b as I,d as H,h as j}from"./main-DS_ca-kn.js";import{E as k}from"./utils-C4S-LQYV.js";const l={chakData:null,selectedPart:null,selectedLevel:null,userResources:{goldButton:1e4,colorBall:1e4},statState:{},allAvailableStats:[],selectedStats:[]},s={};function A(){return`
+import{c as p,g as T,h as P}from"./components-KK9vAy1z.js";import{b as I,d as H,h as j}from"./main-BD5mqkRQ.js";import{E as k}from"./utils-C4S-LQYV.js";const l={chakData:null,selectedPart:null,selectedLevel:null,userResources:{goldButton:1e4,colorBall:1e4},statState:{},allAvailableStats:[],selectedStats:[]},s={};function A(){return`
     <div class="layout-container chak-container">
       <div class="equipment-section">
         <div class="panel equipment-panel">
