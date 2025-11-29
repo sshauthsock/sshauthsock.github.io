@@ -6,6 +6,7 @@
 import { pageState, elements } from "./state.js";
 import { createElement } from "../../utils.js";
 import Logger from "../../utils/logger.js";
+import { isFixedLevelSpirit } from "../../constants.js";
 
 /**
  * 프로파일 목록 가져오기
@@ -167,16 +168,45 @@ export function loadProfileData(profileId, callbacks = {}) {
     try {
       const profileData = JSON.parse(saved);
       pageState.userStats = profileData.userStats || {};
-      pageState.bondSpirits = profileData.bondSpirits || {
+      const loadedBondSpirits = profileData.bondSpirits || {
         수호: [],
         탑승: [],
         변신: [],
       };
-      pageState.activeSpirits = profileData.activeSpirits || {
+      // 고정 레벨 환수의 레벨을 항상 25로 설정
+      const categories = ["수호", "탑승", "변신"];
+      for (const category of categories) {
+        if (loadedBondSpirits[category]) {
+          loadedBondSpirits[category] = loadedBondSpirits[category].map(
+            (spirit) => {
+              if (isFixedLevelSpirit(spirit.name)) {
+                return { ...spirit, level: 25 };
+              }
+              return spirit;
+            }
+          );
+        }
+      }
+      pageState.bondSpirits = loadedBondSpirits;
+
+      const loadedActiveSpirits = profileData.activeSpirits || {
         수호: null,
         탑승: null,
         변신: null,
       };
+      // 고정 레벨 환수의 레벨을 항상 25로 설정
+      for (const category of categories) {
+        if (
+          loadedActiveSpirits[category] &&
+          isFixedLevelSpirit(loadedActiveSpirits[category].name)
+        ) {
+          loadedActiveSpirits[category] = {
+            ...loadedActiveSpirits[category],
+            level: 25,
+          };
+        }
+      }
+      pageState.activeSpirits = loadedActiveSpirits;
       pageState.baselineStats = profileData.baselineStats || {};
       pageState.baselineKeyStats = profileData.baselineKeyStats || {
         tachaeTotal: 0,
@@ -428,4 +458,3 @@ export function showProfileModal(mode, profileId = null, callbacks = {}) {
     modal.querySelector("#profileNameInput").select();
   }, 100);
 }
-

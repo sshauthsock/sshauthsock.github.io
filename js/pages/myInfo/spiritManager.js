@@ -73,7 +73,11 @@ export function getSpiritsForCategory(category) {
  * @param {Function} setCategoryForSelection - 카테고리 선택 콜백
  * @param {Function} showSpiritLevelPopup - 레벨 팝업 표시 콜백
  */
-export function renderBondSlots(category, setCategoryForSelection, showSpiritLevelPopup) {
+export function renderBondSlots(
+  category,
+  setCategoryForSelection,
+  showSpiritLevelPopup
+) {
   const container = elements[`bondSlots${category}`];
   if (!container) return;
 
@@ -101,8 +105,8 @@ export function renderBondSlots(category, setCategoryForSelection, showSpiritLev
       img.alt = spirit.name;
       img.onerror = () => {
         // WebP 로드 실패 시 원본으로 폴백
-        if (img.src.endsWith('.webp')) {
-          const originalPath = spirit.image.replace(/\.webp$/i, '.jpg');
+        if (img.src.endsWith(".webp")) {
+          const originalPath = spirit.image.replace(/\.webp$/i, ".jpg");
           img.src = originalPath;
           return; // 폴백 시도 중이므로 에러 처리 스킵
         }
@@ -285,13 +289,13 @@ export function handleSpiritSelect(
     if (!pageState.removedSpiritLevels[category]) {
       pageState.removedSpiritLevels[category] = {};
     }
-    pageState.removedSpiritLevels[category][removedSpirit.name] = removedSpirit.level || 25;
+    pageState.removedSpiritLevels[category][removedSpirit.name] =
+      removedSpirit.level || 25;
 
     // 각인 데이터는 제거하지 않음 (결속에서 제거해도 각인 정보는 유지)
 
     // 초기 로딩 플래그 해제 (사용자가 환수를 제거했으므로 증감 표시)
     pageState.isInitialLoad = false;
-
 
     if (renderBondSlots) renderBondSlots(category);
     if (renderSpiritList) renderSpiritList();
@@ -303,7 +307,11 @@ export function handleSpiritSelect(
     pageState.lastSoulExpCalculation = null;
 
     // 즉시 업데이트 (환수 제거 시 즉시 반영되어야 함)
-    if (updateTotalStats && updateStatItemsWithValues && getSpiritsForCategory) {
+    if (
+      updateTotalStats &&
+      updateStatItemsWithValues &&
+      getSpiritsForCategory
+    ) {
       updateTotalStats(getSpiritsForCategory, updateStatItemsWithValues);
     } else if (debouncedUpdateTotalStats) {
       debouncedUpdateTotalStats();
@@ -312,23 +320,35 @@ export function handleSpiritSelect(
   } else {
     // 없으면 추가 (최대 6개)
     if (bondSpirits.length < 6) {
-      // 이전에 제거된 환수인 경우 저장된 레벨 사용, 아니면 기본값 25
-      const savedLevel = pageState.removedSpiritLevels[category]?.[spirit.name];
+      // 고정 레벨 환수는 항상 25레벨로 설정
+      const isFixed = isFixedLevelSpirit(spirit.name);
+      let level = 25;
+
+      // 고정 레벨 환수가 아니고, 이전에 제거된 환수인 경우 저장된 레벨 사용
+      if (!isFixed) {
+        const savedLevel =
+          pageState.removedSpiritLevels[category]?.[spirit.name];
+        if (savedLevel !== undefined) {
+          level = savedLevel;
+        }
+      }
+
       const newSpirit = {
         ...spirit,
-        level: savedLevel !== undefined ? savedLevel : 25,
+        level: level,
       };
       bondSpirits.push(newSpirit);
-      
+
       // 레벨 정보 사용 후 제거 (다시 제거하면 새로운 레벨로 저장됨)
-      if (pageState.removedSpiritLevels[category]?.[spirit.name] !== undefined) {
+      if (
+        pageState.removedSpiritLevels[category]?.[spirit.name] !== undefined
+      ) {
         delete pageState.removedSpiritLevels[category][spirit.name];
       }
       pageState.bondSpirits[category] = bondSpirits;
 
       // 초기 로딩 플래그 해제 (사용자가 환수를 추가했으므로 증감 표시)
       pageState.isInitialLoad = false;
-
 
       // 새로 추가된 슬롯 인덱스
       const newIndex = bondSpirits.length - 1;
@@ -406,24 +426,23 @@ export function removeBondSpirit(
 
   // 각인 데이터는 제거하지 않음 (결속에서 제거해도 각인 정보는 유지)
 
-
   if (renderBondSlots) renderBondSlots(category);
   if (renderActiveSpiritSelect) renderActiveSpiritSelect(category);
   if (renderSpiritList) renderSpiritList();
 
-    // 캐시 무효화
-    pageState.lastTotalStatsHash = null;
-    pageState.lastTotalStatsCalculation = null;
-    pageState.lastSoulExpHash = null;
-    pageState.lastSoulExpCalculation = null;
+  // 캐시 무효화
+  pageState.lastTotalStatsHash = null;
+  pageState.lastTotalStatsCalculation = null;
+  pageState.lastSoulExpHash = null;
+  pageState.lastSoulExpCalculation = null;
 
-    // 즉시 업데이트 (환수 제거 시 즉시 반영되어야 함)
-    if (updateTotalStats && updateStatItemsWithValues && getSpiritsForCategory) {
-      updateTotalStats(getSpiritsForCategory, updateStatItemsWithValues);
-    } else if (debouncedUpdateTotalStats) {
-      debouncedUpdateTotalStats();
-    }
-    if (debouncedUpdateSoulExp) debouncedUpdateSoulExp();
+  // 즉시 업데이트 (환수 제거 시 즉시 반영되어야 함)
+  if (updateTotalStats && updateStatItemsWithValues && getSpiritsForCategory) {
+    updateTotalStats(getSpiritsForCategory, updateStatItemsWithValues);
+  } else if (debouncedUpdateTotalStats) {
+    debouncedUpdateTotalStats();
+  }
+  if (debouncedUpdateSoulExp) debouncedUpdateSoulExp();
 }
 
 /**
@@ -544,8 +563,15 @@ function startPopupLongPress(callbacks) {
       pageState.lastSoulExpCalculation = null;
 
       // 즉시 업데이트 (레벨 변경 시 즉시 반영되어야 함)
-      if (callbacks?.updateTotalStats && callbacks?.updateStatItemsWithValues && callbacks?.getSpiritsForCategory) {
-        callbacks.updateTotalStats(callbacks.getSpiritsForCategory, callbacks.updateStatItemsWithValues);
+      if (
+        callbacks?.updateTotalStats &&
+        callbacks?.updateStatItemsWithValues &&
+        callbacks?.getSpiritsForCategory
+      ) {
+        callbacks.updateTotalStats(
+          callbacks.getSpiritsForCategory,
+          callbacks.updateStatItemsWithValues
+        );
       } else if (callbacks?.debouncedUpdateTotalStats) {
         callbacks.debouncedUpdateTotalStats();
       }
@@ -749,8 +775,15 @@ function createPopupHint(callbacks) {
           pageState.lastSoulExpCalculation = null;
 
           // 즉시 업데이트 (레벨 변경 시 즉시 반영되어야 함)
-          if (callbacks?.updateTotalStats && callbacks?.updateStatItemsWithValues && callbacks?.getSpiritsForCategory) {
-            callbacks.updateTotalStats(callbacks.getSpiritsForCategory, callbacks.updateStatItemsWithValues);
+          if (
+            callbacks?.updateTotalStats &&
+            callbacks?.updateStatItemsWithValues &&
+            callbacks?.getSpiritsForCategory
+          ) {
+            callbacks.updateTotalStats(
+              callbacks.getSpiritsForCategory,
+              callbacks.updateStatItemsWithValues
+            );
           } else if (callbacks?.debouncedUpdateTotalStats) {
             callbacks.debouncedUpdateTotalStats();
           }
@@ -1162,8 +1195,15 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
       pageState.lastSoulExpCalculation = null;
 
       // 즉시 업데이트 (레벨 변경 시 즉시 반영되어야 함)
-      if (callbacks?.updateTotalStats && callbacks?.updateStatItemsWithValues && callbacks?.getSpiritsForCategory) {
-        callbacks.updateTotalStats(callbacks.getSpiritsForCategory, callbacks.updateStatItemsWithValues);
+      if (
+        callbacks?.updateTotalStats &&
+        callbacks?.updateStatItemsWithValues &&
+        callbacks?.getSpiritsForCategory
+      ) {
+        callbacks.updateTotalStats(
+          callbacks.getSpiritsForCategory,
+          callbacks.updateStatItemsWithValues
+        );
       } else if (callbacks?.debouncedUpdateTotalStats) {
         callbacks.debouncedUpdateTotalStats();
       }
@@ -1453,7 +1493,10 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
     pageState.lastSoulExpHash = null;
     pageState.lastSoulExpCalculation = null;
     if (callbacks?.updateTotalStats) {
-      callbacks.updateTotalStats(getSpiritsForCategory, callbacks.updateStatItemsWithValues);
+      callbacks.updateTotalStats(
+        getSpiritsForCategory,
+        callbacks.updateStatItemsWithValues
+      );
     }
     if (callbacks?.updateSoulExp) {
       callbacks.updateSoulExp(getSpiritsForCategory);
@@ -1671,19 +1714,21 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
 
       pageState.isInitialLoad = false;
 
-
       // 캐시 무효화 (각인 변경 시 재계산 필요)
       pageState.lastTotalStatsHash = null;
       pageState.lastTotalStatsCalculation = null;
 
       // 즉시 업데이트 (각인 저장 후 바로 반영되어야 함)
       if (callbacks?.updateTotalStats) {
-        callbacks.updateTotalStats(getSpiritsForCategory, callbacks.updateStatItemsWithValues);
+        callbacks.updateTotalStats(
+          getSpiritsForCategory,
+          callbacks.updateStatItemsWithValues
+        );
       }
       if (callbacks?.renderBondSlots) {
         callbacks.renderBondSlots(category);
       }
-      
+
       // 팝업 닫기 (저장 완료 후)
       if (popup && popup.parentNode) {
         popup.remove();
@@ -1748,19 +1793,21 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
 
       pageState.isInitialLoad = false;
 
-
       // 캐시 무효화 (각인 변경 시 재계산 필요)
       pageState.lastTotalStatsHash = null;
       pageState.lastTotalStatsCalculation = null;
 
       // 즉시 업데이트 (각인 저장 후 바로 반영되어야 함)
       if (callbacks?.updateTotalStats) {
-        callbacks.updateTotalStats(getSpiritsForCategory, callbacks.updateStatItemsWithValues);
+        callbacks.updateTotalStats(
+          getSpiritsForCategory,
+          callbacks.updateStatItemsWithValues
+        );
       }
       if (callbacks?.renderBondSlots) {
         callbacks.renderBondSlots(category);
       }
-      
+
       // 팝업 닫기 (저장 완료 후)
       if (popup && popup.parentNode) {
         popup.remove();
@@ -1773,4 +1820,3 @@ export function showSpiritLevelPopup(category, index, slot, event, callbacks) {
     });
   }
 }
-

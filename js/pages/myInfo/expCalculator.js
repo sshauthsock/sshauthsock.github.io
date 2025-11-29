@@ -6,6 +6,7 @@
 import { pageState, elements } from "./state.js";
 import * as api from "../../api.js";
 import Logger from "../../utils/logger.js";
+import { isFixedLevelSpirit } from "../../constants.js";
 
 /**
  * 경험치 테이블 가져오기 (localStorage 캐싱 사용)
@@ -34,7 +35,12 @@ export async function getExpTable() {
  * @param {number} targetLevel - 목표 레벨
  * @returns {number} 필요한 경험치
  */
-export function calculateExpFromTable(expTable, type, currentLevel, targetLevel) {
+export function calculateExpFromTable(
+  expTable,
+  type,
+  currentLevel,
+  targetLevel
+) {
   if (!expTable || !expTable[type]) {
     return 0;
   }
@@ -66,7 +72,9 @@ export function generateSoulExpHash() {
         if (nameCompare !== 0) return nameCompare;
         return (a.level || 25) - (b.level || 25);
       });
-      return sortedBondSpirits.map((s) => `${s.name}:${s.level || 25}`).join(",");
+      return sortedBondSpirits
+        .map((s) => `${s.name}:${s.level || 25}`)
+        .join(",");
     })
     .join("|");
   return hashData;
@@ -83,8 +91,10 @@ export async function updateSoulExp(getSpiritsForCategory) {
   // 캐시 확인
   const currentHash = generateSoulExpHash();
   // baselineSoulExpHash와 비교하여 해시가 같으면 캐시 무효화 (증감 0으로 재계산 필요)
-  const shouldForceZeroExpDiff = pageState.baselineSoulExpHash && currentHash === pageState.baselineSoulExpHash;
-  
+  const shouldForceZeroExpDiff =
+    pageState.baselineSoulExpHash &&
+    currentHash === pageState.baselineSoulExpHash;
+
   if (
     pageState.lastSoulExpHash === currentHash &&
     pageState.lastSoulExpCalculation &&
@@ -117,6 +127,14 @@ export async function updateSoulExp(getSpiritsForCategory) {
       let categoryTotal = 0;
 
       for (const spirit of bondSpirits) {
+        // 고정 레벨 환수는 경험치 계산에서 제외 (처음부터 25레벨이므로 환수혼이 필요 없음)
+        const isFixed = isFixedLevelSpirit(spirit.name);
+        if (isFixed) {
+          // 고정 레벨 환수는 레벨을 25로 강제 설정하되, 경험치 계산에서는 제외
+          spirit.level = 25;
+          continue;
+        }
+
         if (!spirit.level || spirit.level === 0) continue;
 
         // 환수 등급 확인
@@ -177,17 +195,20 @@ export async function updateSoulExp(getSpiritsForCategory) {
     // 기준 대비 정보
     // baselineSoulExpHash와 비교하여 해시가 같으면 증감 0으로 표시
     let shouldForceZeroExpDiff = false;
-    if (pageState.baselineSoulExpHash && currentHash === pageState.baselineSoulExpHash) {
+    if (
+      pageState.baselineSoulExpHash &&
+      currentHash === pageState.baselineSoulExpHash
+    ) {
       shouldForceZeroExpDiff = true;
     }
-    
+
     if (pageState.savedSoulExp > 0) {
       let diff = totalExp - pageState.savedSoulExp;
       // 해시가 같으면 증감 0으로 강제 설정
       if (shouldForceZeroExpDiff) {
         diff = 0;
       }
-      
+
       let diffText = "";
       let diffColor = "";
 
@@ -246,4 +267,3 @@ export async function updateSoulExp(getSpiritsForCategory) {
       "<p class='text-center text-sm text-light'>계산 중 오류가 발생했습니다.</p>";
   }
 }
-
