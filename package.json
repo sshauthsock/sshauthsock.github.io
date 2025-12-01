@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/update-sw-version.js",
     "build": "vite build",
     "preview": "vite preview",
     "local": "bash start-local.sh",

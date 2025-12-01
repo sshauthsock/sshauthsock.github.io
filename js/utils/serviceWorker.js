@@ -27,10 +27,18 @@ export async function registerServiceWorker() {
       const newWorker = registration.installing;
       if (newWorker) {
         newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // 새 버전이 설치되었지만 아직 활성화되지 않음
-            Logger.log('[Service Worker] New version available. Reload to update.');
-            showUpdateNotification();
+          if (newWorker.state === 'installed') {
+            if (navigator.serviceWorker.controller) {
+              // 새 버전이 설치되었지만 아직 활성화되지 않음
+              Logger.log('[Service Worker] New version available. Reload to update.');
+              showUpdateNotification();
+              
+              // 새 Service Worker에게 즉시 활성화 요청
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+            } else {
+              // 첫 설치
+              Logger.log('[Service Worker] First installation completed.');
+            }
           }
         });
       }
@@ -44,8 +52,8 @@ export async function registerServiceWorker() {
     // 컨트롤러 변경 감지 (새 Service Worker 활성화)
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       Logger.log('[Service Worker] New controller activated. Reloading page...');
-      // 자동 새로고침 (선택적)
-      // window.location.reload();
+      // 새 Service Worker가 활성화되면 자동으로 새로고침하여 최신 버전 사용
+      window.location.reload();
     });
 
     return true;
@@ -76,6 +84,12 @@ export async function checkForUpdates() {
  * Service Worker 업데이트 알림 표시
  */
 function showUpdateNotification() {
+  // 기존 알림이 있으면 제거
+  const existing = document.getElementById('sw-update-notification');
+  if (existing) {
+    existing.remove();
+  }
+  
   // 알림 UI 생성
   const notification = document.createElement('div');
   notification.id = 'sw-update-notification';
@@ -84,14 +98,24 @@ function showUpdateNotification() {
       <div class="sw-update-icon">🔄</div>
       <div class="sw-update-text">
         <strong>새 버전이 사용 가능합니다</strong>
-        <p>업데이트를 적용하려면 새로고침하세요.</p>
+        <p>업데이트를 적용하려면 새로고침하세요. (Ctrl+Shift+R 또는 Cmd+Shift+R)</p>
       </div>
       <div class="sw-update-actions">
-        <button class="sw-update-btn sw-update-now" onclick="window.location.reload()">지금 업데이트</button>
-        <button class="sw-update-btn sw-update-later" onclick="this.closest('#sw-update-notification').remove()">나중에</button>
+        <button class="sw-update-btn sw-update-now" id="sw-update-now-btn">지금 업데이트</button>
+        <button class="sw-update-btn sw-update-later" id="sw-update-later-btn">나중에</button>
       </div>
     </div>
   `;
+  
+  // 이벤트 리스너 추가
+  notification.querySelector('#sw-update-now-btn').addEventListener('click', () => {
+    window.location.reload();
+  });
+  
+  notification.querySelector('#sw-update-later-btn').addEventListener('click', () => {
+    notification.style.animation = 'slideInUp 0.3s ease-out reverse';
+    setTimeout(() => notification.remove(), 300);
+  });
 
   // 스타일 추가 (한 번만)
   if (!document.getElementById('sw-update-styles')) {
@@ -255,12 +279,6 @@ function showUpdateNotification() {
     document.head.appendChild(style);
   }
 
-  // 기존 알림이 있으면 제거
-  const existing = document.getElementById('sw-update-notification');
-  if (existing) {
-    existing.remove();
-  }
-
   // 알림 추가
   document.body.appendChild(notification);
 
@@ -280,16 +298,26 @@ export function initServiceWorker() {
   // Service Worker 등록
   registerServiceWorker();
 
-  // 주기적으로 업데이트 확인 (1시간마다)
+  // 페이지 로드 후 즉시 업데이트 확인
+  setTimeout(() => {
+    checkForUpdates();
+  }, 2000); // 2초 후 (초기 로딩 완료 후)
+
+  // 주기적으로 업데이트 확인 (5분마다 - 더 자주 확인)
   setInterval(() => {
     checkForUpdates();
-  }, 60 * 60 * 1000); // 1시간
+  }, 5 * 60 * 1000); // 5분
 
-  // 페이지 가시성 변경 시 업데이트 확인
+  // 페이지 가시성 변경 시 업데이트 확인 (탭 전환 시)
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       checkForUpdates();
     }
+  });
+  
+  // 포커스 시 업데이트 확인 (창 포커스 시)
+  window.addEventListener('focus', () => {
+    checkForUpdates();
   });
 }
 
