@@ -80,7 +80,6 @@ export function showLoading(
   subText = "잠시만 기다려주세요."
 ) {
   if (!container) {
-    console.warn("Loading indicator container not provided.");
     return;
   }
 

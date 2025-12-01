@@ -101,6 +101,24 @@ export function renderBondSlots(
       }
 
       const img = createElement("img");
+      
+      // 이미지 경로가 없으면 실제 환수 객체에서 찾기
+      if (!spirit.image) {
+        const allSpirits = Array.isArray(globalState.allSpirits)
+          ? globalState.allSpirits
+          : [];
+        const fullSpirit = allSpirits.find(
+          (s) => s.name === spirit.name && s.type === category
+        );
+        if (fullSpirit && fullSpirit.image) {
+          spirit.image = fullSpirit.image;
+        } else {
+          Logger.warn(`이미지 경로를 찾을 수 없습니다: ${spirit.name}`);
+          // 기본 이미지 경로 시도
+          spirit.image = `assets/img/${category}/${spirit.name}.webp`;
+        }
+      }
+      
       img.src = spirit.image;
       img.alt = spirit.name;
       img.onerror = () => {
@@ -110,7 +128,21 @@ export function renderBondSlots(
           img.src = originalPath;
           return; // 폴백 시도 중이므로 에러 처리 스킵
         }
-        pageState.imageLoadErrors.add(spirit.image);
+        // 이미지 경로가 없거나 잘못된 경우 실제 환수 객체에서 다시 찾기
+        if (!spirit.image || !spirit.image.includes('/')) {
+          const allSpirits = Array.isArray(globalState.allSpirits)
+            ? globalState.allSpirits
+            : [];
+          const fullSpirit = allSpirits.find(
+            (s) => s.name === spirit.name && s.type === category
+          );
+          if (fullSpirit && fullSpirit.image) {
+            spirit.image = fullSpirit.image;
+            img.src = fullSpirit.image;
+            return;
+          }
+        }
+        pageState.imageLoadErrors.add(spirit.image || 'unknown');
         showImageLoadError();
       };
       slot.appendChild(img);

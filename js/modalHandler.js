@@ -58,8 +58,6 @@ function handleSpiritInfoContainerMouseDown(event) {
     ? "increment"
     : "decrement";
 
-  // console.log(`🖱️ 환수정보 모달 버튼 눌림: ${action} 레벨 ${currentLevel}`);
-
   // 상태 설정
   spiritInfoLongPressState.isPressed = true;
   spiritInfoLongPressState.button = button;
@@ -99,24 +97,12 @@ function handleSpiritInfoGlobalTouchUp(e) {
     type: "touchend",
   };
 
-
-  //   "📱 환수정보 터치 종료, 터치 위치:",
-  //   touch.clientX,
-  //   touch.clientY
-  // );
-  // console.log("📱 터치된 요소:", fakeEvent.target);
-
   handleSpiritInfoGlobalMouseUp(fakeEvent);
 }
 
 function startSpiritInfoLongPress() {
-
-  //   `⏰ 환수정보 길게 누르기 시작: ${spiritInfoLongPressState.action}`
-  // );
-
   // 고정 레벨 환수는 레벨 변경 불가
   if (isFixedLevelSpirit(spiritInfoLongPressState.spiritData.name)) {
-    // console.log("❌ startSpiritInfoLongPress: 고정 레벨 환수 (25레벨 고정)");
     return;
   }
 
@@ -153,10 +139,6 @@ function startSpiritInfoLongPress() {
         newLevel,
         spiritInfoLongPressState.highlightStat
       );
-
-
-      //   `🔄 환수정보 연속 변경: ${spiritInfoLongPressState.spiritData.name} → ${newLevel}`
-      // );
     }
 
     // 최대/최소값에 도달하면 멈춤
@@ -298,12 +280,10 @@ function createSpiritInfoHint() {
   const hintBtn = hint.querySelector(".hint-btn");
   hintBtn.addEventListener("mouseenter", () => {
     spiritInfoLongPressState.hintHovered = true;
-    // console.log("🖱️ 환수정보 힌트 호버 시작");
   });
 
   hintBtn.addEventListener("mouseleave", () => {
     spiritInfoLongPressState.hintHovered = false;
-    // console.log("🖱️ 환수정보 힌트 호버 종료");
   });
 
   // 터치 이벤트 (모바일 지원)
@@ -312,7 +292,6 @@ function createSpiritInfoHint() {
     (e) => {
       e.preventDefault();
       spiritInfoLongPressState.hintHovered = true;
-      // console.log("📱 환수정보 힌트 터치 시작 - modalHandler");
     },
     { passive: false }
   );
@@ -321,10 +300,6 @@ function createSpiritInfoHint() {
     "touchend",
     (e) => {
       e.preventDefault();
-
-      //   "📱 환수정보 힌트 터치 종료 - modalHandler, hintHovered:",
-      //   spiritInfoLongPressState.hintHovered
-      // );
     },
     { passive: false }
   );
@@ -343,7 +318,6 @@ function createSpiritInfoHint() {
     (e) => {
       e.preventDefault();
       spiritInfoLongPressState.hintHovered = true;
-      // console.log("📱 환수정보 브리지 터치 시작 - modalHandler");
     },
     { passive: false }
   );
@@ -352,7 +326,6 @@ function createSpiritInfoHint() {
     "touchend",
     (e) => {
       e.preventDefault();
-      // console.log("📱 환수정보 브리지 터치 종료 - modalHandler");
     },
     { passive: false }
   );
@@ -362,8 +335,6 @@ function createSpiritInfoHint() {
 
   spiritInfoLongPressState.hintElement = hint;
   spiritInfoLongPressState.bridgeElement = bridge;
-
-  // console.log(`💡 환수정보 힌트 생성됨: ${isPlus ? "MAX" : "MIN"}`);
 }
 
 function handleSpiritInfoGlobalMouseUp(event) {
@@ -378,21 +349,11 @@ function handleSpiritInfoGlobalMouseUp(event) {
   const pressDuration = mouseUpTime - spiritInfoLongPressState.mouseDownTime;
   const wasShortClick = pressDuration < 300;
 
-  // console.log(`👆 환수정보 handleGlobalMouseUp 호출:`, {
-  //   hasTimeout: !!spiritInfoLongPressState.timeoutId,
-  //   isPressed: spiritInfoLongPressState.isPressed,
-  //   hintHovered: spiritInfoLongPressState.hintHovered,
-  //   mouseDownTime: spiritInfoLongPressState.mouseDownTime,
-  //   pressDuration: pressDuration,
-  //   wasShortClick: wasShortClick,
-  // });
-
   // 길게 누르기가 시작되지 않았다면 timeout만 취소하고 종료
   if (
     !spiritInfoLongPressState.isPressed &&
     spiritInfoLongPressState.timeoutId
   ) {
-    // console.log("⏸️ 환수정보 timeout 취소 (길게 누르기 시작 전)");
     clearTimeout(spiritInfoLongPressState.timeoutId);
     spiritInfoLongPressState.timeoutId = null;
     spiritInfoLongPressState.button = null;
@@ -415,7 +376,6 @@ function handleSpiritInfoGlobalMouseUp(event) {
 
     if (isWithinHint) {
       spiritInfoLongPressState.hintHovered = true;
-      // console.log("📱 터치 위치가 힌트 영역 내에 있음");
     }
   }
 
@@ -442,10 +402,6 @@ function handleSpiritInfoGlobalMouseUp(event) {
           targetValue,
           spiritInfoLongPressState.highlightStat
         );
-
-
-        //   `🎯 환수정보 힌트 클릭: ${spiritInfoLongPressState.spiritData.name} → ${targetValue}`
-        // );
       }
     }
 
@@ -479,10 +435,6 @@ function handleSpiritInfoGlobalMouseUp(event) {
         newLevel,
         spiritInfoLongPressState.highlightStat
       );
-
-
-      //   `📊 환수정보 짧은 클릭 레벨 변경: ${spiritInfoLongPressState.spiritData.name} ${spiritInfoLongPressState.currentLevel} → ${newLevel}`
-      // );
     }
   }
 
@@ -621,8 +573,6 @@ function updateStatsList(listElement, sumElement, stats, highlightStat) {
 }
 
 function stopSpiritInfoLongPress() {
-  // console.log("🛑 환수정보 길게 누르기 중지");
-
   if (spiritInfoLongPressState.timeoutId) {
     clearTimeout(spiritInfoLongPressState.timeoutId);
   }
@@ -817,10 +767,6 @@ function renderSpiritInfo(
 
         if (desktopAdIns) window.adfit.render(desktopAdIns);
         if (mobileAdIns) window.adfit.render(mobileAdIns);
-
-
-        //   "Kakao AdFit: Ads re-rendered (both mobile/desktop) in Spirit Info modal."
-        // );
       } else {
         Logger.warn(
           "Kakao AdFit script not yet loaded or available for re-rendering."

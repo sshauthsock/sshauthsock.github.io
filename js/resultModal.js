@@ -607,7 +607,6 @@ function startModalLongPress() {
 
     // 고정 레벨 환수는 레벨 변경 불가
     if (isFixedLevelSpirit(modalLongPressState.spiritName)) {
-      // console.log("❌ performModalLevelChange: 고정 레벨 환수 (25레벨 고정)");
       return false;
     }
 
@@ -630,14 +629,6 @@ function startModalLongPress() {
     }
 
     if (changed) {
-      // console.log(
-      //   "📊 모달 길게 누르기 레벨 변경:",
-      //   modalLongPressState.spiritName,
-      //   currentLevel,
-      //   "→",
-      //   spirit.stats[0].level
-      // );
-
       // UI 업데이트
       const levelDisplay = modalLongPressState.button
         .closest(".spirit-info-item-with-level")
@@ -695,8 +686,6 @@ function stopModalLongPress() {
 function createModalHint() {
   if (!modalLongPressState.button) return;
 
-  // console.log("🎨 createModalHint 시작:", modalLongPressState.action);
-
   const targetValue = modalLongPressState.action === "level-down" ? 0 : 25;
   const hintText = targetValue.toString();
 
@@ -744,8 +733,6 @@ function createModalHint() {
   modalLongPressState.hintElement = hint;
   modalLongPressState.hintHovered = false;
 
-  // console.log("✅ 모달 힌트 DOM에 추가됨:", hint);
-
   // 브리지 영역 생성
   const bridge = document.createElement("div");
   bridge.className = "hint-bridge";
@@ -766,8 +753,6 @@ function createModalHint() {
 
   document.body.appendChild(bridge);
   modalLongPressState.bridgeElement = bridge;
-
-  // console.log("✅ 모달 브리지 DOM에 추가됨:", bridge);
 
   // 이벤트 리스너 추가
   const handleHintEnter = () => {
@@ -829,7 +814,6 @@ function createModalHint() {
     "touchstart",
     (e) => {
       e.preventDefault();
-      // console.log("📱 모달 힌트 터치 시작");
       handleHintEnter();
     },
     { passive: false }
@@ -839,7 +823,6 @@ function createModalHint() {
     "touchend",
     (e) => {
       e.preventDefault();
-      // console.log("📱 모달 힌트 터치 종료");
       handleHintMouseUp();
     },
     { passive: false }
@@ -850,7 +833,6 @@ function createModalHint() {
     "touchstart",
     (e) => {
       e.preventDefault();
-      // console.log("📱 모달 브리지 터치 시작");
       handleHintEnter();
     },
     { passive: false }
@@ -860,7 +842,6 @@ function createModalHint() {
     "touchend",
     (e) => {
       e.preventDefault();
-      // console.log("📱 모달 브리지 터치 종료");
     },
     { passive: false }
   );
@@ -902,13 +883,6 @@ function handleModalGlobalMouseUp(e) {
       ) {
         spirit.stats[0].level = Math.min(25, spirit.stats[0].level + 1);
       }
-      // console.log(
-      //   "📊 모달 짧은 클릭 레벨 변경:",
-      //   modalLongPressState.spiritName,
-      //   oldLevel,
-      //   "→",
-      //   spirit.stats[0].level
-      // );
 
       // UI 업데이트
       const levelDisplay = modalLongPressState.button
@@ -949,7 +923,6 @@ function handleModalGlobalMouseUp(e) {
 
       if (isWithinHint) {
         modalLongPressState.hintHovered = true;
-        // console.log("📱 모달 터치 위치가 힌트 영역 내에 있음");
       }
     }
 
@@ -1444,35 +1417,18 @@ function renderHistoryTabs(category) {
 }
 
 function renderSpiritDetailsTable(spirits, gradeEffects = [], factionEffects = []) {
-  // console.log("📊 renderSpiritDetailsTable 호출:");
-  spirits.forEach((s, i) => {
-    // console.log(`  [${i}] ${s.name}: Lv.${s.stats[0].level}`);
-  });
-
   const container = document.getElementById("optimalSpiritsDetails");
   if (!container) {
-    // console.log("❌ optimalSpiritsDetails 컨테이너를 찾을 수 없음");
     return;
   }
 
   const allStatKeys = new Set();
   spirits.forEach((spirit) => {
-    // console.log("🔍 스피릿 검색 중:", {
-    //   name: spirit.name,
-    //   type: spirit.type,
-    //   level: spirit.stats[0].level,
-    // });
-
     const fullSpiritData = globalState.allSpirits.find(
       (s) => s.name === spirit.name && s.type === spirit.type
     );
 
     if (!fullSpiritData) {
-      // console.log(
-      //   "❌ globalState.allSpirits에서 스피릿을 찾을 수 없음:",
-      //   spirit.name,
-      //   spirit.type
-      // );
       return;
     }
 
@@ -1480,12 +1436,6 @@ function renderSpiritDetailsTable(spirits, gradeEffects = [], factionEffects = [
     const levelStats = fullSpiritData.stats.find(
       (s) => s.level === actualLevel
     );
-
-    // console.log("📊 레벨 스탯 검색:", {
-    //   actualLevel,
-    //   levelStats: !!levelStats,
-    //   bindStat: !!levelStats?.bindStat,
-    // });
 
     if (levelStats?.bindStat)
       Object.keys(levelStats.bindStat).forEach((key) => allStatKeys.add(key));
@@ -1594,16 +1544,6 @@ function renderSpiritDetailsTable(spirits, gradeEffects = [], factionEffects = [
     // 전체 합산: 결속 + 등급 + 세력
     const totalValue = bindTotalValue + gradeTotalValue + factionTotalValue;
 
-    // console.log(
-    //   `📊 ${statKey} 스탯 계산:`,
-    //   {
-    //     bind: bindTotalValue,
-    //     grade: gradeTotalValue,
-    //     faction: factionTotalValue,
-    //     total: totalValue,
-    //   }
-    // );
-
     // 결속 합산 표시 값 계산 (모든 값은 정수로 표시)
     let bindDisplayValue;
     if (statKey === "pvpDamagePercent" || statKey === "pvpDefensePercent") {
@@ -1643,8 +1583,6 @@ function renderSpiritDetailsTable(spirits, gradeEffects = [], factionEffects = [
 
   tableHtml += `</tbody></table></div>`;
   container.innerHTML = tableHtml;
-
-  // console.log("✅ renderSpiritDetailsTable 완료, 테이블 업데이트됨");
 }
 
 export function removeAllModals() {

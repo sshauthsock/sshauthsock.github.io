@@ -266,6 +266,9 @@ export function loadProfileData(profileId, callbacks = {}) {
         pageState.isInitialLoad = false;
       }
       if (callbacks.updateSoulExp) {
+        // 캐시를 강제로 무효화하고 업데이트
+        pageState.lastSoulExpHash = null;
+        pageState.lastSoulExpCalculation = null;
         callbacks.updateSoulExp();
       }
     } catch (e) {

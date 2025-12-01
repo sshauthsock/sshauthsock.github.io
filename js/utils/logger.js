@@ -1,63 +1,48 @@
 /**
  * 로깅 유틸리티
- * 개발 환경에서만 로그를 출력하고, 프로덕션에서는 제거됩니다.
+ * 모든 로그 출력 비활성화
  */
 class Logger {
   static isDev() {
-    return import.meta.env.DEV;
+    return false;
   }
 
   static log(...args) {
-    if (this.isDev()) {
-      console.log(...args);
-    }
+    // 로그 비활성화
   }
 
   static error(...args) {
-    // 에러는 항상 출력 (프로덕션에서도 디버깅 필요)
-    console.error(...args);
+    // 로그 비활성화
   }
 
   static warn(...args) {
-    if (this.isDev()) {
-      console.warn(...args);
-    }
+    // 로그 비활성화
   }
 
   static info(...args) {
-    if (this.isDev()) {
-      console.info(...args);
-    }
+    // 로그 비활성화
   }
 
   static debug(...args) {
-    if (this.isDev()) {
-      console.debug(...args);
-    }
+    // 로그 비활성화
   }
 
   /**
-   * 그룹 로그 (개발 환경에서만)
+   * 그룹 로그
    */
   static group(...args) {
-    if (this.isDev()) {
-      console.group(...args);
-    }
+    // 로그 비활성화
   }
 
   static groupEnd() {
-    if (this.isDev()) {
-      console.groupEnd();
-    }
+    // 로그 비활성화
   }
 
   /**
-   * 조건부 로그 (개발 환경에서만)
+   * 조건부 로그
    */
   static logIf(condition, ...args) {
-    if (this.isDev() && condition) {
-      console.log(...args);
-    }
+    // 로그 비활성화
   }
 }
 

@@ -27,12 +27,22 @@ import {
 } from "./statCalculator.js";
 import { renderStats, updateStatItemsWithValues } from "./statUI.js";
 import { getSpiritsForCategory } from "./spiritManager.js";
+import {
+  downloadJSON,
+  downloadCSV,
+  importFromJSON,
+  importFromCSV,
+  showFileInput,
+  copyToClipboard,
+  pasteFromClipboard,
+} from "./exportImport.js";
+
+import { GRADE_SET_EFFECTS, FACTION_SET_EFFECTS } from "../../constants.js";
+import Logger from "../../utils/logger.js";
 
 // updateTotalStats와 updateStatItemsWithValues를 직접 사용하기 위해 전역으로 접근 가능하도록
 let globalGetSpiritsForCategory = null;
 let globalUpdateStatItemsWithValues = null;
-import { GRADE_SET_EFFECTS, FACTION_SET_EFFECTS } from "../../constants.js";
-import Logger from "../../utils/logger.js";
 
 /**
  * 이벤트 리스너 설정
@@ -101,10 +111,7 @@ export function setupEventListeners(callbacks) {
           renderStats: () => renderStats(handleStatEditWrapper),
           updateTotalStats: () =>
             updateTotalStats(getSpiritsForCategory, updateStatItemsWithValues),
-          updateSoulExp: () => {
-            const { updateSoulExp } = require("./expCalculator.js");
-            updateSoulExp(getSpiritsForCategory);
-          },
+          updateSoulExp: () => updateSoulExp(getSpiritsForCategory),
         });
       }
     });
@@ -130,10 +137,7 @@ export function setupEventListeners(callbacks) {
                 getSpiritsForCategory,
                 updateStatItemsWithValues
               ),
-            updateSoulExp: () => {
-              const { updateSoulExp } = require("./expCalculator.js");
-              updateSoulExp(getSpiritsForCategory);
-            },
+            updateSoulExp: () => updateSoulExp(getSpiritsForCategory),
           });
           renderProfileSelect();
           alert("프로파일이 삭제되었습니다.");
@@ -154,6 +158,138 @@ export function setupEventListeners(callbacks) {
       }
     });
   });
+
+  // 데이터 관리 드롭다운 메뉴
+  const dataMenuBtn = elements.container?.querySelector("#dataMenuBtn");
+  const dataMenuDropdown = elements.container?.querySelector("#dataMenuDropdown");
+  const dataMenu = elements.container?.querySelector(".my-info-data-menu");
+  
+  if (dataMenuBtn && dataMenuDropdown && dataMenu) {
+    // 드롭다운 토글
+    dataMenuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      dataMenu.classList.toggle("active");
+    });
+
+    // 외부 클릭 시 드롭다운 닫기
+    document.addEventListener("click", (e) => {
+      if (!dataMenu.contains(e.target)) {
+        dataMenu.classList.remove("active");
+      }
+    });
+
+    // 클립보드 복사 버튼
+    const copyClipboardBtn = dataMenuDropdown.querySelector("#copyClipboardBtn");
+    if (copyClipboardBtn) {
+      copyClipboardBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        dataMenu.classList.remove("active");
+        const success = await copyToClipboard();
+        if (success) {
+          alert("클립보드에 복사되었습니다.");
+        }
+      });
+    }
+
+    // 클립보드 붙여넣기 버튼
+    const pasteClipboardBtn = dataMenuDropdown.querySelector("#pasteClipboardBtn");
+    if (pasteClipboardBtn) {
+      pasteClipboardBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        dataMenu.classList.remove("active");
+        if (confirm("클립보드의 데이터를 가져오시겠습니까? 현재 데이터는 덮어씌워집니다.")) {
+          const success = await pasteFromClipboard({
+            renderBondSlots: renderBondSlotsWrapper,
+            renderActiveSpiritSelect,
+            renderStats: () => renderStats(handleStatEditWrapper),
+            updateTotalStats: () => updateTotalStats(getSpiritsForCategory, updateStatItemsWithValues),
+            updateSoulExp: () => updateSoulExp(getSpiritsForCategory),
+          });
+          if (success) {
+            saveData();
+            alert("클립보드에서 데이터를 성공적으로 가져왔습니다.");
+          }
+        }
+      });
+    }
+
+    // JSON Export 버튼
+    const exportJSONBtn = dataMenuDropdown.querySelector("#exportJSONBtn");
+    if (exportJSONBtn) {
+      exportJSONBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dataMenu.classList.remove("active");
+        downloadJSON();
+      });
+    }
+
+    // CSV Export 버튼
+    const exportCSVBtn = dataMenuDropdown.querySelector("#exportCSVBtn");
+    if (exportCSVBtn) {
+      exportCSVBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dataMenu.classList.remove("active");
+        downloadCSV();
+      });
+    }
+
+    // Import 버튼
+    const importBtn = dataMenuDropdown.querySelector("#importBtn");
+    if (importBtn) {
+      importBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dataMenu.classList.remove("active");
+        showFileInput(".json,.csv", async (file) => {
+          const isJSON = file.name.toLowerCase().endsWith(".json");
+          const isCSV = file.name.toLowerCase().endsWith(".csv");
+
+          if (!isJSON && !isCSV) {
+            alert("JSON 또는 CSV 파일만 가져올 수 있습니다.");
+            return;
+          }
+
+          if (
+            !confirm(
+              "현재 데이터가 가져온 데이터로 대체됩니다. 계속하시겠습니까?"
+            )
+          ) {
+            return;
+          }
+
+          try {
+            if (isJSON) {
+              await importFromJSON(file, {
+                renderBondSlots: renderBondSlotsWrapper,
+                renderActiveSpiritSelect,
+                renderStats: () => renderStats(handleStatEditWrapper),
+                updateTotalStats: () =>
+                  updateTotalStats(getSpiritsForCategory, updateStatItemsWithValues),
+                updateSoulExp: () => updateSoulExp(getSpiritsForCategory),
+              });
+              // Import 후 데이터 저장
+              saveData();
+              alert("JSON 파일이 성공적으로 가져와졌습니다.");
+            } else if (isCSV) {
+              await importFromCSV(file, {
+                renderBondSlots: renderBondSlotsWrapper,
+                renderActiveSpiritSelect,
+                renderStats: () => renderStats(handleStatEditWrapper),
+                updateTotalStats: () =>
+                  updateTotalStats(getSpiritsForCategory, updateStatItemsWithValues),
+                updateSoulExp: () => updateSoulExp(getSpiritsForCategory),
+              });
+              // Import 후 데이터 저장
+              saveData();
+              alert("CSV 파일이 성공적으로 가져와졌습니다.");
+            }
+          } catch (error) {
+            Logger.error("Error importing file:", error);
+            alert("파일 가져오기 중 오류가 발생했습니다.");
+          }
+        });
+      });
+    }
+  }
 
   // 기준값 저장 버튼
   const saveBtn = elements.container?.querySelector("#saveBaselineBtn");

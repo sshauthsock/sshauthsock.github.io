@@ -84,7 +84,7 @@ export function generateSoulExpHash() {
  * 환수 혼 경험치 업데이트 및 표시
  * @param {Function} getSpiritsForCategory - 카테고리별 환수 가져오기 함수
  */
-export async function updateSoulExp(getSpiritsForCategory) {
+export async function updateSoulExp(getSpiritsForCategory, forceUpdate = false) {
   const container = elements.soulExpInfo;
   if (!container) return;
 
@@ -95,13 +95,23 @@ export async function updateSoulExp(getSpiritsForCategory) {
     pageState.baselineSoulExpHash &&
     currentHash === pageState.baselineSoulExpHash;
 
+  // forceUpdate가 true이거나 캐시가 없으면 무조건 업데이트
+  // 해시가 변경되었거나 baseline과 일치하면 재계산
   if (
+    !forceUpdate &&
     pageState.lastSoulExpHash === currentHash &&
     pageState.lastSoulExpCalculation &&
     !shouldForceZeroExpDiff // baseline과 일치하면 재계산하여 증감 0 표시
   ) {
+    // 해시가 같고 baseline과 다르면 캐시 사용
     container.innerHTML = pageState.lastSoulExpCalculation;
     return;
+  }
+  
+  // 해시가 변경되었거나 forceUpdate이면 캐시 무효화
+  if (pageState.lastSoulExpHash !== currentHash) {
+    pageState.lastSoulExpHash = null;
+    pageState.lastSoulExpCalculation = null;
   }
 
   container.innerHTML =
@@ -202,6 +212,8 @@ export async function updateSoulExp(getSpiritsForCategory) {
       shouldForceZeroExpDiff = true;
     }
 
+    // 기준 대비 정보 표시
+    // savedSoulExp가 있으면 기준 대비 표시, 없으면 현재 총합만 표시
     if (pageState.savedSoulExp > 0) {
       let diff = totalExp - pageState.savedSoulExp;
       // 해시가 같으면 증감 0으로 강제 설정
@@ -235,11 +247,16 @@ export async function updateSoulExp(getSpiritsForCategory) {
         </div>
       `;
     } else {
-      // 기준이 없으면 빈 공간
+      // 기준이 없으면 현재 총합을 기준으로 표시 (저장 버튼을 눌러야 기준 설정)
       html += `
-        <div class="my-info-soul-exp-baseline-item" style="opacity: 0.5;">
+        <div class="my-info-soul-exp-baseline-item" style="opacity: 0.7;">
           <div class="my-info-soul-exp-baseline-label">기준 대비</div>
-          <div class="my-info-soul-exp-baseline-value">-</div>
+          <div class="my-info-soul-exp-baseline-value" style="color: var(--text-secondary);">
+            기준 미설정
+          </div>
+          <div class="my-info-soul-exp-baseline-text">
+            현재: ${totalExp.toLocaleString()} exp (저장 버튼으로 기준 설정)
+          </div>
         </div>
       `;
     }

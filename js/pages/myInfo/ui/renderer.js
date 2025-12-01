@@ -138,8 +138,8 @@ export function getHTML() {
       <div class="my-info-stats-section-wrapper">
         <div class="my-info-stats-section">
           <!-- 프로파일 선택 섹션 (통합) -->
-          <div class="my-info-profile-section" style="display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; align-items: center; gap: var(--space-xs); flex: 1;">
+          <div class="my-info-profile-section">
+            <div class="my-info-profile-section-left">
               <label class="my-info-profile-label">설정:</label>
               <select class="my-info-profile-select" id="profileSelect">
                 <option value="">설정 없음</option>
@@ -150,7 +150,38 @@ export function getHTML() {
                 <button class="my-info-profile-btn danger" id="deleteProfileBtn" disabled>삭제</button>
               </div>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="my-info-profile-section-right">
+              <div class="my-info-data-menu">
+                <button id="dataMenuBtn" class="my-info-menu-btn" title="데이터 관리">
+                  <span class="my-info-btn-icon">⚙️</span>
+                  <span class="my-info-btn-text">데이터</span>
+                  <span class="my-info-menu-arrow">▼</span>
+                </button>
+                <div id="dataMenuDropdown" class="my-info-menu-dropdown">
+                  <button id="copyClipboardBtn" class="my-info-menu-item">
+                    <span class="my-info-menu-icon">📋</span>
+                    <span>클립보드 복사</span>
+                  </button>
+                  <button id="pasteClipboardBtn" class="my-info-menu-item">
+                    <span class="my-info-menu-icon">📄</span>
+                    <span>클립보드 붙여넣기</span>
+                  </button>
+                  <div class="my-info-menu-divider"></div>
+                  <button id="exportJSONBtn" class="my-info-menu-item">
+                    <span class="my-info-menu-icon">📥</span>
+                    <span>JSON 내보내기</span>
+                  </button>
+                  <button id="exportCSVBtn" class="my-info-menu-item">
+                    <span class="my-info-menu-icon">📥</span>
+                    <span>CSV 내보내기</span>
+                  </button>
+                  <div class="my-info-menu-divider"></div>
+                  <button id="importBtn" class="my-info-menu-item">
+                    <span class="my-info-menu-icon">📤</span>
+                    <span>파일 가져오기</span>
+                  </button>
+                </div>
+              </div>
               <button id="saveBaselineBtn" class="my-info-save-btn">
                 <span>저장</span>
               </button>

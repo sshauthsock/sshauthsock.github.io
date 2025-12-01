@@ -325,7 +325,6 @@ async function handleCalculate() {
     renderCalculationResult(result);
   } catch (error) {
     alert(`계산 오류: ${error.message}`);
-    console.error("Soul calculation failed:", error);
     elements.resultsPanel.classList.add("hidden");
   } finally {
     hideLoading();

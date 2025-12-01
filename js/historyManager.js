@@ -13,7 +13,6 @@ function loadHistory() {
     if (!history.변신) history.변신 = [];
     return history;
   } catch (e) {
-    console.error("Failed to load history from localStorage:", e);
     return { 수호: [], 탑승: [], 변신: [] };
   }
 }
@@ -27,7 +26,6 @@ function loadCounter() {
     if (counter.변신 === undefined) counter.변신 = 0;
     return counter;
   } catch (e) {
-    console.error("Failed to load counter from localStorage:", e);
     return { 수호: 0, 탑승: 0, 변신: 0 };
   }
 }
@@ -37,7 +35,6 @@ function saveHistory(history, counter) {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
     localStorage.setItem(COUNTER_KEY, JSON.stringify(counter));
   } catch (e) {
-    console.error("기록 저장 실패:", e);
     alert("조합 기록 저장에 실패했습니다. 저장 공간이 부족할 수 있습니다.");
   }
 }
@@ -49,13 +46,11 @@ export function addResult(result) {
     result.spirits.length === 0 ||
     !result.spirits[0].type
   ) {
-    console.warn("Invalid result data provided to addResult:", result);
     return;
   }
 
   const category = result.spirits[0].type;
   if (!["수호", "탑승", "변신"].includes(category)) {
-    console.warn(`Invalid category '${category}' for history storage.`);
     return;
   }
 
@@ -107,7 +102,6 @@ export function removeResult(category, id) {
   const counter = loadCounter();
 
   if (!history[category]) {
-    console.warn(`Attempted to remove from unknown category: ${category}`);
     return false;
   }
 
@@ -115,7 +109,6 @@ export function removeResult(category, id) {
     (entry) => entry && entry.id === id
   );
   if (entryIndex === -1) {
-    console.warn(`Entry with id ${id} not found in category ${category}`);
     return false;
   }
 
@@ -128,9 +121,6 @@ export function removeResult(category, id) {
 export function getHistoryForCategory(category) {
   const history = loadHistory();
   if (!history[category]) {
-    console.warn(
-      `Attempted to retrieve history for unknown category: ${category}`
-    );
     return [];
   }
   const filteredHistory = history[category].filter(Boolean);

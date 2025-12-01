@@ -6,11 +6,6 @@ class ErrorHandler {
       timestamp: new Date().toISOString(),
     };
 
-    // 개발 환경에서만 콘솔 출력
-    if (import.meta.env.DEV) {
-      console.error(`[Error] ${context}:`, errorInfo);
-    }
-
     // Google Analytics에 에러 전송
     if (typeof gtag === 'function') {
       gtag('event', 'exception', {

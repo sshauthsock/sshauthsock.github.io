@@ -20,21 +20,17 @@ try {
   const versionRegex = /const CACHE_VERSION = ['"](.*?)['"];?/;
   if (versionRegex.test(swContent)) {
     swContent = swContent.replace(versionRegex, `const CACHE_VERSION = '${newVersion}';`);
-    console.log(`✅ Service Worker 버전 업데이트: ${newVersion}`);
   } else {
     // 버전이 없으면 추가
     swContent = swContent.replace(
       /const CACHE_NAME = /,
       `const CACHE_VERSION = '${newVersion}';\nconst CACHE_NAME = `
     );
-    console.log(`✅ Service Worker 버전 추가: ${newVersion}`);
   }
   
   // 파일 저장
   writeFileSync(SW_PATH, swContent, 'utf8');
-  console.log(`✅ Service Worker 파일 업데이트 완료: ${SW_PATH}`);
 } catch (error) {
-  console.error('❌ Service Worker 버전 업데이트 실패:', error);
   process.exit(1);
 }
 

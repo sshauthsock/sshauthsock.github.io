@@ -569,7 +569,6 @@ function handleStatAction(e) {
   const maxValue = (pageState.chakData.equipment[dataKeyPart]?.[levelKey] ||
     {})[statName];
   if (maxValue === undefined) {
-    console.error(`Max value not found for ${statName}`);
     return;
   }
 

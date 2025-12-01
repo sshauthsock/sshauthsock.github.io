@@ -46,7 +46,6 @@ async function findImageFiles(dir) {
       if (SUPPORTED_FORMATS.includes(ext)) {
         files.push(fullPath);
       } else if (SKIP_FORMATS.includes(ext)) {
-        console.log(`⏭️  Skipping ${fullPath} (${ext} format)`);
         stats.skipped++;
       }
     }
@@ -68,7 +67,6 @@ async function convertToWebP(inputPath) {
     // 이미 WebP 파일이 존재하면 스킵
     try {
       await fs.access(outputPath);
-      console.log(`⏭️  Skipping ${inputPath} (WebP already exists)`);
       stats.skipped++;
       return;
     } catch {
@@ -96,12 +94,8 @@ async function convertToWebP(inputPath) {
     stats.converted++;
     stats.sizeReduction += reduction;
 
-    console.log(`✅ ${path.relative(IMAGE_DIR, inputPath)}`);
-    console.log(`   ${(originalSize / 1024).toFixed(1)}KB → ${(webpSize / 1024).toFixed(1)}KB (${reductionPercent}% 감소)`);
-
     return { originalSize, webpSize, reduction };
   } catch (error) {
-    console.error(`❌ Error converting ${inputPath}:`, error.message);
     stats.errors++;
     return null;
   }
@@ -111,18 +105,12 @@ async function convertToWebP(inputPath) {
  * 메인 실행 함수
  */
 async function main() {
-  console.log('🚀 Starting WebP conversion...\n');
-  console.log(`📁 Image directory: ${IMAGE_DIR}\n`);
-
   try {
     // 이미지 파일 찾기
     const imageFiles = await findImageFiles(IMAGE_DIR);
     stats.total = imageFiles.length;
 
-    console.log(`📊 Found ${stats.total} image files to process\n`);
-
     if (stats.total === 0) {
-      console.log('⚠️  No image files found!');
       return;
     }
 
@@ -131,23 +119,7 @@ async function main() {
       await convertToWebP(file);
     }
 
-    // 결과 요약
-    console.log('\n' + '='.repeat(50));
-    console.log('📊 Conversion Summary');
-    console.log('='.repeat(50));
-    console.log(`Total files:     ${stats.total}`);
-    console.log(`Converted:       ${stats.converted}`);
-    console.log(`Skipped:         ${stats.skipped}`);
-    console.log(`Errors:          ${stats.errors}`);
-    console.log(`Size reduction:  ${(stats.sizeReduction / 1024 / 1024).toFixed(2)}MB`);
-    if (stats.converted > 0) {
-      const avgReduction = ((stats.sizeReduction / stats.converted) / 1024).toFixed(1);
-      console.log(`Avg reduction:   ${avgReduction}KB per file`);
-    }
-    console.log('='.repeat(50));
-
   } catch (error) {
-    console.error('❌ Fatal error:', error);
     process.exit(1);
   }
 }

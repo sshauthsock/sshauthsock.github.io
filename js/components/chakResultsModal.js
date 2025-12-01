@@ -111,7 +111,7 @@ export function showChakResultsModal(
         if (mobileAdElement) window.adfit.render(mobileAdElement);
       }
     } catch (error) {
-      console.error("Kakao AdFit: Error rendering ads in Chak modal:", error);
+      // Ad rendering error silently ignored
     }
   }, 100);
 }

@@ -6,6 +6,9 @@ import Logger from "./logger.js";
 const SW_PATH = '/sw.js';
 const SW_VERSION = 'v1.0.0';
 
+// 업데이트 알림 표시 여부 추적
+let updateNotificationShown = false;
+
 /**
  * Service Worker 등록
  */
@@ -22,39 +25,48 @@ export async function registerServiceWorker() {
 
     Logger.log('[Service Worker] Registered successfully:', registration.scope);
 
-    // 업데이트 확인
-    registration.addEventListener('updatefound', () => {
-      const newWorker = registration.installing;
-      if (newWorker) {
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed') {
-            if (navigator.serviceWorker.controller) {
-              // 새 버전이 설치되었지만 아직 활성화되지 않음
-              Logger.log('[Service Worker] New version available. Reload to update.');
-              showUpdateNotification();
-              
-              // 새 Service Worker에게 즉시 활성화 요청
-              newWorker.postMessage({ type: 'SKIP_WAITING' });
-            } else {
-              // 첫 설치
-              Logger.log('[Service Worker] First installation completed.');
+    // 업데이트 확인 (한 번만 등록)
+    if (!registration._updateFoundListenerAdded) {
+      registration._updateFoundListenerAdded = true;
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed') {
+              if (navigator.serviceWorker.controller && !updateNotificationShown) {
+                // 새 버전이 설치되었지만 아직 활성화되지 않음
+                Logger.log('[Service Worker] New version available. Reload to update.');
+                updateNotificationShown = true;
+                showUpdateNotification();
+                
+                // 새 Service Worker에게 즉시 활성화 요청
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
+              } else {
+                // 첫 설치
+                Logger.log('[Service Worker] First installation completed.');
+              }
             }
-          }
-        });
-      }
-    });
+          });
+        }
+      });
+    }
 
     // Service Worker가 제어권을 가진 경우
     if (registration.active) {
       Logger.log('[Service Worker] Active and controlling page');
     }
 
-    // 컨트롤러 변경 감지 (새 Service Worker 활성화)
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      Logger.log('[Service Worker] New controller activated. Reloading page...');
-      // 새 Service Worker가 활성화되면 자동으로 새로고침하여 최신 버전 사용
-      window.location.reload();
-    });
+    // 컨트롤러 변경 감지 (새 Service Worker 활성화) - 한 번만 등록
+    if (!navigator.serviceWorker._controllerChangeListenerAdded) {
+      navigator.serviceWorker._controllerChangeListenerAdded = true;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        Logger.log('[Service Worker] New controller activated. Reloading page...');
+        // 알림 플래그 리셋
+        updateNotificationShown = false;
+        // 새 Service Worker가 활성화되면 자동으로 새로고침하여 최신 버전 사용
+        window.location.reload();
+      });
+    }
 
     return true;
   } catch (error) {
@@ -73,6 +85,7 @@ export async function checkForUpdates() {
 
   try {
     const registration = await navigator.serviceWorker.ready;
+    // 이미 알림이 표시된 경우 업데이트 확인만 하고 알림은 표시하지 않음
     await registration.update();
     Logger.log('[Service Worker] Update check completed');
   } catch (error) {

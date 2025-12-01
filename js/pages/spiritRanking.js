@@ -465,16 +465,8 @@ function handleRankingAction(e) {
         factionCounts: factionCounts, // 세력 카운트 추가
       };
 
-      // 디버깅을 위해 데이터 구조 확인 (필요시 주석 해제)
-      // console.log("Debug: selectedRankingData:", selectedRankingData);
-      // console.log("Debug: gradeCounts:", gradeCounts);
-      // console.log("Debug: factionCounts:", factionCounts);
-      // console.log("Debug: gradeEffects:", gradeEffects);
-      // console.log("Debug: factionEffects:", factionEffects);
-
       showOptimalResultModal(dataForModal, true);
     } else {
-      console.error("랭킹 상세 데이터를 찾을 수 없습니다:", index);
       alert("랭킹 상세 정보를 불러오는 데 실패했습니다.");
     }
   }
