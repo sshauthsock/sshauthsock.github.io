@@ -1,4 +1,4 @@
-import{L as f,E as D,a as k}from"./utils-C4S-LQYV.js";function S(e,i,t={}){if(!e){f.error("[ErrorRecovery] Container not provided");return}const{onRetry:r=null,onGoHome:n=()=>{window.location.href="/"},title:a="오류가 발생했습니다",message:c=null}=t,l=c||D.getUserFriendlyMessage(i?.message||""),s=`error-${Date.now()}`;e.innerHTML=`
+import{L as f,E as D,a as k}from"./utils-_hhoRv_V.js";function S(e,i,t={}){if(!e){f.error("[ErrorRecovery] Container not provided");return}const{onRetry:r=null,onGoHome:n=()=>{window.location.href="/"},title:a="오류가 발생했습니다",message:c=null}=t,l=c||D.getUserFriendlyMessage(i?.message||""),s=`error-${Date.now()}`;e.innerHTML=`
     <div class="error-recovery-container" id="${s}">
       <div class="error-recovery-content">
         <div class="error-icon">⚠️</div>
