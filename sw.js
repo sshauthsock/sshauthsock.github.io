@@ -1,6 +1,6 @@
 // Service Worker for 오프라인 지원 및 PWA 기능
 // 버전: 업데이트 시 이 값을 변경하여 캐시 무효화
-const CACHE_VERSION = 'v20251201020100';
+const CACHE_VERSION = 'v20251201135520';
 const CACHE_NAME = `bayeon-hwayeon-${CACHE_VERSION}`;
 
 // 캐시할 정적 리소스 목록
@@ -27,15 +27,11 @@ const CACHE_FIRST_PATTERNS = [
 
 // 설치 이벤트: 초기 캐시 생성
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing...', CACHE_VERSION);
-  
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[Service Worker] Caching static assets');
         // 기본 정적 리소스 캐싱
         return cache.addAll(STATIC_CACHE_URLS).catch((err) => {
-          console.warn('[Service Worker] Failed to cache some static assets:', err);
           // 일부 실패해도 계속 진행
         });
       })
@@ -48,8 +44,6 @@ self.addEventListener('install', (event) => {
 
 // 활성화 이벤트: 이전 캐시 정리
 self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating...', CACHE_VERSION);
-  
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
@@ -57,7 +51,6 @@ self.addEventListener('activate', (event) => {
           cacheNames.map((cacheName) => {
             // 현재 버전이 아닌 캐시 삭제
             if (cacheName !== CACHE_NAME) {
-              console.log('[Service Worker] Deleting old cache:', cacheName);
               return caches.delete(cacheName);
             }
           })
@@ -90,7 +83,6 @@ self.addEventListener('fetch', (event) => {
     // POST 요청은 네트워크로 직접 전달 (에러 핸들링 포함)
     event.respondWith(
       fetch(request).catch((error) => {
-        console.error('[Service Worker] POST request failed:', error);
         throw error; // 에러를 다시 throw하여 브라우저가 처리하도록
       })
     );
@@ -101,7 +93,6 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       handleApiRequest(request).catch((error) => {
-        console.error('[Service Worker] API request failed:', error);
         throw error;
       })
     );
@@ -113,7 +104,6 @@ self.addEventListener('fetch', (event) => {
   if (isSameOrigin) {
     event.respondWith(
       handleStaticRequest(request).catch((error) => {
-        console.error('[Service Worker] Static request failed:', error);
         // 에러 발생 시에도 캐시된 리소스 시도
         return caches.match(request).catch(() => {
           throw error;
@@ -278,14 +268,12 @@ async function handleStaticRequest(request) {
     return networkResponse;
   } catch (error) {
     // 네트워크 실패 시에만 캐시 사용 (오프라인 대비)
-    console.log('[Service Worker] Network failed, trying cache:', request.url);
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
       return cachedResponse;
     }
     
     // 캐시도 없으면 에러 반환
-    console.warn('[Service Worker] Failed to fetch static resource:', request.url, error);
     return new Response(null, { status: 408, statusText: 'Request Timeout' });
   }
 }
@@ -306,8 +294,6 @@ async function networkFirst(request) {
 
     return networkResponse;
   } catch (error) {
-    console.log('[Service Worker] Network failed, trying cache:', request.url);
-    
     // 네트워크 실패 시 캐시에서 가져오기
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
@@ -334,7 +320,7 @@ async function staleWhileRevalidate(request) {
     }
     return networkResponse;
   }).catch((error) => {
-    console.log('[Service Worker] Background fetch failed:', error);
+    // 백그라운드 fetch 실패는 무시
   });
 
   // 캐시가 있으면 즉시 반환, 없으면 네트워크 응답 대기
