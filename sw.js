@@ -1,6 +1,6 @@
 // Service Worker for 오프라인 지원 및 PWA 기능
 // 버전: 업데이트 시 이 값을 변경하여 캐시 무효화
-const CACHE_VERSION = 'v20251210070802';
+const CACHE_VERSION = 'v20251210072238';
 const CACHE_NAME = `bayeon-hwayeon-${CACHE_VERSION}`;
 
 // 캐시할 정적 리소스 목록
@@ -69,12 +69,15 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
-  const isSameOrigin = url.origin === location.origin;
+  const currentOrigin = self.location.origin;
+  const requestOrigin = url.origin;
 
-  // 외부 origin 요청은 서비스 워커가 처리하지 않음
+  // 외부 origin 요청은 서비스 워커가 절대 처리하지 않음
   // CORS 요청은 브라우저가 직접 처리하도록 함
-  if (!isSameOrigin) {
-    return; // 외부 리소스는 브라우저가 직접 처리 (CORS 포함)
+  if (requestOrigin !== currentOrigin) {
+    // 외부 리소스는 브라우저가 직접 처리 (CORS 포함)
+    // event.respondWith를 호출하지 않으면 브라우저가 기본 동작 수행
+    return;
   }
 
   // 같은 origin 요청만 서비스 워커에서 처리
