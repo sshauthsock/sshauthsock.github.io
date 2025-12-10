@@ -1,6 +1,6 @@
 // Service Worker for 오프라인 지원 및 PWA 기능
 // 버전: 업데이트 시 이 값을 변경하여 캐시 무효화
-const CACHE_VERSION = "v1.0.5";
+const CACHE_VERSION = "v1.0.6";
 const CACHE_NAME = `bayeon-hwayeon-${CACHE_VERSION}`;
 
 // 캐시할 정적 리소스 목록
@@ -76,7 +76,8 @@ self.addEventListener("fetch", (event) => {
   // CORS 요청은 브라우저가 직접 처리하도록 함
   if (requestOrigin !== currentOrigin) {
     // 외부 리소스는 브라우저가 직접 처리 (CORS 포함)
-    // event.respondWith를 호출하지 않으면 브라우저가 기본 동작 수행
+    // 명시적으로 fetch를 호출하여 브라우저의 기본 동작 보장
+    event.respondWith(fetch(request));
     return;
   }
 

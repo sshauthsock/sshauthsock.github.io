@@ -338,6 +338,22 @@ function showUpdateNotification() {
  * Service Worker 초기화 (앱 시작 시 호출)
  */
 export function initServiceWorker() {
+  // CORS 문제 해결을 위해 서비스 워커 일시 비활성화
+  // TODO: 서비스 워커 fetch 이벤트에서 외부 요청 처리 문제 해결 후 재활성화
+  if (true) { // 임시로 비활성화
+    Logger.warn('[Service Worker] Service Worker registration disabled temporarily due to CORS issues');
+    // 기존 서비스 워커 제거
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+          registration.unregister();
+          Logger.log('[Service Worker] Unregistered existing service worker');
+        });
+      });
+    }
+    return;
+  }
+
   // Service Worker 등록 (등록 시 자동으로 업데이트 확인됨)
   registerServiceWorker().then(() => {
     // 등록 완료 후 추가 업데이트 확인 (즉시)
