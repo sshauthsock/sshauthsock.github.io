@@ -21,9 +21,13 @@ export async function registerServiceWorker() {
   try {
     const registration = await navigator.serviceWorker.register(SW_PATH, {
       scope: '/',
+      updateViaCache: 'none', // 항상 네트워크에서 확인하여 최신 버전 사용
     });
 
     Logger.log('[Service Worker] Registered successfully:', registration.scope);
+
+    // 등록 직후 즉시 업데이트 확인
+    await registration.update();
 
     // 업데이트 확인 (한 번만 등록)
     if (!registration._updateFoundListenerAdded) {
@@ -31,16 +35,42 @@ export async function registerServiceWorker() {
       registration.addEventListener('updatefound', () => {
         const newWorker = registration.installing;
         if (newWorker) {
+          // installing 상태에서도 SKIP_WAITING 메시지 전송 (더 빠른 활성화)
+          newWorker.postMessage({ type: 'SKIP_WAITING' });
+          
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed') {
-              if (navigator.serviceWorker.controller && !updateNotificationShown) {
+              if (navigator.serviceWorker.controller) {
                 // 새 버전이 설치되었지만 아직 활성화되지 않음
-                Logger.log('[Service Worker] New version available. Reload to update.');
-                updateNotificationShown = true;
-                showUpdateNotification();
+                Logger.log('[Service Worker] New version available. Activating...');
                 
                 // 새 Service Worker에게 즉시 활성화 요청
                 newWorker.postMessage({ type: 'SKIP_WAITING' });
+                
+                // 활성화 대기 (최대 1초)
+                const activatePromise = new Promise((resolve) => {
+                  const timeout = setTimeout(() => resolve(false), 1000);
+                  newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'activated') {
+                      clearTimeout(timeout);
+                      resolve(true);
+                    }
+                  });
+                });
+                
+                activatePromise.then((activated) => {
+                  if (activated) {
+                    Logger.log('[Service Worker] New version activated. Reloading...');
+                    // 자동 새로고침하여 최신 버전 사용
+                    window.location.reload();
+                  } else {
+                    // 활성화가 지연되면 알림 표시
+                    if (!updateNotificationShown) {
+                      updateNotificationShown = true;
+                      showUpdateNotification();
+                    }
+                  }
+                });
               } else {
                 // 첫 설치
                 Logger.log('[Service Worker] First installation completed.');
@@ -308,18 +338,25 @@ function showUpdateNotification() {
  * Service Worker 초기화 (앱 시작 시 호출)
  */
 export function initServiceWorker() {
-  // Service Worker 등록
-  registerServiceWorker();
-
-  // 페이지 로드 후 즉시 업데이트 확인
-  setTimeout(() => {
+  // Service Worker 등록 (등록 시 자동으로 업데이트 확인됨)
+  registerServiceWorker().then(() => {
+    // 등록 완료 후 추가 업데이트 확인 (즉시)
     checkForUpdates();
-  }, 2000); // 2초 후 (초기 로딩 완료 후)
+  });
 
-  // 주기적으로 업데이트 확인 (5분마다 - 더 자주 확인)
+  // 페이지 로드 완료 후 즉시 업데이트 확인 (DOMContentLoaded 또는 load 이벤트)
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => checkForUpdates(), 500);
+    });
+  } else {
+    setTimeout(() => checkForUpdates(), 500);
+  }
+
+  // 주기적으로 업데이트 확인 (1분마다 - 더 자주 확인하여 빠른 업데이트)
   setInterval(() => {
     checkForUpdates();
-  }, 5 * 60 * 1000); // 5분
+  }, 60 * 1000); // 1분
 
   // 페이지 가시성 변경 시 업데이트 확인 (탭 전환 시)
   document.addEventListener('visibilitychange', () => {
