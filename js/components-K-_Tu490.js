@@ -1,4 +1,4 @@
-import{E,a as D}from"./utils-Qx1knf6J.js";function S(e,i,t={}){if(!e)return;const{onRetry:r=null,onGoHome:n=()=>{window.location.href="/"},title:a="오류가 발생했습니다",message:c=null}=t,l=c||E.getUserFriendlyMessage(i?.message||""),s=`error-${Date.now()}`;e.innerHTML=`
+import{E,a as D}from"./utils-C57Sp-PS.js";function S(e,i,t={}){if(!e)return;const{onRetry:r=null,onGoHome:n=()=>{window.location.href="/"},title:a="오류가 발생했습니다",message:c=null}=t,l=c||E.getUserFriendlyMessage(i?.message||""),s=`error-${Date.now()}`;e.innerHTML=`
     <div class="error-recovery-container" id="${s}">
       <div class="error-recovery-content">
         <div class="error-icon">⚠️</div>
