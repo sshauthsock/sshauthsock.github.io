@@ -8,9 +8,10 @@ import (
 )
 
 // 유전 알고리즘 설정값
+// Render.com 무료 플랜 타임아웃(약 2분)을 고려하여 최적화
 const (
-	populationSize  = 200 // 인구(조합)의 수 (증가: 더 넓은 탐색)
-	maxGenerations  = 100 // 최대 세대 수 (증가: 더 깊은 탐색)
+	populationSize  = 150 // 인구(조합)의 수 (200 → 150: 더 빠른 수렴)
+	maxGenerations  = 80  // 최대 세대 수 (100 → 80: 타임아웃 내 완료 보장)
 	eliteSize       = 20  // 다음 세대로 바로 전달될 상위 엘리트 조합의 수 (증가: 우수한 조합 보존)
 	mutationRate    = 0.3 // 돌연변이 확률 (증가: 더 다양한 조합 탐색)
 	combinationSize = 6   // 최종 조합의 크기 (선택할 환수의 수)

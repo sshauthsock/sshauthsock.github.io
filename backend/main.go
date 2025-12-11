@@ -585,11 +585,11 @@ func (a *App) calculateBond(c *gin.Context) {
 		appLogger.Info("Using all %d selected creatures for calculation (no filtering applied)", numCreatures)
 		
 		// 필터링 후에도 여전히 많으면 상위 우선순위 환수만 선택
-		// 하지만 exhaustive search를 위해 최대한 많은 환수를 사용
-		maxForExhaustive := 25 // 25C6 = 177,100 조합 (충분히 계산 가능)
+		// Render.com 무료 플랜 타임아웃(약 2분)을 고려하여 조정
+		maxForExhaustive := 20 // 20C6 = 38,760 조합 (타임아웃 내 계산 가능)
 		if numCreatures > maxForExhaustive {
 			filteredCreatures = selectTopPriorityCreatures(req.Creatures, a.creatureData, maxForExhaustive)
-			appLogger.Info("Selected top %d priority creatures from %d total for exhaustive search.", maxForExhaustive, numCreatures)
+			appLogger.Info("Selected top %d priority creatures from %d total for calculation.", maxForExhaustive, numCreatures)
 		}
 	}
 
@@ -600,15 +600,15 @@ func (a *App) calculateBond(c *gin.Context) {
 		appLogger.Info("Calculating simple sum for %d creatures of type '%s'.", len(filteredCreatures), creatureType)
 		result = calculateCombinationStats(filteredCreatures, creatureType, a.creatureData) // Pass a.creatureData
 	} else {
-		// 결정적이고 정확한 결과를 위해 exhaustive search 사용
-		// 30개 이하: exhaustive search (30C6 = 593,775 조합, 병렬 처리로 충분히 가능)
-		// 30개 초과: GA 사용 (너무 많은 조합으로 exhaustive search가 너무 오래 걸림)
-		maxExhaustiveSearch := 30
+		// Render.com 무료 플랜 타임아웃(약 2분)을 고려하여 알고리즘 선택
+		// 20개 이하: exhaustive search (20C6 = 38,760 조합, 타임아웃 내 계산 가능)
+		// 20개 초과: GA 사용 (너무 많은 조합으로 exhaustive search가 타임아웃 발생)
+		maxExhaustiveSearch := 20 // Render.com 타임아웃을 고려하여 30 → 20으로 조정
 		if len(filteredCreatures) <= maxExhaustiveSearch {
 			appLogger.Info("Using exhaustive search to find optimal combination from %d filtered creatures of type '%s' (deterministic result).", len(filteredCreatures), creatureType)
 			result = findOptimalCombinationExhaustive(filteredCreatures, creatureType, a.creatureData)
 		} else {
-			appLogger.Info("Using genetic algorithm to find optimal combination from %d filtered creatures of type '%s' (too many for exhaustive search).", len(filteredCreatures), creatureType)
+			appLogger.Info("Using genetic algorithm to find optimal combination from %d filtered creatures of type '%s' (too many for exhaustive search, using GA for faster convergence).", len(filteredCreatures), creatureType)
 			result = findOptimalCombinationWithGA(filteredCreatures, creatureType, a.creatureData)
 		}
 	}
