@@ -216,6 +216,7 @@ func SecurityHeadersMiddleware() gin.HandlerFunc {
 		
 		// Content-Security-Policy: XSS 및 데이터 주입 공격 방지
 		// API 서버이므로 스크립트 실행이 필요 없음
+		// CORS 요청을 허용하기 위해 connect-src에 외부 origin 추가하지 않음 (CSP는 서버 측 정책이므로 클라이언트 연결에 영향 없음)
 		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'none'; style-src 'none'; img-src 'none'; font-src 'none'; connect-src 'self'")
 		
 		// Strict-Transport-Security (HSTS): HTTPS 강제 (HTTPS 환경에서만)
