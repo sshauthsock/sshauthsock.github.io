@@ -466,6 +466,8 @@ func main() {
 	corsConfig.AllowMethods = []string{"GET", "POST", "OPTIONS"}
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	corsConfig.AllowCredentials = false // Credentials 허용 안 함 (보안)
+	corsConfig.ExposeHeaders = []string{"Content-Length", "Content-Type"} // 노출할 헤더
+	corsConfig.MaxAge = 12 * time.Hour // Preflight 캐시 시간
 	
 	appLogger.Info("CORS configured. Allowed origins: %v", originsList)
 	router.Use(cors.New(corsConfig))

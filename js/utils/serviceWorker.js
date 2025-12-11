@@ -347,18 +347,32 @@ export function initServiceWorker() {
     // 즉시 실행하여 서비스 워커 제거
     (async () => {
       try {
+        // 컨트롤러가 있으면 먼저 제거 시도
+        if (navigator.serviceWorker.controller) {
+          Logger.log('[Service Worker] Controller found, unregistering...');
+          // 컨트롤러를 가진 서비스 워커 제거
+          const controllerRegistration = await navigator.serviceWorker.getRegistration();
+          if (controllerRegistration) {
+            await controllerRegistration.unregister();
+            Logger.log('[Service Worker] Controller unregistered');
+          }
+        }
+        
+        // 모든 등록된 서비스 워커 제거
         const registrations = await navigator.serviceWorker.getRegistrations();
         for (const registration of registrations) {
           const unregistered = await registration.unregister();
           Logger.log(`[Service Worker] Unregistered service worker: ${unregistered}`);
         }
         
-        // 컨트롤러가 있으면 제거
-        if (navigator.serviceWorker.controller) {
-          Logger.log('[Service Worker] Controller found, attempting to remove...');
-          // 새로고침을 통해 컨트롤러 제거
-          // 하지만 사용자 경험을 위해 자동 새로고침은 하지 않음
+        // 모든 캐시 삭제
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+          Logger.log(`[Service Worker] Deleted ${cacheNames.length} cache(s)`);
         }
+        
+        Logger.log('[Service Worker] All service workers and caches removed');
       } catch (error) {
         Logger.error('[Service Worker] Error unregistering service workers:', error);
       }

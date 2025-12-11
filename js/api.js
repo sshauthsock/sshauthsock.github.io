@@ -273,6 +273,8 @@ export async function calculateOptimalCombination(creatures) {
   try {
     const response = await fetch(`${BASE_URL}/api/calculate/bond`, {
       method: "POST",
+      mode: "cors", // CORS 모드 명시
+      credentials: "omit", // Credentials 전송 안 함
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ creatures }),
     });
