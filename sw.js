@@ -1,6 +1,6 @@
 // Service Worker for 오프라인 지원 및 PWA 기능
 // 버전: 업데이트 시 이 값을 변경하여 캐시 무효화
-const CACHE_VERSION = 'v20251211004515';
+const CACHE_VERSION = 'v20251211011605';
 const CACHE_NAME = `bayeon-hwayeon-${CACHE_VERSION}`;
 
 // CORS 문제 해결을 위해 fetch 이벤트 리스너 완전히 제거
