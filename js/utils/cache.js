@@ -16,7 +16,7 @@ class LRUCache {
    */
   get(key) {
     if (this.cache.has(key)) {
-      // 사용된 항목을 맨 뒤로 이동 (LRU)
+      // 사용된 항목을 맨 뒤로 이동(LRU)
       const value = this.cache.get(key);
       this.cache.delete(key);
       this.cache.set(key, value);
@@ -79,4 +79,3 @@ class LRUCache {
 
 // 기본 크기 50인 LRU Cache 인스턴스 생성 및 export
 export const memoryCache = new LRUCache(50);
-
