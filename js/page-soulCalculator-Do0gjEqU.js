@@ -1,4 +1,4 @@
-import{c as b}from"./components-XA1UI_gW.js";import{b as u,f,h as v,e as y}from"./main-Hy6Dlatb.js";import{E as o}from"./utils-BTed0ji5.js";const a={expTable:null,currentType:"legend",currentLevel:0,targetLevel:1,souls:{high:0,mid:0,low:0}},l={};function x(){return`
+import{c as b}from"./components-Snd72_gc.js";import{b as u,f,h as v,e as y}from"./main-CtgLAOgc.js";import{E as o}from"./utils-Qx1knf6J.js";const a={expTable:null,currentType:"legend",currentLevel:0,targetLevel:1,souls:{high:0,mid:0,low:0}},l={};function x(){return`
     <div class="container soul-container">
       <div class="left card">
         <h3>환수 성장 경험치 테이블</h3>
