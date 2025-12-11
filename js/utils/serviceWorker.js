@@ -338,21 +338,34 @@ function showUpdateNotification() {
  * Service Worker 초기화 (앱 시작 시 호출)
  */
 export function initServiceWorker() {
-  // CORS 문제 해결을 위해 서비스 워커 일시 비활성화
+  // CORS 문제 해결을 위해 서비스 워커 완전 비활성화
   // TODO: 서비스 워커 fetch 이벤트에서 외부 요청 처리 문제 해결 후 재활성화
-  if (true) { // 임시로 비활성화
-    Logger.warn('[Service Worker] Service Worker registration disabled temporarily due to CORS issues');
-    // 기존 서비스 워커 제거
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then((registrations) => {
-        registrations.forEach((registration) => {
-          registration.unregister();
-          Logger.log('[Service Worker] Unregistered existing service worker');
-        });
-      });
-    }
-    return;
+  Logger.warn('[Service Worker] Service Worker registration disabled temporarily due to CORS issues');
+  
+  // 기존 서비스 워커 즉시 제거 (모든 탭에서)
+  if ('serviceWorker' in navigator) {
+    // 즉시 실행하여 서비스 워커 제거
+    (async () => {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          const unregistered = await registration.unregister();
+          Logger.log(`[Service Worker] Unregistered service worker: ${unregistered}`);
+        }
+        
+        // 컨트롤러가 있으면 제거
+        if (navigator.serviceWorker.controller) {
+          Logger.log('[Service Worker] Controller found, attempting to remove...');
+          // 새로고침을 통해 컨트롤러 제거
+          // 하지만 사용자 경험을 위해 자동 새로고침은 하지 않음
+        }
+      } catch (error) {
+        Logger.error('[Service Worker] Error unregistering service workers:', error);
+      }
+    })();
   }
+  
+  return; // 서비스 워커 등록하지 않음
 
   // Service Worker 등록 (등록 시 자동으로 업데이트 확인됨)
   registerServiceWorker().then(() => {
