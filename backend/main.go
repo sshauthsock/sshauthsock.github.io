@@ -364,6 +364,12 @@ func (a *App) loadChakDataFromFirestore(ctx context.Context) error {
 func main() {
 	appLogger.Info("Starting server...")
 	
+	// 프로덕션 환경에서는 Gin을 release 모드로 설정
+	if os.Getenv("ENVIRONMENT") == "production" || os.Getenv("GIN_MODE") == "release" {
+		gin.SetMode(gin.ReleaseMode)
+		appLogger.Info("Gin running in release mode")
+	}
+	
 	err := godotenv.Load()
 	if err != nil {
 		appLogger.Warn(".env file not loaded: %v (This is normal in production environments)", err)
@@ -419,6 +425,11 @@ func main() {
 	go app.startCacheRefreshLoop(ctx)
 
 	router := gin.Default()
+	
+	// Render.com 프록시 환경을 위한 설정
+	// Render.com은 프록시를 사용하므로 X-Forwarded-* 헤더를 신뢰해야 함
+	router.SetTrustedProxies([]string{"0.0.0.0/0"}) // Render.com의 모든 프록시 신뢰
+	router.ForwardedByClientIP = true
 	
 	// CORS 보안 강화: 특정 도메인만 허용
 	cfg := config.Load()
