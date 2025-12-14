@@ -586,7 +586,7 @@ func (a *App) calculateBond(c *gin.Context) {
 		
 		// 필터링 후에도 여전히 많으면 상위 우선순위 환수만 선택
 		// Render.com 무료 플랜 타임아웃(약 2분)을 고려하여 조정
-		maxForExhaustive := 20 // 20C6 = 38,760 조합 (타임아웃 내 계산 가능)
+		maxForExhaustive := 15 // 15C6 = 5,005 조합 (타임아웃 내 계산 가능, 20C6=38,760은 여전히 느림)
 		if numCreatures > maxForExhaustive {
 			filteredCreatures = selectTopPriorityCreatures(req.Creatures, a.creatureData, maxForExhaustive)
 			appLogger.Info("Selected top %d priority creatures from %d total for calculation.", maxForExhaustive, numCreatures)
@@ -601,9 +601,9 @@ func (a *App) calculateBond(c *gin.Context) {
 		result = calculateCombinationStats(filteredCreatures, creatureType, a.creatureData) // Pass a.creatureData
 	} else {
 		// Render.com 무료 플랜 타임아웃(약 2분)을 고려하여 알고리즘 선택
-		// 20개 이하: exhaustive search (20C6 = 38,760 조합, 타임아웃 내 계산 가능)
-		// 20개 초과: GA 사용 (너무 많은 조합으로 exhaustive search가 타임아웃 발생)
-		maxExhaustiveSearch := 20 // Render.com 타임아웃을 고려하여 30 → 20으로 조정
+		// 15개 이하: exhaustive search (15C6 = 5,005 조합, 타임아웃 내 계산 가능)
+		// 15개 초과: GA 사용 (너무 많은 조합으로 exhaustive search가 타임아웃 발생)
+		maxExhaustiveSearch := 15 // Render.com 타임아웃을 고려하여 20 → 15로 조정 (20C6=38,760은 여전히 느림)
 		if len(filteredCreatures) <= maxExhaustiveSearch {
 			appLogger.Info("Using exhaustive search to find optimal combination from %d filtered creatures of type '%s' (deterministic result).", len(filteredCreatures), creatureType)
 			result = findOptimalCombinationExhaustive(filteredCreatures, creatureType, a.creatureData)

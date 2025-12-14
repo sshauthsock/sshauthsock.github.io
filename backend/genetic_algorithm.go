@@ -10,9 +10,9 @@ import (
 // 유전 알고리즘 설정값
 // Render.com 무료 플랜 타임아웃(약 2분)을 고려하여 최적화
 const (
-	populationSize  = 150 // 인구(조합)의 수 (200 → 150: 더 빠른 수렴)
-	maxGenerations  = 80  // 최대 세대 수 (100 → 80: 타임아웃 내 완료 보장)
-	eliteSize       = 20  // 다음 세대로 바로 전달될 상위 엘리트 조합의 수 (증가: 우수한 조합 보존)
+	populationSize  = 100 // 인구(조합)의 수 (150 → 100: 더 빠른 수렴)
+	maxGenerations  = 60  // 최대 세대 수 (80 → 60: 타임아웃 내 완료 보장)
+	eliteSize       = 15  // 다음 세대로 바로 전달될 상위 엘리트 조합의 수 (20 → 15: 더 빠른 수렴)
 	mutationRate    = 0.3 // 돌연변이 확률 (증가: 더 다양한 조합 탐색)
 	combinationSize = 6   // 최종 조합의 크기 (선택할 환수의 수)
 )
@@ -421,7 +421,7 @@ func generateInitialPopulationWithPriority(prioritizedCreatures []CreatureInput)
 
 	// 상위 우선순위 환수들을 더 많이 포함하도록 조합 생성
 	// 불멸환수와 전설환수를 모두 고려하되, 우선순위 높은 환수에 가중치 부여
-	topN := 30 // 상위 30개 환수에 가중치 부여 (불멸+전설 혼합)
+	topN := 20 // 상위 20개 환수에 가중치 부여 (불멸+전설 혼합, 30 → 20으로 조정)
 	if topN > len(prioritizedCreatures) {
 		topN = len(prioritizedCreatures)
 	}
