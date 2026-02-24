@@ -27,6 +27,7 @@ lerna-debug.log*
 # Environment variables
 # ============================================
 .env
+.env*
 .env.local
 .env.*.local
 *.local
@@ -63,6 +64,7 @@ lerna-debug.log*
 backend/myapp*
 backend/serviceAccountKey.json
 config/serviceAccountKey.json
+config/baram-yeon-firebase-adminsdk-*.json
 
 # ============================================
 # Terraform

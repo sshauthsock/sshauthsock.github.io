@@ -18,6 +18,7 @@ const pageModules = {
   spiritRanking: () => import("./pages/spiritRanking.js"),
   soulCalculator: () => import("./pages/soulCalculator.js"),
   chakCalculator: () => import("./pages/chakCalculator.js"),
+  characterSearch: () => import("./pages/characterSearch.js"),
   myInfo: () => import("./pages/myInfo.js"),
 };
 

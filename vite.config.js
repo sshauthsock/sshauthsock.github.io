@@ -101,6 +101,7 @@ export default defineConfig(({ mode }) => {
       __API_BASE_URL__: JSON.stringify(
         env.VITE_API_BASE_URL || "https://bayeon-hwayeon-backend.onrender.com"
       ),
+      // 넥슨 오픈 API는 백엔드 프록시 사용. 클라이언트에 API 키 노출하지 않음.
     },
     server: {
       port: 5173,

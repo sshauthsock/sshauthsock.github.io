@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
@@ -507,6 +508,9 @@ func main() {
 		api.POST("/calculate/soul", app.calculateSoulHandler)
 		api.GET("/chak/data", app.getChakData)
 		api.POST("/calculate/chak", app.calculateChakHandler)
+		// 넥슨 오픈 API 프록시 (API 키를 클라이언트에 노출하지 않음)
+		api.GET("/nexon/baramy/v1/id", nexonProxyOcid)
+		api.GET("/nexon/baramy/v1/character/basic", nexonProxyCharacterBasic)
 		// 캐시 관리 엔드포인트
 		api.GET("/cache/status", app.getCacheStatus)
 		api.POST("/cache/refresh", app.refreshCache)
@@ -1185,4 +1189,94 @@ func (a *App) refreshCache(c *gin.Context) {
 		"message": "Cache refresh completed",
 		"results": results,
 	})
+}
+
+// ======== 넥슨 오픈 API 프록시 (API 키를 클라이언트에 노출하지 않음) ========
+
+var (
+	nexonAllowedServers = map[string]bool{
+		"연": true, "무휼": true, "세류": true, "해명": true, "낙랑": true, "하백": true, "비류": true, "온조": true,
+	}
+)
+
+func getNexonProxyBaseURL() string {
+	if u := os.Getenv("NEXON_OPEN_API_BASE"); u != "" {
+		return strings.TrimSuffix(u, "/")
+	}
+	return "https://open.api.nexon.com"
+}
+
+// nexonProxyOcid: GET /api/nexon/baramy/v1/id?character_name=...&server_name=...
+func nexonProxyOcid(c *gin.Context) {
+	apiKey := os.Getenv("NEXON_OPEN_API_KEY")
+	if apiKey == "" {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Nexon API key not configured on server"})
+		return
+	}
+	characterName := strings.TrimSpace(c.Query("character_name"))
+	if len(characterName) > 12 {
+		characterName = characterName[:12]
+	}
+	serverName := c.Query("server_name")
+	if !nexonAllowedServers[serverName] {
+		serverName = "연"
+	}
+	base := getNexonProxyBaseURL()
+	url := fmt.Sprintf("%s/baramy/v1/id?character_name=%s&server_name=%s",
+		base, strings.ReplaceAll(characterName, " ", "+"), serverName)
+	req, err := http.NewRequestWithContext(c.Request.Context(), http.MethodGet, url, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to build request"})
+		return
+	}
+	req.Header.Set("x-nxopen-api-key", apiKey)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Nexon API request failed"})
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to read Nexon API response"})
+		return
+	}
+	c.Data(resp.StatusCode, resp.Header.Get("Content-Type"), body)
+}
+
+// nexonProxyCharacterBasic: GET /api/nexon/baramy/v1/character/basic?ocid=...
+func nexonProxyCharacterBasic(c *gin.Context) {
+	apiKey := os.Getenv("NEXON_OPEN_API_KEY")
+	if apiKey == "" {
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Nexon API key not configured on server"})
+		return
+	}
+	ocid := strings.TrimSpace(c.Query("ocid"))
+	if len(ocid) > 64 {
+		ocid = ocid[:64]
+	}
+	if ocid == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ocid is required"})
+		return
+	}
+	base := getNexonProxyBaseURL()
+	url := fmt.Sprintf("%s/baramy/v1/character/basic?ocid=%s", base, ocid)
+	req, err := http.NewRequestWithContext(c.Request.Context(), http.MethodGet, url, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to build request"})
+		return
+	}
+	req.Header.Set("x-nxopen-api-key", apiKey)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Nexon API request failed"})
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to read Nexon API response"})
+		return
+	}
+	c.Data(resp.StatusCode, resp.Header.Get("Content-Type"), body)
 }

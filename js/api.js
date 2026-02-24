@@ -19,6 +19,8 @@ const BASE_URL =
   (typeof __API_BASE_URL__ !== "undefined" ? __API_BASE_URL__ : null) ||
   "https://bayeon-hwayeon-backend.onrender.com";
 
+// 넥슨 오픈 API (바람의나라: 연 수행자 검색) — 백엔드 프록시 사용. API 키는 서버 환경 변수 NEXON_OPEN_API_KEY 로만 설정.
+
 // 이미지 경로 변환 함수는 utils/imagePath.js로 이동
 // _transformSpiritImagePath, _transformSpiritsArrayPaths는 더 이상 사용하지 않음
 
@@ -354,15 +356,80 @@ export async function calculateChak(data) {
     });
     const result = await handleResponse(response);
     const duration = performance.now() - startTime;
-    
+
     // API 성능 추적
     trackApiPerformance("/api/calculate/chak", duration, true);
-    
+
     return result;
   } catch (error) {
     const duration = performance.now() - startTime;
     trackApiPerformance("/api/calculate/chak", duration, false);
     ErrorHandler.handle(error, "calculateChak");
+    throw error;
+  }
+}
+
+/** 바람의나라:연 서버 목록 (캐릭터 식별자 조회 시 server_name 파라미터용) */
+export const BARAMY_SERVER_NAMES = ["연", "무휼", "세류", "해명", "낙랑", "하백", "비류", "온조"];
+
+/**
+ * 넥슨 오픈 API - 캐릭터 식별자(OCID) 조회
+ * GET /baramy/v1/id?character_name={캐릭터명}&server_name={서버명}
+ * server_name 필수. (연, 무휼, 세류, 해명, 낙랑, 하백, 비류, 온조)
+ * @param {string} characterName - 캐릭터 이름
+ * @param {string} serverName - 서버 명 (BARAMY_SERVER_NAMES 중 하나)
+ * @returns {Promise<{ ocid: string }|object>}
+ */
+export async function fetchCharacterOcid(characterName, serverName = "연") {
+  const safeServer = BARAMY_SERVER_NAMES.includes(serverName) ? serverName : "연";
+  const params = new URLSearchParams({
+    character_name: String(characterName ?? "").trim().slice(0, 12),
+    server_name: safeServer,
+  });
+  const url = `${BASE_URL}/api/nexon/baramy/v1/id?${params}`;
+  const startTime = performance.now();
+  try {
+    const response = await fetch(url, { method: "GET" });
+    const result = await handleResponse(response);
+    trackApiPerformance(url, performance.now() - startTime, true);
+    if (result !== null && typeof result === "object") {
+      return JSON.parse(JSON.stringify(result));
+    }
+    return result;
+  } catch (error) {
+    trackApiPerformance(url, performance.now() - startTime, false);
+    ErrorHandler.handle(error, "fetchCharacterOcid");
+    throw error;
+  }
+}
+
+/**
+ * 넥슨 오픈 API - 캐릭터 기본정보 조회
+ * GET /baramy/v1/character/basic?ocid={ocid}
+ * ocid는 fetchCharacterOcid(캐릭터명)로 GET /baramy/v1/id 호출 후 사용.
+ * @param {Record<string, string>} params - 쿼리 파라미터 (반드시 ocid 포함)
+ * @returns {Promise<object>}
+ */
+export async function fetchCharacterBasic(params = {}) {
+  const ocid = params?.ocid != null ? String(params.ocid).trim().slice(0, 64) : "";
+  if (!ocid) {
+    const err = new Error("캐릭터 식별자(ocid)가 필요합니다.");
+    ErrorHandler.handle(err, "fetchCharacterBasic");
+    throw err;
+  }
+  const url = `${BASE_URL}/api/nexon/baramy/v1/character/basic?ocid=${encodeURIComponent(ocid)}`;
+  const startTime = performance.now();
+  try {
+    const response = await fetch(url, { method: "GET" });
+    const result = await handleResponse(response);
+    trackApiPerformance(url, performance.now() - startTime, true);
+    if (result !== null && typeof result === "object") {
+      return JSON.parse(JSON.stringify(result));
+    }
+    return result;
+  } catch (error) {
+    trackApiPerformance(url, performance.now() - startTime, false);
+    ErrorHandler.handle(error, "fetchCharacterBasic");
     throw error;
   }
 }
